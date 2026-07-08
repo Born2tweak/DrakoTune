@@ -26,6 +26,7 @@ from src.dsp.preprocess import preprocess
 from src.decision import evaluate_safety
 from src.diagnostics import diagnose_loudness, diagnose_safety
 from src.dsp_engine import render_plan
+from src.evaluation import evaluate
 from src.ingestion import PreflightError, ensure_processable
 from src.orchestration import analyze_and_plan
 
@@ -139,6 +140,17 @@ def main() -> None:
             print(f"      chain: {exec_result.chain_description()}")
             if bundle.plan.skipped_processors:
                 print(f"      skipped: {'; '.join(bundle.plan.skipped_processors)}")
+
+            # Before/after evaluation (M10).
+            evaluation = evaluate(str(normalized_path), str(processed_path), plan=bundle.plan)
+            print(f"      loudness change: {evaluation.deltas['loudness_gain_db']:+.2f}dB")
+            for chk in evaluation.passed_checks:
+                print(f"      pass: {chk}")
+            for chk in evaluation.failed_checks:
+                print(f"      FAIL: {chk}")
+            for w in evaluation.warnings:
+                print(f"      eval warning: {w}")
+
             export_result = export_before_after(
                 original_path=normalized_path,
                 processed_path=processed_path,
