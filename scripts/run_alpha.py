@@ -23,6 +23,7 @@ from src.dsp.diagnose import diagnose, print_profile, scan_artifacts, print_arti
 from src.dsp.export import export_before_after
 from src.dsp.pipeline import process_audio
 from src.dsp.preprocess import preprocess
+from src.diagnostics import diagnose_safety
 from src.ingestion import PreflightError, ensure_processable
 
 
@@ -89,6 +90,16 @@ def main() -> None:
             sys.exit(2)
         for w in preflight_report.warnings:
             print(f"      preflight warning: {w}")
+
+        # Technical-safety diagnostics (M04): measurement only, does not drive DSP.
+        safety = diagnose_safety(str(normalized_path))
+        safety_metrics = {o.metric: o.value for o in safety.observations}
+        print(
+            "      safety: peak={peak_dbfs:.1f}dBFS truepeak={true_peak_dbtp:.1f}dBTP "
+            "headroom={headroom_db:.1f}dB clip={clipping_ratio:.3%}".format(**safety_metrics)
+        )
+        if safety.integrity_flags:
+            print(f"      safety flags: {', '.join(safety.integrity_flags)}")
 
         # Step 2: Diagnosis
         profile = None
