@@ -24,6 +24,18 @@ from pedalboard import (
 )
 
 from src.dsp.diagnose import Severity, VocalProfile
+from src.shared_types import (
+    ANALYZER_VERSION,
+    POLICY_VERSION,
+    SCHEMA_VERSION,
+    AudioAsset,
+    DiagnosticResult,
+    Observation,
+    ProcessingAction,
+    ProcessingPlan,
+    ProcessingRecord,
+    to_serializable,
+)
 
 
 @dataclass(frozen=True)
@@ -303,6 +315,94 @@ def apply_alpha22_refinement(audio: np.ndarray, sample_rate: int) -> tuple[np.nd
 
 
 # ---------------------------------------------------------------------------
+# Canonical processing record (M01)
+# ---------------------------------------------------------------------------
+
+
+_OBSERVATION_UNITS = {"noise_floor": "dBFS"}  # everything else is a unitless ratio
+
+
+def _build_processing_record(
+    input_path: str,
+    output_path: str,
+    sample_rate: int,
+    channels: int,
+    duration: float,
+    profile: VocalProfile | None,
+    chain_parts: list[str],
+) -> ProcessingRecord:
+    """Assemble a minimal, versioned record for one processing run.
+
+    This does not decide anything: it records the asset, maps existing
+    diagnoses into canonical Observations, and lists the applied chain steps as
+    provisional actions. Real decision-authored plans arrive in M09.
+    """
+    import datetime
+    import uuid
+
+    asset = AudioAsset(
+        id=uuid.uuid4().hex,
+        owner_id="local",
+        original_storage_path=input_path,
+        processed_storage_path=output_path,
+        sample_rate=sample_rate,
+        channels=channels,
+        duration=duration,
+        created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    )
+
+    diagnostics = None
+    if profile is not None:
+        observations: list[Observation] = []
+        integrity: list[str] = []
+        for d in profile.diagnoses:
+            if d.measured_value is not None:
+                evidence = f"severity={d.severity.name}"
+                if d.detected_frequency_hz:
+                    evidence += f", peak={d.detected_frequency_hz:.0f}Hz"
+                observations.append(
+                    Observation(
+                        id=uuid.uuid4().hex,
+                        metric=d.category,
+                        value=float(d.measured_value),
+                        units=_OBSERVATION_UNITS.get(d.category, "ratio"),
+                        confidence=float(d.confidence),
+                        evidence=evidence,
+                    )
+                )
+            if d.category == "clipping" and d.severity >= Severity.MODERATE:
+                integrity.append("clipping")
+        diagnostics = DiagnosticResult(
+            id=uuid.uuid4().hex,
+            audio_asset_id=asset.id,
+            analyzer_version=ANALYZER_VERSION,
+            measurement_context={
+                "quality_score": profile.overall_quality_score,
+                "warnings": list(profile.warnings),
+            },
+            observations=tuple(observations),
+            integrity_flags=tuple(integrity),
+        )
+
+    actions = tuple(
+        ProcessingAction(id=uuid.uuid4().hex, processor=part) for part in chain_parts
+    )
+    plan = ProcessingPlan(
+        id=uuid.uuid4().hex,
+        preset_profile="adaptive" if profile is not None else "generic",
+        actions=actions,
+        policy_version=POLICY_VERSION,
+    )
+
+    return ProcessingRecord(
+        id=uuid.uuid4().hex,
+        asset=asset,
+        diagnostics=diagnostics,
+        plan=plan,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Audio processing
 # ---------------------------------------------------------------------------
 
@@ -352,6 +452,22 @@ def process_audio(
 
     duration_seconds = len(processed_out) / sample_rate
 
+    chain_parts = [
+        part
+        for part in [*getattr(board, "_chain_description", []), *refinement_steps]
+        if part
+    ] or ["generic cleanup chain"]
+
+    record = _build_processing_record(
+        input_path=input_path,
+        output_path=output_path,
+        sample_rate=int(sample_rate),
+        channels=int(processed_out.shape[1]) if processed_out.ndim > 1 else 1,
+        duration=float(duration_seconds),
+        profile=profile,
+        chain_parts=chain_parts,
+    )
+
     return {
         "sample_rate": sample_rate,
         "duration_seconds": float(duration_seconds),
@@ -360,4 +476,8 @@ def process_audio(
         "chain_description": " -> ".join(
             part for part in [get_chain_description(board), *refinement_steps] if part
         ),
+        "schema_version": SCHEMA_VERSION,
+        "analyzer_version": ANALYZER_VERSION,
+        "policy_version": POLICY_VERSION,
+        "processing_record": to_serializable(record),
     }

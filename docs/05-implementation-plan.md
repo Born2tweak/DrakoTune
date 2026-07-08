@@ -1,5 +1,12 @@
 # DrakoTune — Implementation Plan v1
 
+> **SUPERSEDED (2026-07-08).** This early plan proposes a frontend/AI-first build
+> order (Phase 0–7) that conflicts with the current source-of-truth sequence,
+> which builds the deterministic audio core first. The authoritative roadmap is
+> the DrakoTune Implementation Roadmap (M00→M16) as reconciled in
+> [`docs/audit/M00_baseline_audit.md`](audit/M00_baseline_audit.md). Retained for
+> historical context only — do not follow the ordering below.
+
 ## Core Development Philosophy
 
 DrakoTune **MUST** be built:

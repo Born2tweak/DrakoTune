@@ -137,6 +137,30 @@ class TestPipeline:
             f"original ({original_harsh:.0f})"
         )
 
+    def test_process_audio_emits_versioned_record(self, harsh_wav: Path, tmp_path: Path) -> None:
+        from src.shared_types import SCHEMA_VERSION, ProcessingRecord
+
+        normalized = tmp_path / "normalized.wav"
+        preprocess(harsh_wav, normalized)
+
+        processed = tmp_path / "processed.wav"
+        profile = diagnose(str(normalized))
+        result = process_audio(str(normalized), str(processed), profile=profile)
+
+        # Version metadata is present.
+        assert result["schema_version"] == SCHEMA_VERSION
+        assert result["analyzer_version"]
+        assert result["policy_version"]
+
+        # The processing record is serialized and reconstructable.
+        rec_dict = result["processing_record"]
+        assert rec_dict["schema_version"] == SCHEMA_VERSION
+        record = ProcessingRecord.from_dict(rec_dict)
+        assert record.asset.sample_rate == SAMPLE_RATE
+        assert record.diagnostics is not None
+        assert len(record.diagnostics.observations) >= 1
+        assert len(record.plan.actions) >= 1
+
     def test_custom_params(self, harsh_wav: Path, tmp_path: Path) -> None:
         normalized = tmp_path / "normalized.wav"
         preprocess(harsh_wav, normalized)

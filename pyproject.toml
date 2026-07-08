@@ -13,6 +13,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
+    "scipy>=1.10.0",  # used by tests/test_diagnose.py (signal generation)
 ]
 
 [tool.pytest.ini_options]
