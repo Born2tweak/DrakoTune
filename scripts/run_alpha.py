@@ -23,7 +23,7 @@ from src.dsp.diagnose import diagnose, print_profile, scan_artifacts, print_arti
 from src.dsp.export import export_before_after
 from src.dsp.pipeline import process_audio
 from src.dsp.preprocess import preprocess
-from src.diagnostics import diagnose_safety
+from src.diagnostics import diagnose_loudness, diagnose_safety
 from src.ingestion import PreflightError, ensure_processable
 
 
@@ -100,6 +100,14 @@ def main() -> None:
         )
         if safety.integrity_flags:
             print(f"      safety flags: {', '.join(safety.integrity_flags)}")
+
+        # Loudness & dynamics diagnostics (M05): measurement only.
+        loud = diagnose_loudness(str(normalized_path))
+        lm = {o.metric: o.value for o in loud.observations}
+        print(
+            "      loudness: rms={rms_dbfs:.1f}dBFS crest={crest_factor_db:.1f}dB "
+            "range={dynamic_range_db:.1f}dB cv={consistency_cv:.2f}".format(**lm)
+        )
 
         # Step 2: Diagnosis
         profile = None
