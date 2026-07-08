@@ -23,6 +23,7 @@ from src.dsp.diagnose import diagnose, print_profile, scan_artifacts, print_arti
 from src.dsp.export import export_before_after
 from src.dsp.pipeline import process_audio
 from src.dsp.preprocess import preprocess
+from src.decision import evaluate_safety
 from src.diagnostics import diagnose_loudness, diagnose_safety
 from src.ingestion import PreflightError, ensure_processable
 
@@ -108,6 +109,16 @@ def main() -> None:
             "      loudness: rms={rms_dbfs:.1f}dBFS crest={crest_factor_db:.1f}dB "
             "range={dynamic_range_db:.1f}dB cv={consistency_cv:.2f}".format(**lm)
         )
+
+        # Decision engine v1 (M07): deterministic safety gates. Advisory in the
+        # CLI today; DSP-path enforcement (mitigation-only) lands in M09.
+        decision = evaluate_safety(preflight_report, safety)
+        if decision.blocked_targets:
+            print(f"      safety decision: would block {', '.join(decision.blocked_targets)} "
+                  "(advisory; DSP gating in M09)")
+            for r in decision.records:
+                if r.outcome == "block":
+                    print(f"        - {r.reason}")
 
         # Step 2: Diagnosis
         profile = None

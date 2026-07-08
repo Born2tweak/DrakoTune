@@ -9,8 +9,12 @@ reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit
 | M01 — Canonical versioned records + housekeeping | ✅ complete |
 | M02 — Deterministic synthetic fixture library | ✅ complete |
 | M03 — Preflight validation | ✅ complete |
-| M04 — Technical-safety diagnostics | ▶️ next |
-| M05–M16 | pending |
+| M04 — Technical-safety diagnostics | ✅ complete |
+| M05 — Loudness & dynamics diagnostics | ✅ complete |
+| M06 — Spectral/noise diagnostics (observation/interpretation split) | ✅ complete |
+| M07 — Decision engine v1: safety rules | ✅ complete |
+| M08 — Decision engine v1: objective selection | ▶️ next |
+| M09–M16 | pending |
 
 ## What runs today
 
