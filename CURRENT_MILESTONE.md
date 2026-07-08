@@ -1,57 +1,34 @@
-# Current Milestone: ALPHA
+# Current Milestone Status
 
-## Proof-of-Concept Audio Pipeline
+**Authoritative roadmap:** DrakoTune Implementation Roadmap (M00→M16), as
+reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit.md).
 
-**Started:** 2026-05-20
-**Status:** COMPLETE — PENDING REAL VOCAL TEST
+| Milestone | Status |
+|-----------|--------|
+| M00 — Repository baseline & safety inventory | ✅ complete |
+| M01 — Canonical versioned records + housekeeping | ✅ complete |
+| M02 — Deterministic synthetic fixture library | ✅ complete |
+| M03 — Preflight validation | ✅ complete |
+| M04 — Technical-safety diagnostics | ▶️ next |
+| M05–M16 | pending |
 
-## The Question
+## What runs today
 
-> "Can DrakoTune make bad raw vocals sound noticeably smoother, less harsh, and more professionally listenable?"
-
-## Scope
-
-1. Accept a raw vocal WAV file as input
-2. Run FFmpeg preprocessing (normalize to 44100Hz, 16-bit, mono)
-3. Apply a basic Spotify Pedalboard DSP chain (cleanup stage)
-4. Generate before/after preview audio files
-5. Export a processed WAV
-
-## DSP Chain
-
-- Highpass filter (~80Hz)
-- Parametric EQ cut on harsh upper-mids (2-8kHz)
-- Gentle compression
-- Light noise gate
-- Output normalization
-
-## Deliverables
-
-- [x] `src/dsp/pipeline.py` — Core Pedalboard processing chain
-- [x] `src/dsp/preprocess.py` — FFmpeg preprocessing utilities
-- [x] `src/dsp/export.py` — WAV export with before/after
-- [x] `tests/test_pipeline.py` — Pipeline tests
-- [x] `scripts/run_alpha.py` — CLI entry point
-
-## Acceptance Criteria
-
-- [x] Pipeline accepts WAV and produces processed WAV
-- [x] FFmpeg normalizes input to 44100Hz/16-bit/mono
-- [x] Pedalboard applies: highpass, EQ cut, compression, noise gate
-- [x] Before/after files generated in output directory
-- [x] Processed vocal is audibly smoother than input (verified via spectral energy test)
-- [x] Completes in under 30s for 3-minute vocal (4.34s for 9 tests including 3s audio)
-- [x] Tests pass with pytest (9/9 passed)
-- [x] No fake DSP — only real Pedalboard operations (HighpassFilter, PeakFilter, Compressor, NoiseGate, Gain)
-
-## NOT in Scope
-
-Authentication, dashboards, billing, reference matching, conversational AI, advanced infrastructure, frontend, database, Redis, deployment.
-
-## Next Step
-
-Test with a real raw vocal file:
 ```
-python scripts/run_alpha.py path/to/raw_vocal.wav --output-dir output/
+python scripts/run_alpha.py <input.wav> --output-dir output/ [--generic] [--force]
+python -m pytest -q          # full suite
+python fixtures/generate.py  # (re)generate fixtures
 ```
-Then listen to `output/vocal_before.wav` vs `output/vocal_after.wav` to confirm the pipeline makes a real difference.
+
+Pipeline: FFmpeg normalize → **preflight (blocks silent/too-short/corrupt)** →
+diagnose (7 categories) → artifact scan → adaptive DSP → export before/after.
+`process_audio` emits a versioned `processing_record`. Original audio is never
+overwritten.
+
+## Guardrails (every milestone)
+
+- One milestone at a time; do not skip.
+- Full test suite stays green; audio must not regress.
+- No thresholds tuned just to pass tests.
+- Each milestone ends with a completion report (changed / files / tests /
+  evidence / not-verified / risks / next).

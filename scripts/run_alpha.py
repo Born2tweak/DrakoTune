@@ -23,6 +23,7 @@ from src.dsp.diagnose import diagnose, print_profile, scan_artifacts, print_arti
 from src.dsp.export import export_before_after
 from src.dsp.pipeline import process_audio
 from src.dsp.preprocess import preprocess
+from src.ingestion import PreflightError, ensure_processable
 
 
 def main() -> None:
@@ -51,6 +52,11 @@ def main() -> None:
         action="store_true",
         help="Use generic Alpha 1 chain instead of adaptive diagnosis-driven chain",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Bypass preflight blockers (silent/too-short/corrupt) and process anyway",
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -71,6 +77,18 @@ def main() -> None:
         normalized_path = Path(tmpdir) / "normalized.wav"
         preprocess(input_path, normalized_path)
         print("      Normalized to 44100Hz, 16-bit, mono")
+
+        # Preflight validation (M03): stop bad input before wasting analysis/DSP.
+        try:
+            preflight_report = ensure_processable(normalized_path, enforce=not args.force)
+        except PreflightError as exc:
+            print()
+            print(exc.report.explain())
+            print()
+            print("Processing stopped for safety. Re-run with --force to override.")
+            sys.exit(2)
+        for w in preflight_report.warnings:
+            print(f"      preflight warning: {w}")
 
         # Step 2: Diagnosis
         profile = None
