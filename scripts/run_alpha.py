@@ -29,6 +29,7 @@ from src.dsp_engine import render_plan
 from src.evaluation import evaluate
 from src.ingestion import PreflightError, ensure_processable
 from src.orchestration import analyze_and_plan
+from src.reports import build_report, render_markdown
 
 
 def main() -> None:
@@ -157,6 +158,13 @@ def main() -> None:
                 output_dir=args.output_dir,
                 project_name=args.name,
             )
+
+            # Report (M11): every processed file produces a report.
+            report = build_report(bundle, evaluation, asset_name=args.name)
+            report_md = render_markdown(report, evaluation)
+            report_path = Path(args.output_dir) / f"{args.name}_report.md"
+            report_path.write_text(report_md, encoding="utf-8")
+
             elapsed = time.time() - start_time
             print()
             print("=" * 40)
@@ -169,6 +177,7 @@ def main() -> None:
             )
             print(f"Before: {export_result['before']}")
             print(f"After:  {export_result['after']}")
+            print(f"Report: {report_path}")
             return
 
         # Step 2: Diagnosis

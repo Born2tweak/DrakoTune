@@ -15,8 +15,13 @@ reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit
 | M07 — Decision engine v1: safety rules | ✅ complete |
 | M08 — Decision engine v1: objective selection | ✅ complete |
 | M09 — Modular DSP plan execution (v2 engine) | ✅ complete |
-| M10 — Before/after evaluation | ▶️ next |
-| M11–M16 | pending |
+| M10 — Before/after evaluation | ✅ complete |
+| M11 — Report engine v1 | ✅ complete |
+| M12 — Web app skeleton | ▶️ next |
+| M13–M16 | pending |
+
+The deterministic core is complete end-to-end: `--plan` runs diagnostics →
+decision → bounded DSP → evaluation → report (written to `<name>_report.md`).
 
 The decision-driven v2 path (`--plan`) runs: diagnostics → decision → plan →
 bounded DSP execution. The legacy adaptive chain remains the default until v2 is
