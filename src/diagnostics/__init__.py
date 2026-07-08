@@ -15,6 +15,12 @@ from src.diagnostics.safety import (
     diagnose_safety,
     measure_safety,
 )
+from src.diagnostics.spectral import (
+    SPECTRAL_ANALYZER_VERSION,
+    diagnose_spectral,
+    interpret_spectral,
+    measure_spectral,
+)
 
 __all__ = [
     "measure_safety",
@@ -23,4 +29,8 @@ __all__ = [
     "measure_loudness",
     "diagnose_loudness",
     "LOUDNESS_ANALYZER_VERSION",
+    "measure_spectral",
+    "interpret_spectral",
+    "diagnose_spectral",
+    "SPECTRAL_ANALYZER_VERSION",
 ]
