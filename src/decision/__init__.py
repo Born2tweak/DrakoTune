@@ -9,6 +9,11 @@ from src.decision.records import (
     DecisionRecord,
     SafetyDecision,
 )
+from src.decision.planner import (
+    DYNAMICS_CV_MIN,
+    STRENGTH_BY_BAND,
+    build_plan,
+)
 from src.decision.safety_rules import (
     HEADROOM_MIN_DB,
     MILD_CLIP_RATIO,
@@ -24,4 +29,7 @@ __all__ = [
     "SEVERE_CLIP_RATIO",
     "MILD_CLIP_RATIO",
     "HEADROOM_MIN_DB",
+    "build_plan",
+    "STRENGTH_BY_BAND",
+    "DYNAMICS_CV_MIN",
 ]
