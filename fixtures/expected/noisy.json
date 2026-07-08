@@ -1,0 +1,13 @@
+{
+  "name": "noisy",
+  "category": "noisy",
+  "description": "Quiet 220Hz tone over an elevated broadband noise floor.",
+  "sample_rate": 44100,
+  "channels": 1,
+  "duration_seconds": 1.0,
+  "subtype": "PCM_16",
+  "audio_path": "audio/noisy.wav",
+  "expected_diagnoses": {
+    "noise_floor": "elevated"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "clipped",
+  "category": "clipped",
+  "description": "Hard-clipped 440Hz sine; broadband distortion from full-scale plateaus.",
+  "sample_rate": 44100,
+  "channels": 1,
+  "duration_seconds": 1.0,
+  "subtype": "PCM_16",
+  "audio_path": "audio/clipped.wav",
+  "expected_diagnoses": {
+    "clipping": "elevated"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "harsh",
+  "category": "harsh",
+  "description": "Strong narrow energy at 3.5kHz and 6.5kHz over a 200Hz fundamental.",
+  "sample_rate": 44100,
+  "channels": 1,
+  "duration_seconds": 1.0,
+  "subtype": "PCM_16",
+  "audio_path": "audio/harsh.wav",
+  "expected_diagnoses": {
+    "harshness": "elevated"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "clean_tone",
+  "category": "clean",
+  "description": "Harmonic vocal-like tone with gentle highs; minimal issues expected.",
+  "sample_rate": 44100,
+  "channels": 1,
+  "duration_seconds": 1.0,
+  "subtype": "PCM_16",
+  "audio_path": "audio/clean_tone.wav",
+  "expected_diagnoses": {
+    "harshness": "low",
+    "muddiness": "low"
+  }
+}

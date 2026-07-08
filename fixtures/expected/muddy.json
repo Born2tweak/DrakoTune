@@ -1,0 +1,13 @@
+{
+  "name": "muddy",
+  "category": "muddy",
+  "description": "Dominant 300Hz low-mid buildup with little clarity band energy.",
+  "sample_rate": 44100,
+  "channels": 1,
+  "duration_seconds": 1.0,
+  "subtype": "PCM_16",
+  "audio_path": "audio/muddy.wav",
+  "expected_diagnoses": {
+    "muddiness": "elevated"
+  }
+}

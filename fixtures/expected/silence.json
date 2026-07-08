@@ -1,0 +1,11 @@
+{
+  "name": "silence",
+  "category": "silence",
+  "description": "Near-digital-silence; used to check graceful handling of empty input.",
+  "sample_rate": 44100,
+  "channels": 1,
+  "duration_seconds": 1.0,
+  "subtype": "PCM_16",
+  "audio_path": "audio/silence.wav",
+  "expected_diagnoses": {}
+}
