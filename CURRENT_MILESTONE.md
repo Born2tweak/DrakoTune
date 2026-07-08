@@ -13,8 +13,14 @@ reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit
 | M05 — Loudness & dynamics diagnostics | ✅ complete |
 | M06 — Spectral/noise diagnostics (observation/interpretation split) | ✅ complete |
 | M07 — Decision engine v1: safety rules | ✅ complete |
-| M08 — Decision engine v1: objective selection | ▶️ next |
-| M09–M16 | pending |
+| M08 — Decision engine v1: objective selection | ✅ complete |
+| M09 — Modular DSP plan execution (v2 engine) | ✅ complete |
+| M10 — Before/after evaluation | ▶️ next |
+| M11–M16 | pending |
+
+The decision-driven v2 path (`--plan`) runs: diagnostics → decision → plan →
+bounded DSP execution. The legacy adaptive chain remains the default until v2 is
+A/B-validated on real vocals.
 
 ## What runs today
 

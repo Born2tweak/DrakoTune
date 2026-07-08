@@ -25,7 +25,9 @@ from src.dsp.pipeline import process_audio
 from src.dsp.preprocess import preprocess
 from src.decision import evaluate_safety
 from src.diagnostics import diagnose_loudness, diagnose_safety
+from src.dsp_engine import render_plan
 from src.ingestion import PreflightError, ensure_processable
+from src.orchestration import analyze_and_plan
 
 
 def main() -> None:
@@ -58,6 +60,11 @@ def main() -> None:
         "--force",
         action="store_true",
         help="Bypass preflight blockers (silent/too-short/corrupt) and process anyway",
+    )
+    parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="Use the decision-driven v2 engine (diagnostics -> decision -> plan -> render)",
     )
     args = parser.parse_args()
 
@@ -119,6 +126,38 @@ def main() -> None:
             for r in decision.records:
                 if r.outcome == "block":
                     print(f"        - {r.reason}")
+
+        # v2 engine (M09): decision-driven plan execution.
+        if args.plan:
+            print()
+            print("[plan] Decision-driven plan execution (v2 engine)")
+            processed_path = Path(tmpdir) / "processed.wav"
+            bundle = analyze_and_plan(str(normalized_path), preflight_report)
+            exec_result = render_plan(str(normalized_path), str(processed_path), bundle.plan)
+            goals = ", ".join(o.goal for o in bundle.plan.objectives) or "none"
+            print(f"      objectives: {goals}")
+            print(f"      chain: {exec_result.chain_description()}")
+            if bundle.plan.skipped_processors:
+                print(f"      skipped: {'; '.join(bundle.plan.skipped_processors)}")
+            export_result = export_before_after(
+                original_path=normalized_path,
+                processed_path=processed_path,
+                output_dir=args.output_dir,
+                project_name=args.name,
+            )
+            elapsed = time.time() - start_time
+            print()
+            print("=" * 40)
+            print("Plan Execution Report (v2)")
+            print("=" * 40)
+            print(f"Processed in {elapsed:.1f}s | policy {bundle.plan.policy_version}")
+            print(
+                f"Decision: enhancement={bundle.decision.enhancement_allowed} "
+                f"positive_gain={bundle.decision.positive_gain_allowed}"
+            )
+            print(f"Before: {export_result['before']}")
+            print(f"After:  {export_result['after']}")
+            return
 
         # Step 2: Diagnosis
         profile = None
