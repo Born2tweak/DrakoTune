@@ -6,9 +6,10 @@ the before/after result and report. Audio-first: the result page leads with the
 before/after players. No accounts, billing, or AI (out of scope).
 """
 
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, Form, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
+from src.webapp.feedback import record_feedback
 from src.webapp.jobs import (
     audio_path,
     delete_job,
@@ -16,7 +17,7 @@ from src.webapp.jobs import (
     process_upload,
 )
 from src.webapp.security import signed_url, verify
-from src.webapp.templates import page, render_result, render_upload
+from src.webapp.templates import page, render_privacy, render_result, render_upload
 
 app = FastAPI(title="DrakoTune", version="0.1.0")
 
@@ -74,6 +75,23 @@ def job_page(job_id: str):
     before_src = signed_url(job.id, "before") if job.before_path else None
     after_src = signed_url(job.id, "after") if job.after_path else None
     return HTMLResponse(page(f"DrakoTune — {job.name}", render_result(job, before_src, after_src)))
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+def privacy() -> str:
+    return page("DrakoTune — Privacy", render_privacy())
+
+
+@app.post("/api/feedback")
+def api_feedback(job_id: str = Form(...), rating: str = Form("up"), comment: str = Form("")) -> JSONResponse:
+    entry = record_feedback(job_id, rating, comment)
+    return JSONResponse({"ok": True, "rating": entry["rating"]})
+
+
+@app.post("/feedback")
+def form_feedback(job_id: str = Form(...), rating: str = Form("up"), comment: str = Form("")) -> RedirectResponse:
+    record_feedback(job_id, rating, comment)
+    return RedirectResponse(url=f"/jobs/{job_id}?thanks=1", status_code=303)
 
 
 @app.get("/api/audio/{job_id}/{which}")

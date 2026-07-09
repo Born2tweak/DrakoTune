@@ -54,7 +54,12 @@ def page(title: str, body: str) -> str:
         '<a class="skip" href="#main">Skip to content</a>'
         f'<header><span class="brand">DrakoTune</span>'
         f'<span class="tag">{html.escape(BRAND_TAGLINE)}</span></header>'
-        f'<main id="main">{body}</main></body></html>'
+        f'<main id="main">{body}</main>'
+        '<footer style="max-width:860px;margin:0 auto;padding:20px;color:var(--muted);'
+        'border-top:1px solid var(--line);font-size:.9rem">'
+        '<a href="/">Home</a> · <a href="/privacy">Privacy</a> · '
+        "DrakoTune is not a professional mix or mastering engineer.</footer>"
+        "</body></html>"
     )
 
 
@@ -72,6 +77,32 @@ def render_upload() -> str:
         '<button type="submit">Analyze</button>'
         '<span id="fhint" class="hint">Your audio stays private.</span>'
         "</form></div>"
+        '<div class="card"><h2>What this is — and isn\'t</h2>'
+        '<ul class="clean">'
+        "<li>It <strong>diagnoses</strong> a raw vocal and applies conservative, "
+        "explained processing.</li>"
+        "<li>It shows a <strong>before/after</strong> and every decision, with limits.</li>"
+        '<li class="muted">It is <strong>not</strong> a professional mix, mastering, '
+        "pitch-correction, or an “AI makes it better” button.</li>"
+        "</ul>"
+        '<p class="hint">Pilot software — results are experimental. See '
+        '<a href="/privacy">Privacy</a>.</p></div>'
+    )
+
+
+def render_privacy() -> str:
+    return (
+        "<h1>Privacy (pilot draft)</h1>"
+        '<div class="card"><ul class="clean">'
+        "<li>Your uploaded audio is treated as private creative material.</li>"
+        "<li>Processing runs on our server; audio is <strong>not</strong> sent to any "
+        "third-party service.</li>"
+        "<li>Playback links are signed and time-limited; there are no public audio URLs.</li>"
+        "<li>Working files are deleted on request and after a short retention window.</li>"
+        "<li>We do not ask for personal information. Optional feedback is stored without audio.</li>"
+        "<li>This is an early pilot draft, not a final legal policy.</li>"
+        "</ul></div>"
+        '<p><a href="/">Back</a></p>'
     )
 
 
@@ -164,6 +195,18 @@ def render_result(job, before_src: str, after_src: str | None) -> str:
     lims = "".join(f"<li>{html.escape(x)}</li>" for x in report.limitations)
     body.append(
         f'<h2>Limitations</h2><div class="card"><ul class="clean muted">{lims}</ul></div>'
+    )
+
+    body.append(
+        '<h2>Feedback</h2><div class="card">'
+        '<form action="/feedback" method="post">'
+        f'<input type="hidden" name="job_id" value="{html.escape(job.id)}">'
+        '<p><label for="rating">Was this helpful?</label> '
+        '<select id="rating" name="rating">'
+        '<option value="up">Yes</option><option value="down">No</option></select></p>'
+        '<p><label for="comment">Comments (optional, no audio is sent)</label><br>'
+        '<textarea id="comment" name="comment" rows="3" style="width:100%"></textarea></p>'
+        "<button type=\"submit\">Send feedback</button></form></div>"
     )
     body.append('<p><a href="/">Try another file</a></p>')
     return "".join(body)

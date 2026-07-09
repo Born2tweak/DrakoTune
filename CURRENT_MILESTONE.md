@@ -21,7 +21,12 @@ reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit
 | M13 — Private storage & security baseline | ✅ complete |
 | M14 — Product experience pass | ✅ complete |
 | M15 — CI audio regression | ✅ complete |
-| M16 — Pilot readiness | ▶️ next |
+| M16 — Pilot readiness | ✅ complete |
+
+**Roadmap M00–M16 complete.** DrakoTune is ready for a *controlled* pilot
+(see [`docs/PILOT.md`](docs/PILOT.md)). Next work is post-M16: threshold
+calibration on real vocals, subjective listening study, and production hardening
+(accounts, rate limits, audit log) — none of which should be claimed done yet.
 
 The deterministic core is complete end-to-end: `--plan` runs diagnostics →
 decision → bounded DSP → evaluation → report (written to `<name>_report.md`).
