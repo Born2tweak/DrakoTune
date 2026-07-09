@@ -14,11 +14,25 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 from src.webapp.jobs import (
     STATUS_COMPLETED,
     audio_path,
+    delete_job,
     get_job,
     process_upload,
 )
+from src.webapp.security import signed_url, verify
 
 app = FastAPI(title="DrakoTune", version="0.1.0")
+
+
+def _job_response(job) -> dict:
+    """Public job payload with signed, time-limited playback URLs."""
+    data = job.public_dict()
+    urls: dict[str, str] = {}
+    if job.before_path is not None:
+        urls["before"] = signed_url(job.id, "before")
+    if job.after_path is not None:
+        urls["after"] = signed_url(job.id, "after")
+    data["audio_urls"] = urls
+    return data
 
 _UPLOAD_PAGE = """<!doctype html>
 <title>DrakoTune</title>
@@ -38,7 +52,7 @@ def _result_html(job) -> str:
         players = ""
         if job.before_path:
             players = ('<h2>Original</h2>'
-                       f'<audio controls src="/api/audio/{job.id}/before"></audio>')
+                       f'<audio controls src="{signed_url(job.id, "before")}"></audio>')
         return (f"<!doctype html><title>DrakoTune — {html.escape(job.name)}</title>"
                 f"<h1>{html.escape(job.name)}</h1>"
                 f'<p><strong>Status: {html.escape(job.status)}</strong></p>'
@@ -46,12 +60,14 @@ def _result_html(job) -> str:
                 '<p><a href="/">Try another file</a></p>')
 
     report_html = html.escape(job.report_markdown)
+    before_src = signed_url(job.id, "before")
+    after_src = signed_url(job.id, "after")
     return (
         f"<!doctype html><title>DrakoTune — {html.escape(job.name)}</title>"
         f"<h1>{html.escape(job.name)}</h1>"
         '<h2>Before / After</h2>'
-        f'<p>Original<br><audio controls src="/api/audio/{job.id}/before"></audio></p>'
-        f'<p>Processed<br><audio controls src="/api/audio/{job.id}/after"></audio></p>'
+        f'<p>Original<br><audio controls src="{before_src}"></audio></p>'
+        f'<p>Processed<br><audio controls src="{after_src}"></audio></p>'
         f"<h2>Report</h2><pre>{report_html}</pre>"
         '<p><a href="/">Try another file</a></p>'
     )
@@ -66,7 +82,7 @@ def index() -> str:
 async def api_upload(file: UploadFile) -> JSONResponse:
     data = await file.read()
     job = process_upload(file.filename or "vocal", data)
-    return JSONResponse(job.public_dict())
+    return JSONResponse(_job_response(job))
 
 
 @app.post("/upload")
@@ -81,7 +97,14 @@ def api_job(job_id: str) -> JSONResponse:
     job = get_job(job_id)
     if job is None:
         return JSONResponse({"error": "job_not_found"}, status_code=404)
-    return JSONResponse(job.public_dict())
+    return JSONResponse(_job_response(job))
+
+
+@app.delete("/api/jobs/{job_id}")
+def api_delete_job(job_id: str) -> JSONResponse:
+    if not delete_job(job_id):
+        return JSONResponse({"error": "job_not_found"}, status_code=404)
+    return JSONResponse({"deleted": job_id})
 
 
 @app.get("/jobs/{job_id}", response_class=HTMLResponse)
@@ -93,7 +116,10 @@ def job_page(job_id: str):
 
 
 @app.get("/api/audio/{job_id}/{which}")
-def serve_audio(job_id: str, which: str):
+def serve_audio(job_id: str, which: str, exp: int = 0, sig: str = ""):
+    # No public audio: a valid, unexpired signature is required.
+    if not verify(job_id, which, exp, sig):
+        return JSONResponse({"error": "forbidden"}, status_code=403)
     path = audio_path(job_id, which)
     if path is None:
         return JSONResponse({"error": "audio_not_found"}, status_code=404)

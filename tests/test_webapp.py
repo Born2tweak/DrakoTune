@@ -42,11 +42,11 @@ class TestUploadFlow:
         resp = client.get(f"/api/jobs/{job_id}")
         assert resp.status_code == 200 and resp.json()["status"] == "completed"
 
-    def test_playback_serves_wav(self):
+    def test_playback_serves_wav_via_signed_url(self):
         data = (AUDIO_DIR / "harsh.wav").read_bytes()
-        job_id = _upload("harsh.wav", data)["job_id"]
+        payload = _upload("harsh.wav", data)
         for which in ("before", "after"):
-            resp = client.get(f"/api/audio/{job_id}/{which}")
+            resp = client.get(payload["audio_urls"][which])  # signed URL
             assert resp.status_code == 200
             assert resp.headers["content-type"] == "audio/wav"
             assert resp.content[:4] == b"RIFF"
@@ -80,5 +80,7 @@ class TestErrorPaths:
 
     def test_unknown_job_404(self):
         assert client.get("/api/jobs/nope").status_code == 404
-        assert client.get("/api/audio/nope/after").status_code == 404
+        # Unsigned audio requests are rejected (403) before existence is checked,
+        # so a missing job is not distinguishable from a real one without a token.
+        assert client.get("/api/audio/nope/after").status_code == 403
         assert client.get("/jobs/nope").status_code == 404

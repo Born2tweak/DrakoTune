@@ -7,7 +7,10 @@ app's controlled routes (no public paths, no path traversal). No accounts,
 billing, or AI — that is deliberately out of scope for the skeleton.
 """
 
+import atexit
+import shutil
 import tempfile
+import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -26,6 +29,9 @@ STATUS_BLOCKED = "blocked"
 STATUS_FAILED = "failed"
 
 
+RETENTION_SECONDS = 3600  # working audio is cleaned up after this age
+
+
 @dataclass
 class Job:
     id: str
@@ -37,19 +43,19 @@ class Job:
     report_markdown: str = ""
     objectives: tuple[str, ...] = ()
     warnings: tuple[str, ...] = ()
+    workdir: Path | None = None
+    created_at: float = field(default_factory=time.time)
 
     def public_dict(self) -> dict:
-        urls: dict[str, str] = {}
-        if self.before_path:
-            urls["before"] = f"/api/audio/{self.id}/before"
-        if self.after_path:
-            urls["after"] = f"/api/audio/{self.id}/after"
+        # Playback URLs are omitted here on purpose: they are minted as signed,
+        # time-limited capabilities by the app layer. There are no public URLs.
         return {
             "job_id": self.id,
             "name": self.name,
             "status": self.status,
             "message": self.message,
-            "audio_urls": urls,
+            "has_before": self.before_path is not None,
+            "has_after": self.after_path is not None,
             "objectives": list(self.objectives),
             "warnings": list(self.warnings),
             "has_report": bool(self.report_markdown),
@@ -88,7 +94,7 @@ def process_upload(filename: str, data: bytes) -> Job:
         preprocess(raw_path, normalized)
     except Exception as exc:  # noqa: BLE001 - surface decode/preprocess failures
         job = Job(id=job_id, name=name, status=STATUS_FAILED,
-                  message=f"Could not decode audio: {type(exc).__name__}")
+                  message=f"Could not decode audio: {type(exc).__name__}", workdir=workdir)
         _JOBS[job_id] = job
         return job
 
@@ -96,7 +102,7 @@ def process_upload(filename: str, data: bytes) -> Job:
     if not report.passed:
         job = Job(id=job_id, name=name, status=STATUS_BLOCKED,
                   message="Preflight blocked: " + ", ".join(report.blockers),
-                  before_path=normalized, warnings=report.warnings)
+                  before_path=normalized, warnings=report.warnings, workdir=workdir)
         _JOBS[job_id] = job
         return job
 
@@ -116,6 +122,33 @@ def process_upload(filename: str, data: bytes) -> Job:
         report_markdown=report_md,
         objectives=tuple(o.goal for o in bundle.plan.objectives),
         warnings=evaluation.warnings,
+        workdir=workdir,
     )
     _JOBS[job_id] = job
     return job
+
+
+def delete_job(job_id: str) -> bool:
+    """Remove a job and its private working files. Returns True if it existed."""
+    job = _JOBS.pop(job_id, None)
+    if job is None:
+        return False
+    if job.workdir is not None:
+        shutil.rmtree(job.workdir, ignore_errors=True)
+    return True
+
+
+def cleanup_expired(max_age_seconds: float = RETENTION_SECONDS) -> int:
+    """Delete jobs older than the retention window. Returns count removed."""
+    now = time.time()
+    stale = [jid for jid, j in _JOBS.items() if now - j.created_at > max_age_seconds]
+    for jid in stale:
+        delete_job(jid)
+    return len(stale)
+
+
+def _cleanup_all() -> None:
+    shutil.rmtree(WORKROOT, ignore_errors=True)
+
+
+atexit.register(_cleanup_all)
