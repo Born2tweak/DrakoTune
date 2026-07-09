@@ -45,6 +45,10 @@ class Job:
     warnings: tuple[str, ...] = ()
     workdir: Path | None = None
     created_at: float = field(default_factory=time.time)
+    # Structured payloads for the UI (M14); not serialized in public_dict.
+    report: object | None = None  # shared_types.Report
+    evaluation: object | None = None  # shared_types.EvaluationResult
+    blocked_targets: tuple[str, ...] = ()
 
     def public_dict(self) -> dict:
         # Playback URLs are omitted here on purpose: they are minted as signed,
@@ -110,7 +114,8 @@ def process_upload(filename: str, data: bytes) -> Job:
     processed = workdir / "after.wav"
     render_plan(str(normalized), str(processed), bundle.plan)
     evaluation = evaluate(str(normalized), str(processed), plan=bundle.plan, eval_id=name)
-    report_md = render_markdown(build_report(bundle, evaluation, asset_name=name), evaluation)
+    report_obj = build_report(bundle, evaluation, asset_name=name)
+    report_md = render_markdown(report_obj, evaluation)
 
     job = Job(
         id=job_id,
@@ -123,6 +128,9 @@ def process_upload(filename: str, data: bytes) -> Job:
         objectives=tuple(o.goal for o in bundle.plan.objectives),
         warnings=evaluation.warnings,
         workdir=workdir,
+        report=report_obj,
+        evaluation=evaluation,
+        blocked_targets=tuple(bundle.decision.blocked_targets),
     )
     _JOBS[job_id] = job
     return job

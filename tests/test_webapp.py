@@ -56,7 +56,7 @@ class TestUploadFlow:
         job_id = _upload("harsh.wav", data)["job_id"]
         resp = client.get(f"/jobs/{job_id}")
         assert resp.status_code == 200
-        assert "<audio" in resp.text and "Report" in resp.text
+        assert "<audio" in resp.text and "Findings" in resp.text
 
     def test_form_upload_redirects_to_result(self):
         data = (AUDIO_DIR / "harsh.wav").read_bytes()

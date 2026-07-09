@@ -19,8 +19,9 @@ reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit
 | M11 — Report engine v1 | ✅ complete |
 | M12 — Web app skeleton (FastAPI) | ✅ complete |
 | M13 — Private storage & security baseline | ✅ complete |
-| M14 — Product experience pass | ▶️ next |
-| M15–M16 | pending |
+| M14 — Product experience pass | ✅ complete |
+| M15 — CI audio regression | ▶️ next |
+| M16 | pending |
 
 The deterministic core is complete end-to-end: `--plan` runs diagnostics →
 decision → bounded DSP → evaluation → report (written to `<name>_report.md`).
