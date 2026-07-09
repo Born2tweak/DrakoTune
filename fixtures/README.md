@@ -48,6 +48,23 @@ python fixtures/generate.py
 Only change fixtures deliberately. If a regeneration changes the committed bytes,
 that is a behavior change to review — not something to silently overwrite.
 
+## Regression policy (M15)
+
+`fixtures/regression/<name>.json` stores a **decision fingerprint** per fixture:
+objectives, applied processors, skipped issues, the safety decision, and
+per-objective pass/fail. It deliberately excludes raw metric floats and
+confidence values, so it is stable across platforms but fails when what
+DrakoTune *decides* changes.
+
+- Check: `python scripts/audio_regression.py` (also run by CI and by
+  `tests/test_audio_regression.py`).
+- On failure, actual fingerprints are written to `artifacts/` and uploaded by CI.
+- If a decision change is intentional, regenerate and **review the diff**:
+  `python scripts/audio_regression.py --update`.
+
+Never run `--update` just to make CI green — a changed fingerprint is a changed
+decision and must be understood before it is accepted.
+
 ## Loading (in tests)
 
 ```python

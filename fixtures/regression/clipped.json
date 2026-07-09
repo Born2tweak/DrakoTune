@@ -1,0 +1,30 @@
+{
+  "applied_processors": [],
+  "decision": {
+    "blocked_targets": [
+      "enhancement",
+      "positive_gain"
+    ],
+    "enhancement_allowed": false,
+    "positive_gain_allowed": false,
+    "processing_allowed": true
+  },
+  "evaluation": {
+    "failed": [],
+    "passed": [
+      "reduce_muddiness",
+      "reduce_noise"
+    ]
+  },
+  "name": "clipped",
+  "objectives": [
+    "reduce_muddiness",
+    "reduce_noise"
+  ],
+  "preflight_passed": true,
+  "report_finding_count": 5,
+  "skipped": [
+    "{\"issue\": \"muddiness\", \"reason\": \"enhancement_blocked\"}",
+    "{\"issue\": \"noise_floor\", \"reason\": \"enhancement_blocked\"}"
+  ]
+}

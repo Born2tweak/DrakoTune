@@ -30,6 +30,9 @@ htmlcov/
 # Audio output artifacts (large binaries)
 output/*.wav
 
+# CI regression artifacts (written on failure)
+artifacts/
+
 # Agent/orchestrator internals
 .agent/
 .autoclaw/

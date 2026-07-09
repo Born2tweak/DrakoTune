@@ -1,0 +1,27 @@
+{
+  "applied_processors": [
+    "NoiseGate<-obj.noise_floor",
+    "PeakFilter<-obj.muddiness"
+  ],
+  "decision": {
+    "blocked_targets": [],
+    "enhancement_allowed": true,
+    "positive_gain_allowed": true,
+    "processing_allowed": true
+  },
+  "evaluation": {
+    "failed": [],
+    "passed": [
+      "reduce_muddiness",
+      "reduce_noise"
+    ]
+  },
+  "name": "muddy",
+  "objectives": [
+    "reduce_muddiness",
+    "reduce_noise"
+  ],
+  "preflight_passed": true,
+  "report_finding_count": 3,
+  "skipped": []
+}

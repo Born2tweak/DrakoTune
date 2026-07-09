@@ -1,0 +1,31 @@
+{
+  "applied_processors": [
+    "HighpassFilter<-obj.rumble",
+    "NoiseGate<-obj.noise_floor",
+    "PeakFilter<-obj.muddiness"
+  ],
+  "decision": {
+    "blocked_targets": [],
+    "enhancement_allowed": true,
+    "positive_gain_allowed": true,
+    "processing_allowed": true
+  },
+  "evaluation": {
+    "failed": [
+      "reduce_rumble"
+    ],
+    "passed": [
+      "reduce_muddiness",
+      "reduce_noise"
+    ]
+  },
+  "name": "clean_tone",
+  "objectives": [
+    "reduce_muddiness",
+    "reduce_noise",
+    "reduce_rumble"
+  ],
+  "preflight_passed": true,
+  "report_finding_count": 4,
+  "skipped": []
+}

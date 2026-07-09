@@ -1,0 +1,36 @@
+{
+  "applied_processors": [],
+  "decision": {
+    "blocked_targets": [
+      "enhancement",
+      "positive_gain",
+      "processing"
+    ],
+    "enhancement_allowed": false,
+    "positive_gain_allowed": false,
+    "processing_allowed": false
+  },
+  "evaluation": {
+    "failed": [
+      "reduce_harshness",
+      "reduce_rumble",
+      "reduce_sibilance"
+    ],
+    "passed": []
+  },
+  "name": "silence",
+  "objectives": [
+    "reduce_harshness",
+    "reduce_muddiness",
+    "reduce_rumble",
+    "reduce_sibilance"
+  ],
+  "preflight_passed": false,
+  "report_finding_count": 6,
+  "skipped": [
+    "{\"issue\": \"harshness\", \"reason\": \"enhancement_blocked\"}",
+    "{\"issue\": \"muddiness\", \"reason\": \"enhancement_blocked\"}",
+    "{\"issue\": \"rumble\", \"reason\": \"enhancement_blocked\"}",
+    "{\"issue\": \"sibilance\", \"reason\": \"enhancement_blocked\"}"
+  ]
+}
