@@ -10,11 +10,10 @@
     "processing_allowed": true
   },
   "evaluation": {
-    "failed": [
-      "reduce_rumble"
-    ],
+    "failed": [],
     "passed": [
-      "reduce_noise"
+      "reduce_noise",
+      "reduce_rumble"
     ]
   },
   "name": "clean_tone",

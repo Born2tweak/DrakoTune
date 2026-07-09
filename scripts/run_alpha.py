@@ -54,9 +54,14 @@ def main() -> None:
         help="Base name for output files (default: vocal)",
     )
     parser.add_argument(
+        "--legacy",
+        action="store_true",
+        help="Use the legacy adaptive chain instead of the v2 decision engine",
+    )
+    parser.add_argument(
         "--generic",
         action="store_true",
-        help="Use generic Alpha 1 chain instead of adaptive diagnosis-driven chain",
+        help="Use the generic Alpha 1 fixed chain (implies --legacy)",
     )
     parser.add_argument(
         "--force",
@@ -66,17 +71,21 @@ def main() -> None:
     parser.add_argument(
         "--plan",
         action="store_true",
-        help="Use the decision-driven v2 engine (diagnostics -> decision -> plan -> render)",
+        help="(Deprecated) v2 is now the default; kept as a no-op for compatibility",
     )
     args = parser.parse_args()
+
+    # v2 (decision-driven) is the default. Legacy paths are opt-in.
+    use_v2 = not (args.legacy or args.generic)
 
     input_path = Path(args.input)
     if not input_path.exists():
         print(f"Error: Input file not found: {input_path}")
         sys.exit(1)
 
-    print("DrakoTune Alpha 2.2 Pipeline")
-    print("============================")
+    engine = "v2 (decision-driven)" if use_v2 else ("generic" if args.generic else "legacy adaptive")
+    print(f"DrakoTune Pipeline — {engine}")
+    print("=" * 44)
     print(f"Input: {input_path}")
     print()
 
@@ -129,8 +138,8 @@ def main() -> None:
                 if r.outcome == "block":
                     print(f"        - {r.reason}")
 
-        # v2 engine (M09): decision-driven plan execution.
-        if args.plan:
+        # v2 engine (default since M19): decision-driven plan execution.
+        if use_v2:
             print()
             print("[plan] Decision-driven plan execution (v2 engine)")
             processed_path = Path(tmpdir) / "processed.wav"

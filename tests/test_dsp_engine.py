@@ -65,8 +65,14 @@ class TestExecution:
         processed, result = execute_plan(_tone(200, 0.5), SR, plan)
         assert processed.shape[0] == SR
         assert np.all(np.isfinite(processed)) and np.max(np.abs(processed)) <= 1.0
-        assert result.applied[-1].processor == "Limiter"  # output safety always last
+        assert result.applied[-1].processor == "output_ceiling"  # output safety always last
         assert result.applied[-1].objective_id == "output_safety"
+
+    def test_output_ceiling_attenuates_only_never_boosts(self):
+        quiet = _tone(200, 0.1)  # peak ~0.1, well under ceiling
+        processed, _ = execute_plan(quiet, SR, ProcessingPlan(id="p"))
+        # A makeup limiter would raise this toward full scale; a ceiling must not.
+        assert float(np.max(np.abs(processed))) <= 0.11
 
     def test_empty_plan_only_output_safety(self):
         processed, result = execute_plan(_tone(200, 0.5), SR, ProcessingPlan(id="p"))

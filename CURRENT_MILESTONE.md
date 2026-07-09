@@ -32,8 +32,13 @@ reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit
 |-----------|--------|
 | M17 — Calibration harness (calibrated confidence) | ✅ complete |
 | M18 — Real integrated LUFS (BS.1770) | ✅ complete |
-| M19 — Promote v2 decision engine to CLI default (A/B guard) | ▶️ next |
-| M20 — Batch processing | pending |
+| M19 — v2 decision engine is CLI default (A/B guard) | ✅ complete |
+| M20 — Batch processing | ▶️ next |
+
+M19 note: the A/B work found and fixed a real bug — the output-safety "limiter"
+(pedalboard, with makeup gain) was *inflating loudness* (quiet input −10→−5 dB).
+Replaced with an attenuate-only ceiling. v2 is now the default CLI engine;
+`--legacy` / `--generic` remain as fallbacks.
 
 M17 note: the harness (`python scripts/calibrate.py`) surfaced a 100%
 false-positive rate for muddiness on clean harmonic voices; fixed with an
