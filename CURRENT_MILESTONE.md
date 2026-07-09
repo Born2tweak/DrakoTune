@@ -24,9 +24,21 @@ reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit
 | M16 — Pilot readiness | ✅ complete |
 
 **Roadmap M00–M16 complete.** DrakoTune is ready for a *controlled* pilot
-(see [`docs/PILOT.md`](docs/PILOT.md)). Next work is post-M16: threshold
-calibration on real vocals, subjective listening study, and production hardening
-(accounts, rate limits, audit log) — none of which should be claimed done yet.
+(see [`docs/PILOT.md`](docs/PILOT.md)).
+
+## Adaptive post-M16 milestones (from the roadmap's Future list + flagged debts)
+
+| Milestone | Status |
+|-----------|--------|
+| M17 — Calibration harness (calibrated confidence) | ✅ complete |
+| M18 — Real integrated LUFS (BS.1770) | ▶️ next |
+| M19 — Promote v2 decision engine to CLI default (A/B guard) | pending |
+| M20 — Batch processing | pending |
+
+M17 note: the harness (`python scripts/calibrate.py`) surfaced a 100%
+false-positive rate for muddiness on clean harmonic voices; fixed with an
+evidence-based centroid gate (spectral analyzer 1.0.0 → 1.1.0), goldens
+regenerated. Still open: real-vocal calibration and a subjective listening study.
 
 The deterministic core is complete end-to-end: `--plan` runs diagnostics →
 decision → bounded DSP → evaluation → report (written to `<name>_report.md`).

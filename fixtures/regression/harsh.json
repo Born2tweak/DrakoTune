@@ -1,8 +1,7 @@
 {
   "applied_processors": [
     "NoiseGate<-obj.noise_floor",
-    "PeakFilter<-obj.harshness",
-    "PeakFilter<-obj.muddiness"
+    "PeakFilter<-obj.harshness"
   ],
   "decision": {
     "blocked_targets": [],
@@ -11,9 +10,7 @@
     "processing_allowed": true
   },
   "evaluation": {
-    "failed": [
-      "reduce_muddiness"
-    ],
+    "failed": [],
     "passed": [
       "reduce_harshness",
       "reduce_noise"
@@ -22,12 +19,11 @@
   "name": "harsh",
   "objectives": [
     "reduce_harshness",
-    "reduce_muddiness",
     "reduce_noise",
     "reduce_sibilance"
   ],
   "preflight_passed": true,
-  "report_finding_count": 5,
+  "report_finding_count": 4,
   "skipped": [
     "{\"issue\": \"sibilance\", \"reason\": \"report_only\"}"
   ]

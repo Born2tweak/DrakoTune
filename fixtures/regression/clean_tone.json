@@ -1,8 +1,7 @@
 {
   "applied_processors": [
     "HighpassFilter<-obj.rumble",
-    "NoiseGate<-obj.noise_floor",
-    "PeakFilter<-obj.muddiness"
+    "NoiseGate<-obj.noise_floor"
   ],
   "decision": {
     "blocked_targets": [],
@@ -15,17 +14,15 @@
       "reduce_rumble"
     ],
     "passed": [
-      "reduce_muddiness",
       "reduce_noise"
     ]
   },
   "name": "clean_tone",
   "objectives": [
-    "reduce_muddiness",
     "reduce_noise",
     "reduce_rumble"
   ],
   "preflight_passed": true,
-  "report_finding_count": 4,
+  "report_finding_count": 3,
   "skipped": []
 }

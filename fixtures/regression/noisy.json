@@ -1,7 +1,6 @@
 {
   "applied_processors": [
-    "NoiseGate<-obj.noise_floor",
-    "PeakFilter<-obj.muddiness"
+    "NoiseGate<-obj.noise_floor"
   ],
   "decision": {
     "blocked_targets": [],
@@ -13,18 +12,15 @@
     "failed": [
       "reduce_noise"
     ],
-    "passed": [
-      "reduce_muddiness"
-    ]
+    "passed": []
   },
   "name": "noisy",
   "objectives": [
-    "reduce_muddiness",
     "reduce_noise",
     "reduce_rumble"
   ],
   "preflight_passed": true,
-  "report_finding_count": 4,
+  "report_finding_count": 3,
   "skipped": [
     "{\"issue\": \"rumble\", \"reason\": \"report_only\"}"
   ]

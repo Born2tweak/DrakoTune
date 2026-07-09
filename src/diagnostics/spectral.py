@@ -22,7 +22,7 @@ import soundfile as sf
 
 from src.shared_types import DiagnosticResult, Interpretation, Observation
 
-SPECTRAL_ANALYZER_VERSION = "1.0.0"
+SPECTRAL_ANALYZER_VERSION = "1.1.0"
 
 # --- Named, versioned frequency bands (Hz) ---
 BANDS = {
@@ -40,6 +40,10 @@ BANDS = {
 # --- Interpretation thresholds (ratio above which an issue is hypothesized) ---
 RUMBLE_RATIO_MIN = 0.06
 MUD_RATIO_MIN = 0.60
+# Muddiness also requires a low spectral centroid: calibration (M17) showed the
+# mud_ratio alone gives a 100% false-positive rate on clean harmonic voices
+# (clean centroid ~925Hz, muddy ~413-456Hz). The centroid gate separates them.
+MUD_CENTROID_MAX = 700.0
 HARSHNESS_RATIO_MIN = 0.12
 SIBILANCE_RATIO_MIN = 0.18
 NOISE_FLOOR_DBFS_MIN = -50.0  # louder (less negative) than this -> noise hypothesis
@@ -118,6 +122,7 @@ def measure_spectral(audio: np.ndarray, sample_rate: int) -> tuple[list[Observat
             "rumble_ratio_min": RUMBLE_RATIO_MIN,
             "mud_ratio_min": MUD_RATIO_MIN,
             "harshness_ratio_min": HARSHNESS_RATIO_MIN,
+            "mud_centroid_max": MUD_CENTROID_MAX,
             "sibilance_ratio_min": SIBILANCE_RATIO_MIN,
             "noise_floor_dbfs_min": NOISE_FLOOR_DBFS_MIN,
         },
@@ -156,11 +161,19 @@ def interpret_spectral(observations: list[Observation]) -> list[Interpretation]:
         RUMBLE_RATIO_MIN, 0.10, corroborated=False, corroborating_id=None,
         rationale="Sub-80Hz energy elevated relative to full band.")
 
-    add("muddiness", "spectral.mud_ratio", by_metric["mud_ratio"].value,
-        MUD_RATIO_MIN, 0.60, corroborated=centroid < 1500,
-        corroborating_id="spectral.centroid_hz",
-        rationale="Low-mid buildup (200-500Hz) high vs clarity band"
-                  + ("; low centroid corroborates." if centroid < 1500 else "."))
+    # Muddiness requires BOTH high mud_ratio and a low centroid (evidence-based
+    # gate from M17 calibration). Low centroid is the corroborating observation.
+    mud_ratio = by_metric["mud_ratio"].value
+    if mud_ratio > MUD_RATIO_MIN and centroid < MUD_CENTROID_MAX:
+        conf = _ratio_confidence(mud_ratio, MUD_RATIO_MIN, 4.0, CORROBORATED_CAP)
+        interpretations.append(Interpretation(
+            id="interp.muddiness",
+            issue="muddiness",
+            supporting_observation_ids=("spectral.mud_ratio", "spectral.centroid_hz"),
+            confidence=conf,
+            rationale=f"Low-mid (200-500Hz) dominates and the centroid is low "
+                      f"({centroid:.0f}Hz), consistent with muddiness.",
+        ))
 
     add("harshness", "spectral.harshness_ratio", by_metric["harshness_ratio"].value,
         HARSHNESS_RATIO_MIN, 0.38, corroborated=centroid > 3000,

@@ -12,19 +12,16 @@
   "evaluation": {
     "failed": [],
     "passed": [
-      "reduce_muddiness",
       "reduce_noise"
     ]
   },
   "name": "clipped",
   "objectives": [
-    "reduce_muddiness",
     "reduce_noise"
   ],
   "preflight_passed": true,
-  "report_finding_count": 5,
+  "report_finding_count": 4,
   "skipped": [
-    "{\"issue\": \"muddiness\", \"reason\": \"enhancement_blocked\"}",
     "{\"issue\": \"noise_floor\", \"reason\": \"enhancement_blocked\"}"
   ]
 }
