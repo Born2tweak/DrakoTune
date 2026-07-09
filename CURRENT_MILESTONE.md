@@ -33,7 +33,11 @@ reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit
 | M17 — Calibration harness (calibrated confidence) | ✅ complete |
 | M18 — Real integrated LUFS (BS.1770) | ✅ complete |
 | M19 — v2 decision engine is CLI default (A/B guard) | ✅ complete |
-| M20 — Batch processing | ▶️ next |
+| M20 — Batch processing | ✅ complete |
+
+M20: `python scripts/batch.py <input_dir> --output-dir out/` processes a folder
+of vocals → per-file `before/after/report.md` + a `summary.json`/`summary.md`
+index; blocked/failed files are recorded, never fatal.
 
 M19 note: the A/B work found and fixed a real bug — the output-safety "limiter"
 (pedalboard, with makeup gain) was *inflating loudness* (quiet input −10→−5 dB).
