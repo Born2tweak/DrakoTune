@@ -17,11 +17,16 @@ reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit
 | M09 — Modular DSP plan execution (v2 engine) | ✅ complete |
 | M10 — Before/after evaluation | ✅ complete |
 | M11 — Report engine v1 | ✅ complete |
-| M12 — Web app skeleton | ▶️ next |
-| M13–M16 | pending |
+| M12 — Web app skeleton (FastAPI) | ✅ complete |
+| M13 — Private storage & security baseline | ▶️ next |
+| M14–M16 | pending |
 
 The deterministic core is complete end-to-end: `--plan` runs diagnostics →
 decision → bounded DSP → evaluation → report (written to `<name>_report.md`).
+
+Web skeleton (FastAPI, reuses the core): `pip install -e ".[web,dev]"` then
+`python -m uvicorn src.webapp.app:app --port 8000` and open http://localhost:8000
+(upload → before/after playback → report). Framework rationale: ADR 0001.
 
 The decision-driven v2 path (`--plan`) runs: diagnostics → decision → plan →
 bounded DSP execution. The legacy adaptive chain remains the default until v2 is

@@ -14,6 +14,12 @@ dependencies = [
 dev = [
     "pytest>=7.0.0",
     "scipy>=1.10.0",  # used by tests/test_diagnose.py (signal generation)
+    "httpx>=0.27.0",  # FastAPI TestClient for web tests (M12)
+]
+web = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.29.0",
+    "python-multipart>=0.0.9",  # required by FastAPI for file uploads
 ]
 
 [tool.pytest.ini_options]
