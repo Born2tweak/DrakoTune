@@ -64,10 +64,18 @@ def evaluate_arrays(
     )
     deltas["loudness_gain_db"] = loudness_gain_db
 
+    # Prefer BS.1770 LUFS for the loudness comparison when it is measurable.
+    lufs_before = before_metrics.get("integrated_lufs", -120.0)
+    lufs_after = after_metrics.get("integrated_lufs", -120.0)
+    lufs_available = lufs_before > -120.0 and lufs_after > -120.0
+    if lufs_available:
+        deltas["loudness_lufs_delta"] = round(lufs_after - lufs_before, 3)
+    loudness_change = deltas["loudness_lufs_delta"] if lufs_available else loudness_gain_db
+
     warnings: list[str] = []
     if after_metrics.get("clipping_ratio", 0.0) > OUTPUT_CLIP_WARN:
         warnings.append("output_clipping")
-    if loudness_gain_db > LOUDNESS_WARN_DB:
+    if loudness_change > LOUDNESS_WARN_DB:
         warnings.append("loudness_increase_may_bias_comparison")
     if after_metrics.get("harshness_ratio", 0.0) > before_metrics.get("harshness_ratio", 0.0) + IMPROVE_EPS:
         warnings.append("harshness_increased")

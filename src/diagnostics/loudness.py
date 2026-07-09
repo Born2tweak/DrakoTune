@@ -5,11 +5,11 @@ factor, dynamic range, and loudness consistency. Emitted as canonical
 Observations with explicit `window` ("full" vs "frame") and confidence that
 degrades when there is too little voiced material to measure reliably.
 
-LUFS note: gated BS.1770 integrated loudness (true LUFS) is intentionally NOT
-implemented here. On isolated raw vocals it is easy to misapply, and a subtly
-wrong LUFS is worse than an honest omission (Bible: never fake metrics). RMS
-loudness is provided as a documented proxy; true LUFS is a future item and, if
-added, should use an established implementation (e.g. pyloudnorm).
+LUFS: gated BS.1770-4 integrated loudness is provided via pyloudnorm (M18). It
+is emitted as `integrated_lufs` when measurable; for signals shorter than one
+400ms block, silence, or if the library is unavailable, the value is marked
+unavailable (confidence 0, `lufs_unavailable` flag) rather than faked. `rms_dbfs`
+is retained as a simple secondary measure.
 
 Silence handling: frames quieter than SILENCE_FRAME_DBFS are excluded from
 voiced dynamics stats. If fewer than MIN_VOICED_FRAMES remain, dynamics
@@ -23,15 +23,33 @@ import librosa
 import numpy as np
 import soundfile as sf
 
+try:  # BS.1770 integrated loudness (M18). Optional so the core imports without it.
+    import pyloudnorm as _pyln
+    _HAS_PYLN = True
+except Exception:  # noqa: BLE001
+    _HAS_PYLN = False
+
 from src.shared_types import DiagnosticResult, Observation, band_from_confidence
 
-LOUDNESS_ANALYZER_VERSION = "1.0.0"
+LOUDNESS_ANALYZER_VERSION = "1.1.0"
 
 RMS_FRAME_LENGTH = 2048
 RMS_HOP_LENGTH = 512
 SILENCE_FRAME_DBFS = -60.0
 MIN_VOICED_FRAMES = 5          # below this, dynamics stats are unreliable
 CONFIDENT_VOICED_FRAMES = 20   # at/above this, full confidence in dynamics
+LUFS_MIN_SECONDS = 0.4         # BS.1770 needs at least one 400ms block
+
+
+def _integrated_lufs(mono: np.ndarray, sample_rate: int) -> float | None:
+    """Gated BS.1770 integrated loudness, or None if not measurable."""
+    if not _HAS_PYLN or mono.shape[0] < int(LUFS_MIN_SECONDS * sample_rate):
+        return None
+    try:
+        value = _pyln.Meter(sample_rate).integrated_loudness(mono.astype(np.float64))
+    except Exception:  # noqa: BLE001 - pyloudnorm raises on too-short/degenerate input
+        return None
+    return float(value) if math.isfinite(value) else None
 
 
 def _dbfs(linear: float) -> float:
@@ -85,7 +103,13 @@ def measure_loudness(audio: np.ndarray, sample_rate: int) -> tuple[list[Observat
     dyn_conf = _dynamics_confidence(voiced_count)
     band = band_from_confidence(dyn_conf).value
 
+    lufs = _integrated_lufs(mono, sample_rate)
+
     observations = [
+        Observation(id="loudness.integrated_lufs", metric="integrated_lufs",
+                    value=lufs if lufs is not None else -120.0, units="LUFS", window="full",
+                    confidence=0.9 if lufs is not None else 0.0,
+                    evidence="BS.1770 gated" if lufs is not None else "unavailable (short/silent/no lib)"),
         Observation(id="loudness.rms_dbfs", metric="rms_dbfs", value=rms_dbfs,
                     units="dBFS", window="full", confidence=1.0, evidence="full-file RMS"),
         Observation(id="loudness.crest_factor_db", metric="crest_factor_db", value=crest_factor_db,
@@ -101,6 +125,8 @@ def measure_loudness(audio: np.ndarray, sample_rate: int) -> tuple[list[Observat
     flags: list[str] = []
     if voiced_count < MIN_VOICED_FRAMES:
         flags.append("insufficient_voiced_content")
+    if lufs is None:
+        flags.append("lufs_unavailable")
 
     context = {
         "analyzer_version": LOUDNESS_ANALYZER_VERSION,
@@ -110,8 +136,8 @@ def measure_loudness(audio: np.ndarray, sample_rate: int) -> tuple[list[Observat
         "silence_frame_dbfs": SILENCE_FRAME_DBFS,
         "voiced_frames": voiced_count,
         "total_frames": int(frame_rms.size),
-        "lufs_implemented": False,
-        "lufs_note": "gated BS.1770 LUFS not implemented; rms_dbfs is a proxy",
+        "lufs_implemented": _HAS_PYLN,
+        "lufs_standard": "BS.1770-4 (pyloudnorm)",
     }
     return observations, flags, context
 

@@ -31,8 +31,8 @@ reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit
 | Milestone | Status |
 |-----------|--------|
 | M17 — Calibration harness (calibrated confidence) | ✅ complete |
-| M18 — Real integrated LUFS (BS.1770) | ▶️ next |
-| M19 — Promote v2 decision engine to CLI default (A/B guard) | pending |
+| M18 — Real integrated LUFS (BS.1770) | ✅ complete |
+| M19 — Promote v2 decision engine to CLI default (A/B guard) | ▶️ next |
 | M20 — Batch processing | pending |
 
 M17 note: the harness (`python scripts/calibrate.py`) surfaced a 100%

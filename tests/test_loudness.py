@@ -74,7 +74,7 @@ class TestWindowsAndSilence:
     def test_silence_handling_documented_in_context(self):
         _, _, ctx = measure_loudness(_sine(300, 0.4), SR)
         assert ctx["silence_frame_dbfs"] == -60.0
-        assert ctx["lufs_implemented"] is False
+        assert ctx["lufs_implemented"] is True  # M18: BS.1770 LUFS now implemented
         assert "voiced_frames" in ctx
 
 
@@ -82,8 +82,28 @@ class TestIntegration:
     def test_diagnose_loudness_on_fixture(self):
         result = diagnose_loudness(str(AUDIO_DIR / "clean_tone.wav"), asset_id="clean")
         assert result.analyzer_version == LOUDNESS_ANALYZER_VERSION
-        assert len(result.observations) == 4
+        assert len(result.observations) == 5  # + integrated_lufs (M18)
 
     def test_deterministic(self):
         sig = _sine(300, 0.4)
         assert _values(measure_loudness(sig, SR)[0]) == _values(measure_loudness(sig, SR)[0])
+
+
+class TestIntegratedLUFS:
+    def test_lufs_present_and_finite(self):
+        obs, _, ctx = measure_loudness(_sine(1000, 0.5), SR)
+        vals = _values(obs)
+        assert "integrated_lufs" in vals
+        assert -60.0 < vals["integrated_lufs"] < 0.0
+        assert ctx["lufs_implemented"] is True
+
+    def test_lufs_monotonic_with_level(self):
+        quiet = _values(measure_loudness(_sine(1000, 0.05), SR)[0])["integrated_lufs"]
+        loud = _values(measure_loudness(_sine(1000, 0.5), SR)[0])["integrated_lufs"]
+        assert loud > quiet + 6
+
+    def test_lufs_unavailable_for_short_signal(self):
+        obs, flags, _ = measure_loudness(_sine(1000, 0.5, seconds=0.05), SR)
+        assert "lufs_unavailable" in flags
+        lufs_ob = next(o for o in obs if o.metric == "integrated_lufs")
+        assert lufs_ob.confidence == 0.0
