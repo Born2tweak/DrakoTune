@@ -49,6 +49,32 @@ false-positive rate for muddiness on clean harmonic voices; fixed with an
 evidence-based centroid gate (spectral analyzer 1.0.0 → 1.1.0), goldens
 regenerated. Still open: real-vocal calibration and a subjective listening study.
 
+## Next phase: evidence layer (M21+)
+
+**Canonical M21+ roadmap:**
+[`docs/implementation/DRAKOTUNE_MASTER_EXECUTION_ROADMAP.md`](docs/implementation/DRAKOTUNE_MASTER_EXECUTION_ROADMAP.md)
+(derived from the post-research audit
+[`docs/audit/DRAKOTUNE_POST_DATASET_RESEARCH_AUDIT.md`](docs/audit/DRAKOTUNE_POST_DATASET_RESEARCH_AUDIT.md)
+and the dataset research
+[`docs/research/PUBLIC_VOCAL_AUDIO_DATASET_RESEARCH.md`](docs/research/PUBLIC_VOCAL_AUDIO_DATASET_RESEARCH.md)).
+
+| Milestone | Status |
+|-----------|--------|
+| M21 — Dataset governance & evidence scaffolding | 🔜 next — see [`docs/implementation/NEXT_EXECUTION_PACKAGE.md`](docs/implementation/NEXT_EXECUTION_PACKAGE.md) |
+| M22 — Evaluation corpus v1 + synthetic degradation library | planned |
+| M23 — Evaluation harness v2 (loudness-matched A/B, SI-SDR, per-defect benchmark) | planned |
+| M24 — Blinded listening test v1 (**alpha verdict**) | planned |
+| M25 — Diagnosis calibration v2 (graded severities; new diagnoses advisory-only) | planned (∥ M24) |
+| M26 — Evidence-driven DSP tuning + do-no-harm CI gates | gated on M24+M25 |
+| M27 — Report & product-experience upgrade | gated on M24 |
+| M28 — Expanded processors (de-esser first; each individually gated) | gated on M26 |
+| M29 — Genre coverage & proprietary mini-corpus (consent protocol first) | gated |
+
+Standing constraints: no new processors, no threshold tuning, no frontend
+rebuild, no ML, no data collection before their gates (ADR 0002–0004,
+`docs/RISK_REGISTER.md`, `docs/data/DATASET_GOVERNANCE.md`,
+`docs/validation/DRAKOTUNE_ALPHA_VALIDATION_PLAN.md`).
+
 The deterministic core is complete end-to-end: `--plan` runs diagnostics →
 decision → bounded DSP → evaluation → report (written to `<name>_report.md`).
 

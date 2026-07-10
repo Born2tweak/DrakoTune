@@ -1,0 +1,7 @@
+# ADR 0003 — Dataset governance: tiered licensing with manual approval gates
+
+- **Status:** accepted (2026-07-10)
+- **Context:** the public dataset research (`docs/research/PUBLIC_VOCAL_AUDIO_DATASET_RESEARCH.md` §28) shows licensing, not availability, is the binding constraint: nearly all singing/music datasets are research-/education-only; only a handful (VocalSet, Vocadito, VoiceBank-DEMAND, MUSAN, OpenSLR RIRs) are commercially usable. One committed restricted file poisons git history permanently.
+- **Decision:** adopt the five-tier policy in `docs/data/DATASET_GOVERNANCE.md` (A commercially-usable / B research-only / C permission-required / D excluded / P proprietary), classified by the most restrictive component used. Manifests + attribution ledger committed; raw audio never committed; CI fixtures Tier A or synthetic only; all registration/click-through/agreement steps are **human-performed manual checkpoints** — no automation may accept a license. Published product claims rest on Tier A + Tier P evidence unless legal review clears otherwise. Clinical voice datasets are Tier D permanently (no medical positioning).
+- **Consequences:** slightly slower data acquisition (human gates); complete provenance; benchmark results over Tier B data usable internally and in papers but not as commercial marketing evidence without review.
+- **Superseded if:** legal counsel establishes a different internal-R&D posture for NC-licensed data.
