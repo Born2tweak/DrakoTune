@@ -61,7 +61,7 @@ and the dataset research
 | Milestone | Status |
 |-----------|--------|
 | M21 — Dataset governance & evidence scaffolding | ✅ complete |
-| M22 — Evaluation corpus v1 + synthetic degradation library | 🔜 next |
+| M22 — Evaluation corpus v1 + synthetic degradation library | 🟡 in progress — part 1 (degradation library) complete; corpus downloads **blocked on human checkpoints** |
 | M23 — Evaluation harness v2 (loudness-matched A/B, SI-SDR, per-defect benchmark) | planned |
 | M24 — Blinded listening test v1 (**alpha verdict**) | planned |
 | M25 — Diagnosis calibration v2 (graded severities; new diagnoses advisory-only) | planned (∥ M24) |
@@ -77,6 +77,20 @@ git-index guards (no audio outside `fixtures/`, no tracked file > 1 MB).
 Evidence: 261 tests pass (8 new), audio regression 6/6 — no behavior change.
 Manual checkpoints before M22 downloads: DAMP email agreement, Zenodo requests,
 SingVERSE HF license read (governance §4).
+
+M22 part 1 note: seeded degradation recipe library (`fixtures/degradations.py`,
+v1.0.0) implementing the validation-plan grid — 9 families (noise×3 kinds, hum,
+clipping, reverb via synthetic seeded IRs, harshness, sibilance, proximity,
+low_level, codec), 24 recipes, bit-exact regeneration guaranteed for all
+non-codec families. Evidence: 271 tests pass (10 new), audio regression 6/6.
+**M22 remainder requires human action before any agent may proceed:**
+1. VocalSet + vocadito + VoiceBank-DEMAND + MUSAN + OpenSLR-28: direct downloads
+   (a human runs them; place under `data/local/<id>/`, fill `checksum`,
+   `local_path`, `last_verified` in the manifest).
+2. SingVERSE: read the HF license field, record it in `data/manifests/singverse.json`.
+3. DAMP: email damp-edu@smule.com, sign agreement, store in `data/licenses/`.
+Then: `scripts/build_corpus.py` (slice/convert + corpus manifest + CI fixture
+selection) completes M22.
 
 Standing constraints: no new processors, no threshold tuning, no frontend
 rebuild, no ML, no data collection before their gates (ADR 0002–0004,
