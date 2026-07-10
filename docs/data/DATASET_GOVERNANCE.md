@@ -3,6 +3,8 @@
 > Policy for acquiring, storing, using, and citing audio datasets.
 > Source analysis: `docs/research/PUBLIC_VOCAL_AUDIO_DATASET_RESEARCH.md` (§28).
 > Status: adopted 2026-07-10 (ADR 0003). Applies to all agents and contributors.
+> Enforced by `tests/test_data_governance.py` since M21 (schema:
+> `src/data_governance/manifest.py`, manifests: `data/manifests/`).
 
 ## 1. Usage tiers
 

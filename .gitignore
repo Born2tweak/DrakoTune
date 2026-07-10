@@ -30,6 +30,12 @@ htmlcov/
 # Audio output artifacts (large binaries)
 output/*.wav
 
+# Dataset governance (docs/data/DATASET_GOVERNANCE.md): raw/restricted/derived
+# audio never enters git; only data/manifests/ and data/licenses/ are tracked.
+data/local/
+data/restricted/
+data/derived/
+
 # CI regression artifacts (written on failure)
 artifacts/
 

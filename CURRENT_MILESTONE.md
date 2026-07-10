@@ -60,8 +60,8 @@ and the dataset research
 
 | Milestone | Status |
 |-----------|--------|
-| M21 — Dataset governance & evidence scaffolding | 🔜 next — see [`docs/implementation/NEXT_EXECUTION_PACKAGE.md`](docs/implementation/NEXT_EXECUTION_PACKAGE.md) |
-| M22 — Evaluation corpus v1 + synthetic degradation library | planned |
+| M21 — Dataset governance & evidence scaffolding | ✅ complete |
+| M22 — Evaluation corpus v1 + synthetic degradation library | 🔜 next |
 | M23 — Evaluation harness v2 (loudness-matched A/B, SI-SDR, per-defect benchmark) | planned |
 | M24 — Blinded listening test v1 (**alpha verdict**) | planned |
 | M25 — Diagnosis calibration v2 (graded severities; new diagnoses advisory-only) | planned (∥ M24) |
@@ -69,6 +69,14 @@ and the dataset research
 | M27 — Report & product-experience upgrade | gated on M24 |
 | M28 — Expanded processors (de-esser first; each individually gated) | gated on M26 |
 | M29 — Genre coverage & proprietary mini-corpus (consent protocol first) | gated |
+
+M21 note: manifest schema v1.0.0 + validator (`src/data_governance/`), 8 dataset
+manifests (5×Tier A, 2×Tier B, 1×Tier C — metadata only, nothing downloaded),
+attribution ledger, gitignore rules for `data/{local,restricted,derived}/`, and
+git-index guards (no audio outside `fixtures/`, no tracked file > 1 MB).
+Evidence: 261 tests pass (8 new), audio regression 6/6 — no behavior change.
+Manual checkpoints before M22 downloads: DAMP email agreement, Zenodo requests,
+SingVERSE HF license read (governance §4).
 
 Standing constraints: no new processors, no threshold tuning, no frontend
 rebuild, no ML, no data collection before their gates (ADR 0002–0004,
