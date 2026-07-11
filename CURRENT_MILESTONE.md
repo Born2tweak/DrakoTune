@@ -61,8 +61,8 @@ and the dataset research
 | Milestone | Status |
 |-----------|--------|
 | M21 — Dataset governance & evidence scaffolding | ✅ complete |
-| M22 — Evaluation corpus v1 + synthetic degradation library | 🟡 in progress — part 1 (degradation library) complete; corpus downloads **blocked on human checkpoints** |
-| M23 — Evaluation harness v2 (loudness-matched A/B, SI-SDR, per-defect benchmark) | planned |
+| M22 — Evaluation corpus v1 + synthetic degradation library | ✅ complete |
+| M23 — Evaluation harness v2 (loudness-matched A/B, SI-SDR, per-defect benchmark) | 🔜 next |
 | M24 — Blinded listening test v1 (**alpha verdict**) | planned |
 | M25 — Diagnosis calibration v2 (graded severities; new diagnoses advisory-only) | planned (∥ M24) |
 | M26 — Evidence-driven DSP tuning + do-no-harm CI gates | gated on M24+M25 |
@@ -83,14 +83,26 @@ v1.0.0) implementing the validation-plan grid — 9 families (noise×3 kinds, hu
 clipping, reverb via synthetic seeded IRs, harshness, sibilance, proximity,
 low_level, codec), 24 recipes, bit-exact regeneration guaranteed for all
 non-codec families. Evidence: 271 tests pass (10 new), audio regression 6/6.
-**M22 remainder requires human action before any agent may proceed:**
-1. VocalSet + vocadito + VoiceBank-DEMAND + MUSAN + OpenSLR-28: direct downloads
-   (a human runs them; place under `data/local/<id>/`, fill `checksum`,
-   `local_path`, `last_verified` in the manifest).
-2. SingVERSE: read the HF license field, record it in `data/manifests/singverse.json`.
-3. DAMP: email damp-edu@smule.com, sign agreement, store in `data/licenses/`.
-Then: `scripts/build_corpus.py` (slice/convert + corpus manifest + CI fixture
-selection) completes M22.
+M22 part 2 note (corpus-v1 built): human downloaded VocalSet + vocadito
+(sha256 recorded in manifests; extracted to `data/local/`). The grid is **27
+recipes** (part-1 commit message said 24 — corrected here).
+`python scripts/build_corpus.py --ci-fixtures` → **80 clean clips** (40
+VocalSet across all 20 singers × 2 techniques + 40 vocadito), normalized to
+−23 LUFS, **160 degraded pairs** (round-robin; every recipe covered; `--full-grid`
+available), frozen in `data/corpus/corpus-v1.json` (digests committed; audio
+regenerable, gitignored). 3 Tier A CI fixtures in `fixtures/audio_real/` (≤1 MB
+each, attributed). Evidence: 278 tests pass (7 new), audio regression 6/6.
+
+Still-open manual checkpoints (optional extensions, not blockers):
+- VoiceBank-DEMAND + MUSAN + OpenSLR-28: not yet downloaded (paired-speech
+  control + real noise beds/IRs would upgrade the synthetic families).
+- SingVERSE: read HF license, record in manifest, then download (real
+  degraded/clean singing pairs — the strongest external validation set).
+- DAMP: email agreement (real amateur recordings).
+- LibriSpeech (~62 GB) was downloaded to `Downloads/` but is **not used**: it
+  has no clean/noisy pairs and corpus-v1 needs none of it; it may be deleted
+  or kept for future work. A 67 GB `Unconfirmed 736357.crdownload` in
+  `Downloads/` is an incomplete browser download (unidentified).
 
 Standing constraints: no new processors, no threshold tuning, no frontend
 rebuild, no ML, no data collection before their gates (ADR 0002–0004,

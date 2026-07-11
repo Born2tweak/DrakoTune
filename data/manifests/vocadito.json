@@ -1,9 +1,11 @@
 {
   "version": "1.0.0",
-  "checksum": null,
-  "local_path": null,
-  "preprocessing": null,
-  "derived_fixtures": [],
+  "checksum": "e0d6b99d3f9c594afe5ae5c4d7bdacebe569e53b809e90b89d1c771c4f9990e3",
+  "local_path": "data/local/vocadito",
+  "preprocessing": "extracted from vocadito.zip (Zenodo 5557945), __MACOSX junk skipped",
+  "derived_fixtures": [
+    "fixtures/audio_real/vocadito_1.wav"
+  ],
   "bit_depth": null,
   "last_verified": "2026-07-10",
   "id": "vocadito",

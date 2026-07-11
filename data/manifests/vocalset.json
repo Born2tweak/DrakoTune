@@ -1,9 +1,12 @@
 {
   "version": "1.0.0",
-  "checksum": null,
-  "local_path": null,
-  "preprocessing": null,
-  "derived_fixtures": [],
+  "checksum": "2bf96b80abe57a23323fd8c78be8cb70503e35995e6bae94a6067197c88a61ae",
+  "local_path": "data/local/vocalset",
+  "preprocessing": "extracted from VocalSet.zip (Zenodo 1193957), __MACOSX junk skipped",
+  "derived_fixtures": [
+    "fixtures/audio_real/vocalset_female1_straight.wav",
+    "fixtures/audio_real/vocalset_female1_vibrato.wav"
+  ],
   "bit_depth": null,
   "last_verified": "2026-07-10",
   "id": "vocalset",
@@ -17,7 +20,7 @@
   "registration_required": false,
   "attribution_text": "Wilkins, Seetharaman, Wahl, Pardo: 'VocalSet: A Singing Voice Dataset' (ISMIR 2018), CC BY 4.0, Zenodo 10.5281/zenodo.1193957",
   "download_method": "direct",
-  "file_count": null,
+  "file_count": 3613,
   "duration_hours": 10.1,
   "sample_rate": 44100,
   "channels": 1,
