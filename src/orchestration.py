@@ -15,6 +15,7 @@ from dataclasses import dataclass
 
 from src.decision import build_plan, evaluate_safety
 from src.decision.records import SafetyDecision
+from src.diagnostics.advisory import diagnose_advisory, promoted_hum_interpretation
 from src.diagnostics import diagnose_loudness, diagnose_safety, diagnose_spectral
 from src.shared_types import DiagnosticResult, Interpretation, ProcessingPlan
 
@@ -29,6 +30,8 @@ class PlanBundle:
     loudness: DiagnosticResult
     spectral: DiagnosticResult
     interpretations: tuple[Interpretation, ...]
+    advisory: DiagnosticResult | None = None
+    advisory_interpretations: tuple[Interpretation, ...] = ()
 
 
 def analyze_and_plan(audio_path: str, preflight_report=None, asset_id: str = "input") -> PlanBundle:
@@ -37,12 +40,22 @@ def analyze_and_plan(audio_path: str, preflight_report=None, asset_id: str = "in
     loudness = diagnose_loudness(audio_path, asset_id=asset_id)
     spectral, interpretations = diagnose_spectral(audio_path, asset_id=asset_id)
 
+    # M28: advisory diagnoses run here too; only the strictly gated
+    # hum_confirmed promotion may enter the plan (advisory issues are
+    # spec-less and can never produce actions).
+    advisory_result, advisory_interps = diagnose_advisory(audio_path, asset_id=asset_id)
+    plan_inputs = list(interpretations)
+    hum_confirmed = promoted_hum_interpretation(list(advisory_result.observations))
+    if hum_confirmed is not None:
+        plan_inputs.append(hum_confirmed)
+
     decision = evaluate_safety(preflight_report, safety)
     plan = build_plan(
-        list(interpretations),
+        plan_inputs,
         decision,
         loudness_observations=list(loudness.observations),
         spectral_observations=list(spectral.observations),
+        advisory_observations=list(advisory_result.observations),
     )
     return PlanBundle(
         plan=plan,
@@ -51,4 +64,6 @@ def analyze_and_plan(audio_path: str, preflight_report=None, asset_id: str = "in
         loudness=loudness,
         spectral=spectral,
         interpretations=interpretations,
+        advisory=advisory_result,
+        advisory_interpretations=advisory_interps,
     )

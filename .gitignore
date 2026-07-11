@@ -35,6 +35,9 @@ output/*.wav
 data/local/
 data/restricted/
 data/derived/
+# Artist consent forms contain PII: only the index is tracked (Tier P).
+data/licenses/artist/*
+!data/licenses/artist/INDEX.md
 
 # CI regression artifacts (written on failure)
 artifacts/

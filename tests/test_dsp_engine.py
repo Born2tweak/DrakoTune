@@ -24,6 +24,7 @@ _VALID_PARAMS = {
     "Compressor": {"threshold_db": -18.0, "ratio": 3.0, "attack_ms": 15.0, "release_ms": 75.0},
     "NoiseGate": {"threshold_db": -42.0, "attack_ms": 1.0, "release_ms": 250.0},
     "Limiter": {"threshold_db": -1.0, "release_ms": 250.0},
+    "HumNotch": {"base_hz": 60.0, "gain_db": -12.0, "q": 8.0, "harmonics": 3},
 }
 
 

@@ -20,6 +20,7 @@ from pedalboard import (
     Limiter,
     NoiseGate,
     PeakFilter,
+    Pedalboard,
 )
 
 PROCESSOR_ENGINE_VERSION = "1.0.0"
@@ -76,6 +77,21 @@ PROCESSORS: dict[str, ProcessorSpec] = {
         {"threshold_db": (-12.0, 0.0), "release_ms": (10.0, 1000.0)},
         "low", True,
         lambda p: Limiter(**p),
+    ),
+    # M28: narrow notches at the mains base + harmonics. Only reachable via
+    # the strictly gated "hum_confirmed" interpretation (0% clean FP on
+    # corpus-v1); a false trigger at 120/180 Hz could hit a vocal fundamental,
+    # hence the high-Q, bounded-depth, max-3-harmonics design.
+    "HumNotch": ProcessorSpec(
+        "HumNotch", "reduce_hum",
+        {"base_hz": (45.0, 65.0), "gain_db": (-15.0, -3.0),
+         "q": (4.0, 12.0), "harmonics": (1, 3)},
+        "medium", True,
+        lambda p: Pedalboard([
+            PeakFilter(cutoff_frequency_hz=p["base_hz"] * k,
+                       gain_db=p["gain_db"], q=p["q"])
+            for k in range(1, int(p["harmonics"]) + 1)
+        ]),
     ),
 }
 

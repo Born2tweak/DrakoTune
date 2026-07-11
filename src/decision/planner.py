@@ -65,6 +65,11 @@ _ISSUE_SPECS: dict[str, _Spec] = {
                        lambda s: {"cutoff_frequency_hz": 6500.0, "gain_db": round(-3.5 * s, 2), "q": 3.5}),
     "noise_floor": _Spec("reduce_noise", "NoiseGate", 30, True,
                          lambda s: {"threshold_db": -42.0, "attack_ms": 1.0, "release_ms": 250.0}),
+    # M28: only the strictly gated hum_confirmed interpretation maps here
+    # (advisory "hum" stays spec-less). base_hz is filled from the advisory
+    # observation in build_plan.
+    "hum_confirmed": _Spec("reduce_hum", "HumNotch", 15, True,
+                           lambda s: {"gain_db": round(-12.0 * s, 2), "q": 8.0, "harmonics": 3}),
     "dynamics": _Spec("stabilize_dynamics", "Compressor", 40, False,
                       lambda s: {"threshold_db": round(-18.0 - 2.0 * s, 2),
                                  "ratio": round(2.5 + 1.0 * s, 2), "attack_ms": 15.0, "release_ms": 75.0}),
@@ -90,6 +95,7 @@ def build_plan(
     loudness_observations: list[Observation] | None = None,
     spectral_observations: list[Observation] | None = None,
     preset_profile: str = "adaptive",
+    advisory_observations: list[Observation] | None = None,
 ) -> ProcessingPlan:
     """Build a confidence-gated, conflict-resolved ProcessingPlan. Renders no audio."""
     issues = list(interpretations)
@@ -136,10 +142,16 @@ def build_plan(
             continue
 
         strength = STRENGTH_BY_BAND[band]
+        parameters = spec.build(strength)
+        if interp.issue == "hum_confirmed":
+            parameters["base_hz"] = next(
+                (o.value for o in (advisory_observations or []) if o.metric == "hum_base_hz"),
+                60.0,
+            )
         actions.append((spec.order, ProcessingAction(
             id=f"act.{interp.issue}",
             processor=spec.processor,
-            parameters=spec.build(strength),
+            parameters=parameters,
             strength=strength,
             reason=f"{interp.issue} ({band.value} confidence {interp.confidence:.2f}); "
                    f"{'conservative' if band == ConfidenceBand.MEDIUM else 'standard'} move.",

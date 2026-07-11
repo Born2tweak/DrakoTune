@@ -39,6 +39,14 @@ HUM_ABS_ENERGY_FRAC = 1e-8     # harmonic peak must carry this fraction of total
                                # energy — empty bins otherwise produce spurious
                                # contrast (numeric noise / numeric noise)
 
+# Promotion gate (M28): a strictly gated "hum_confirmed" interpretation may
+# control the HumNotch processor. Corpus-v1 evidence: count>=4 & contrast>=100
+# -> 0.0% FP on 80 clean real-vocal clips, 100% recall on moderate/strong hum
+# (mild hum intentionally stays advisory-only). The plain advisory "hum" issue
+# remains spec-less in the planner and can never produce actions.
+HUM_CONTROL_COUNT_MIN = 4
+HUM_CONTROL_CONTRAST_MIN = 100.0
+
 # recording level (policy window for a raw vocal handed to processing)
 LEVEL_LOW_LUFS = -30.0
 LEVEL_HIGH_LUFS = -10.0
@@ -103,6 +111,9 @@ def measure_advisory(audio: np.ndarray, sample_rate: int) -> tuple[list[Observat
     observations.append(Observation(
         id="advisory.hum_contrast", metric="hum_contrast", value=best_contrast, units="ratio",
         confidence=0.8, evidence="median peak/local-ring contrast across harmonics"))
+    observations.append(Observation(
+        id="advisory.hum_base_hz", metric="hum_base_hz", value=float(best_base), units="Hz",
+        confidence=0.8, evidence="mains base with strongest harmonic contrast"))
 
     # --- recording level ---
     try:
@@ -215,6 +226,30 @@ def interpret_advisory(observations: list[Observation]) -> list[Interpretation]:
             supporting_observation_ids=("advisory.plosive_rate",), confidence=0.55,
             rationale=f"{plosive_rate:.1f} low-frequency transient bursts/min."))
     return out
+
+
+def promoted_hum_interpretation(observations: list[Observation]) -> Interpretation | None:
+    """Strictly gated hum confirmation that MAY control the HumNotch processor.
+
+    Distinct issue name ("hum_confirmed") so the plain advisory "hum" can never
+    reach DSP. Gate calibrated on corpus-v1: 0% clean FP, 100% moderate/strong
+    recall (see module constants).
+    """
+    by = {o.metric: o for o in observations}
+    if not by:
+        return None
+    count = by["hum_harmonic_count"].value
+    contrast = by["hum_contrast"].value
+    if count >= HUM_CONTROL_COUNT_MIN and contrast >= HUM_CONTROL_CONTRAST_MIN:
+        return Interpretation(
+            id="interp.hum_confirmed", issue="hum_confirmed",
+            supporting_observation_ids=("advisory.hum_harmonic_count",
+                                        "advisory.hum_contrast", "advisory.hum_base_hz"),
+            confidence=0.85,
+            rationale=f"{count:.0f}/{HUM_HARMONICS} mains harmonics with contrast "
+                      f"{contrast:.0f}x (gate: >= {HUM_CONTROL_COUNT_MIN} harmonics, "
+                      f">= {HUM_CONTROL_CONTRAST_MIN:.0f}x; 0% clean FP on corpus-v1).")
+    return None
 
 
 def diagnose_advisory(

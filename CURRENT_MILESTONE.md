@@ -62,13 +62,27 @@ and the dataset research
 |-----------|--------|
 | M21 — Dataset governance & evidence scaffolding | ✅ complete |
 | M22 — Evaluation corpus v1 + synthetic degradation library | ✅ complete |
-| M23 — Evaluation harness v2 (loudness-matched A/B, SI-SDR, per-defect benchmark) | 🔜 next |
-| M24 — Blinded listening test v1 (**alpha verdict**) | planned |
-| M25 — Diagnosis calibration v2 (graded severities; new diagnoses advisory-only) | planned (∥ M24) |
-| M26 — Evidence-driven DSP tuning + do-no-harm CI gates | gated on M24+M25 |
-| M27 — Report & product-experience upgrade | gated on M24 |
-| M28 — Expanded processors (de-esser first; each individually gated) | gated on M26 |
-| M29 — Genre coverage & proprietary mini-corpus (consent protocol first) | gated |
+| M23 — Evaluation harness v2 (loudness-matched A/B, SI-SDR, per-defect benchmark) | ✅ complete |
+| M24 — Blinded listening test v1 (**alpha verdict**) | 🟡 tooling complete; **awaiting ≥8 human listeners** (session prepared under `data/derived/listening/`) |
+| M25 — Diagnosis calibration v2 (graded severities; advisory diagnoses) | ✅ complete |
+| M26 — Evidence-based diagnosis recalibration + do-no-harm CI gates | ✅ complete (spectral 1.2.0) |
+| M27 — Report engine v2 + loudness-matched web previews | ✅ complete |
+| M28 — First gated processor: HumNotch (objective evidence; perceptual confirmation pending M24) | ✅ complete |
+| M29 — Genre coverage & proprietary mini-corpus | 🟡 consent protocol DRAFTED (`docs/data/ARTIST_CONSENT_PROTOCOL.md`) — **blocked on human/legal approval** |
+
+Evidence chain (all committed under `reports/evaluations/corpus-v1/`):
+M23 benchmark (480 runs) → M25 confusion matrices → M26 recalibration
+(rumble FP 57.5%→2.5%; sibilance recall 0%→50% strong; harshness strong
+33%→67%; ΔSI-SDR improved in 15/21 cells, low_level/moderate −19→0 dB) →
+M28 HumNotch behind a 0%-clean-FP promotion gate (hum_confirmed:
+≥4 harmonics @ ≥100× contrast; advisory "hum" remains spec-less).
+
+**Open human gates:** (1) M24 listeners — the alpha verdict and every
+perceptual claim wait on this; (2) M29 consent-protocol legal approval;
+(3) optional corpus upgrades (VoiceBank-DEMAND/MUSAN/OpenSLR-28 downloads,
+SingVERSE license read, DAMP agreement).
+De-esser remains **deferred** until M24 shows a sibilance failure mode
+(sibilance detection itself only reaches 50% strong-recall — detector first).
 
 M21 note: manifest schema v1.0.0 + validator (`src/data_governance/`), 8 dataset
 manifests (5×Tier A, 2×Tier B, 1×Tier C — metadata only, nothing downloaded),
