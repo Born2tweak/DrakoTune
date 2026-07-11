@@ -1,0 +1,251 @@
+{
+  "calibration_version": "2.0.0",
+  "corpus_version": "corpus-v1",
+  "clean_clip_count": 80,
+  "false_positive_rates": {
+    "clipping": 0.0,
+    "harshness": 0.025,
+    "hum": 0.212,
+    "muddiness": 0.0,
+    "noise_floor": 0.225,
+    "plosives": 0.487,
+    "recording_level_high": 0.0,
+    "recording_level_low": 0.025,
+    "reverb": 0.412,
+    "rumble": 0.575,
+    "sibilance": 0.0
+  },
+  "recall": [
+    {
+      "family": "clipping",
+      "severity": "mild",
+      "hits": 6,
+      "n": 6,
+      "recall": 1.0
+    },
+    {
+      "family": "clipping",
+      "severity": "moderate",
+      "hits": 6,
+      "n": 6,
+      "recall": 1.0
+    },
+    {
+      "family": "clipping",
+      "severity": "strong",
+      "hits": 6,
+      "n": 6,
+      "recall": 1.0
+    },
+    {
+      "family": "codec",
+      "severity": "moderate",
+      "hits": 0,
+      "n": 5,
+      "recall": 0.0
+    },
+    {
+      "family": "codec",
+      "severity": "strong",
+      "hits": 0,
+      "n": 5,
+      "recall": 0.0
+    },
+    {
+      "family": "harshness",
+      "severity": "moderate",
+      "hits": 1,
+      "n": 6,
+      "recall": 0.167
+    },
+    {
+      "family": "harshness",
+      "severity": "strong",
+      "hits": 2,
+      "n": 6,
+      "recall": 0.333
+    },
+    {
+      "family": "hum",
+      "severity": "mild",
+      "hits": 6,
+      "n": 6,
+      "recall": 1.0
+    },
+    {
+      "family": "hum",
+      "severity": "moderate",
+      "hits": 6,
+      "n": 6,
+      "recall": 1.0
+    },
+    {
+      "family": "hum",
+      "severity": "strong",
+      "hits": 6,
+      "n": 6,
+      "recall": 1.0
+    },
+    {
+      "family": "low_level",
+      "severity": "moderate",
+      "hits": 6,
+      "n": 6,
+      "recall": 1.0
+    },
+    {
+      "family": "low_level",
+      "severity": "strong",
+      "hits": 6,
+      "n": 6,
+      "recall": 1.0
+    },
+    {
+      "family": "noise",
+      "severity": "mild",
+      "hits": 16,
+      "n": 18,
+      "recall": 0.889
+    },
+    {
+      "family": "noise",
+      "severity": "moderate",
+      "hits": 18,
+      "n": 18,
+      "recall": 1.0
+    },
+    {
+      "family": "noise",
+      "severity": "strong",
+      "hits": 18,
+      "n": 18,
+      "recall": 1.0
+    },
+    {
+      "family": "proximity",
+      "severity": "moderate",
+      "hits": 6,
+      "n": 6,
+      "recall": 1.0
+    },
+    {
+      "family": "reverb",
+      "severity": "mild",
+      "hits": 2,
+      "n": 6,
+      "recall": 0.333
+    },
+    {
+      "family": "reverb",
+      "severity": "moderate",
+      "hits": 1,
+      "n": 6,
+      "recall": 0.167
+    },
+    {
+      "family": "reverb",
+      "severity": "strong",
+      "hits": 0,
+      "n": 6,
+      "recall": 0.0
+    },
+    {
+      "family": "sibilance",
+      "severity": "moderate",
+      "hits": 0,
+      "n": 6,
+      "recall": 0.0
+    },
+    {
+      "family": "sibilance",
+      "severity": "strong",
+      "hits": 0,
+      "n": 6,
+      "recall": 0.0
+    }
+  ],
+  "detection_matrix": {
+    "clipping": {
+      "rumble": 17,
+      "reverb": 9,
+      "noise_floor": 18,
+      "plosives": 9,
+      "clipping": 18,
+      "recording_level_high": 13,
+      "hum": 2
+    },
+    "codec": {
+      "plosives": 5,
+      "rumble": 5,
+      "reverb": 4,
+      "noise_floor": 3
+    },
+    "harshness": {
+      "rumble": 10,
+      "plosives": 9,
+      "reverb": 2,
+      "hum": 4,
+      "harshness": 3,
+      "noise_floor": 3
+    },
+    "hum": {
+      "hum": 18,
+      "rumble": 18,
+      "noise_floor": 18,
+      "plosives": 5,
+      "muddiness": 1
+    },
+    "low_level": {
+      "rumble": 5,
+      "recording_level_low": 12,
+      "reverb": 5,
+      "plosives": 4,
+      "harshness": 1,
+      "hum": 3
+    },
+    "noise": {
+      "rumble": 54,
+      "reverb": 36,
+      "noise_floor": 52,
+      "plosives": 18,
+      "hum": 2,
+      "recording_level_low": 2
+    },
+    "proximity": {
+      "plosives": 6,
+      "rumble": 6,
+      "noise_floor": 3,
+      "harshness": 1,
+      "reverb": 1,
+      "hum": 2
+    },
+    "reverb": {
+      "rumble": 10,
+      "hum": 9,
+      "plosives": 11,
+      "noise_floor": 7,
+      "recording_level_low": 2,
+      "reverb": 3
+    },
+    "sibilance": {
+      "plosives": 4,
+      "rumble": 8,
+      "reverb": 6,
+      "harshness": 1,
+      "noise_floor": 3,
+      "hum": 1
+    }
+  },
+  "family_counts": {
+    "codec": 10,
+    "noise": 54,
+    "hum": 18,
+    "clipping": 18,
+    "reverb": 18,
+    "harshness": 12,
+    "sibilance": 12,
+    "proximity": 6,
+    "low_level": 12
+  },
+  "note": "Ground truth = synthetic degradation recipes; real-vocal validity requires human evidence (M24). Advisory issues never control DSP."
+}

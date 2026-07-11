@@ -26,19 +26,28 @@ from src.shared_types import DiagnosticResult, Interpretation, Observation
 
 ADVISORY_ANALYZER_VERSION = "1.0.0"
 
-# hum
+# hum: a true mains hum is a narrow spectral spike that stands out from its
+# immediate spectral neighborhood at multiple harmonics. Contrast against the
+# local ring (not a global median — sparse harmonic voices make medians ~0).
 HUM_BASES_HZ = (50.0, 60.0)
 HUM_HARMONICS = 4
 HUM_TOLERANCE_HZ = 2.0
-HUM_RATIO_MIN = 6.0            # hum-bin energy vs 30-300 Hz median energy
+HUM_RING_HZ = (5.0, 20.0)      # ring around each harmonic used as local floor
+HUM_CONTRAST_MIN = 20.0        # peak/ring contrast for one harmonic to count
+HUM_HARMONICS_MIN = 2          # >= this many contrasting harmonics -> hum
+HUM_ABS_ENERGY_FRAC = 1e-8     # harmonic peak must carry this fraction of total
+                               # energy — empty bins otherwise produce spurious
+                               # contrast (numeric noise / numeric noise)
 
 # recording level (policy window for a raw vocal handed to processing)
 LEVEL_LOW_LUFS = -30.0
 LEVEL_HIGH_LUFS = -10.0
 
-# reverb (experimental)
-REVERB_FLOOR_RATIO_MIN = 0.10  # 20th-pct envelope vs 95th-pct envelope
-REVERB_DECAY_DB_PER_S_MAX = 60.0  # slower decay than this after peaks -> tail suspected
+# reverb (experimental): elevated inter-phrase floor with a decay rate in the
+# "tail" band. Near-constant floors (hum, steady noise) decay slower than
+# REVERB_DECAY_RANGE[0]; dry phrase endings decay faster than [1].
+REVERB_FLOOR_RATIO_MIN = 0.05  # 20th-pct envelope vs 95th-pct envelope
+REVERB_DECAY_RANGE_DB_PER_S = (10.0, 60.0)
 
 # plosives
 PLOSIVE_BAND_HZ = (30.0, 150.0)
@@ -66,21 +75,34 @@ def measure_advisory(audio: np.ndarray, sample_rate: int) -> tuple[list[Observat
     # --- hum ---
     spectrum = np.abs(np.fft.rfft(mono.astype(np.float64))) ** 2
     freqs = np.fft.rfftfreq(len(mono), 1.0 / sample_rate)
-    region = spectrum[(freqs >= 30.0) & (freqs <= 300.0)]
-    region_median = float(np.median(region)) + 1e-20
-    best_base, best_ratio = None, 0.0
+    total_energy = float(np.sum(spectrum)) + 1e-20
+    best_base, best_count, best_contrast = HUM_BASES_HZ[0], 0, 0.0
     for base in HUM_BASES_HZ:
-        energy = 0.0
+        contrasts = []
         for k in range(1, HUM_HARMONICS + 1):
-            mask = np.abs(freqs - base * k) <= HUM_TOLERANCE_HZ
-            if np.any(mask):
-                energy += float(np.max(spectrum[mask]))
-        ratio = energy / (region_median * HUM_HARMONICS)
-        if ratio > best_ratio:
-            best_base, best_ratio = base, ratio
+            center = base * k
+            peak_mask = np.abs(freqs - center) <= HUM_TOLERANCE_HZ
+            ring_dist = np.abs(freqs - center)
+            ring_mask = (ring_dist > HUM_RING_HZ[0]) & (ring_dist <= HUM_RING_HZ[1])
+            if not (np.any(peak_mask) and np.any(ring_mask)):
+                continue
+            peak = float(np.max(spectrum[peak_mask]))
+            if peak < HUM_ABS_ENERGY_FRAC * total_energy:
+                contrasts.append(0.0)  # insignificant bin: cannot be audible hum
+                continue
+            contrasts.append(peak / (float(np.median(spectrum[ring_mask])) + 1e-20))
+        count = sum(1 for c in contrasts if c > HUM_CONTRAST_MIN)
+        if count > best_count or (count == best_count and contrasts and
+                                  float(np.median(contrasts)) > best_contrast):
+            best_base, best_count = base, count
+            best_contrast = float(np.median(contrasts)) if contrasts else 0.0
     observations.append(Observation(
-        id="advisory.hum_ratio", metric="hum_ratio", value=float(best_ratio), units="ratio",
-        confidence=0.9, evidence=f"peak energy at {best_base:.0f}Hz harmonics vs 30-300Hz median"))
+        id="advisory.hum_harmonic_count", metric="hum_harmonic_count", value=float(best_count),
+        units="count", confidence=0.9,
+        evidence=f"{best_base:.0f}Hz harmonics with peak/ring contrast > {HUM_CONTRAST_MIN}"))
+    observations.append(Observation(
+        id="advisory.hum_contrast", metric="hum_contrast", value=best_contrast, units="ratio",
+        confidence=0.8, evidence="median peak/local-ring contrast across harmonics"))
 
     # --- recording level ---
     try:
@@ -133,10 +155,10 @@ def measure_advisory(audio: np.ndarray, sample_rate: int) -> tuple[list[Observat
         "analyzer_version": ADVISORY_ANALYZER_VERSION,
         "sample_rate": int(sample_rate),
         "thresholds": {
-            "hum_ratio_min": HUM_RATIO_MIN,
+            "hum_contrast_min": HUM_CONTRAST_MIN, "hum_harmonics_min": HUM_HARMONICS_MIN,
             "level_low_lufs": LEVEL_LOW_LUFS, "level_high_lufs": LEVEL_HIGH_LUFS,
             "reverb_floor_ratio_min": REVERB_FLOOR_RATIO_MIN,
-            "reverb_decay_db_per_s_max": REVERB_DECAY_DB_PER_S_MAX,
+            "reverb_decay_range_db_per_s": list(REVERB_DECAY_RANGE_DB_PER_S),
             "plosive_rate_min_per_min": PLOSIVE_RATE_MIN_PER_MIN,
         },
         "advisory_only": True,
@@ -151,12 +173,15 @@ def interpret_advisory(observations: list[Observation]) -> list[Interpretation]:
         return []
     out: list[Interpretation] = []
 
-    hum = by["hum_ratio"].value
-    if hum > HUM_RATIO_MIN:
+    hum_count = by["hum_harmonic_count"].value
+    hum_fired = hum_count >= HUM_HARMONICS_MIN
+    if hum_fired:
         out.append(Interpretation(
-            id="interp.hum", issue="hum", supporting_observation_ids=("advisory.hum_ratio",),
-            confidence=min(0.6 + 0.05 * (hum / HUM_RATIO_MIN), 0.9),
-            rationale=f"Narrowband 50/60Hz-harmonic energy {hum:.1f}x the LF median."))
+            id="interp.hum", issue="hum",
+            supporting_observation_ids=("advisory.hum_harmonic_count", "advisory.hum_contrast"),
+            confidence=min(0.6 + 0.1 * hum_count, 0.9),
+            rationale=f"{hum_count:.0f} mains harmonics stand out from their spectral "
+                      f"neighborhood (median contrast {by['hum_contrast'].value:.0f}x)."))
 
     lufs = by["advisory_integrated_lufs"].value
     if -70.0 < lufs < LEVEL_LOW_LUFS:
@@ -172,13 +197,16 @@ def interpret_advisory(observations: list[Observation]) -> list[Interpretation]:
 
     floor = by["envelope_floor_ratio"].value
     decay = by["decay_db_per_s"].value
-    if floor > REVERB_FLOOR_RATIO_MIN and decay < REVERB_DECAY_DB_PER_S_MAX:
+    lo, hi = REVERB_DECAY_RANGE_DB_PER_S
+    if floor > REVERB_FLOOR_RATIO_MIN and lo <= decay <= hi and not hum_fired:
+        # hum guard: a constant mains floor also raises the envelope floor;
+        # when hum fired, the reverb hypothesis is suppressed (documented limit).
         out.append(Interpretation(
             id="interp.reverb", issue="reverb",
             supporting_observation_ids=("advisory.envelope_floor_ratio", "advisory.decay_db_per_s"),
             confidence=0.5,  # experimental estimator: capped LOW on purpose
-            rationale=f"Elevated envelope floor ({floor:.2f}) with slow decay "
-                      f"({decay:.0f} dB/s); tail suspected (experimental estimator)."))
+            rationale=f"Elevated envelope floor ({floor:.2f}) decaying at {decay:.0f} dB/s "
+                      f"(tail band {lo:.0f}-{hi:.0f}); reverb suspected (experimental)."))
 
     plosive_rate = by["plosive_rate_per_min"].value
     if plosive_rate > PLOSIVE_RATE_MIN_PER_MIN:
