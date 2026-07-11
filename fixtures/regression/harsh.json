@@ -19,12 +19,9 @@
   "name": "harsh",
   "objectives": [
     "reduce_harshness",
-    "reduce_noise",
-    "reduce_sibilance"
+    "reduce_noise"
   ],
   "preflight_passed": true,
-  "report_finding_count": 4,
-  "skipped": [
-    "{\"issue\": \"sibilance\", \"reason\": \"report_only\"}"
-  ]
+  "report_finding_count": 3,
+  "skipped": []
 }

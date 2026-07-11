@@ -1,6 +1,5 @@
 {
   "applied_processors": [
-    "HighpassFilter<-obj.rumble",
     "NoiseGate<-obj.noise_floor"
   ],
   "decision": {
@@ -10,18 +9,16 @@
     "processing_allowed": true
   },
   "evaluation": {
-    "failed": [],
-    "passed": [
-      "reduce_noise",
-      "reduce_rumble"
-    ]
+    "failed": [
+      "reduce_noise"
+    ],
+    "passed": []
   },
   "name": "clean_tone",
   "objectives": [
-    "reduce_noise",
-    "reduce_rumble"
+    "reduce_noise"
   ],
   "preflight_passed": true,
-  "report_finding_count": 3,
+  "report_finding_count": 2,
   "skipped": []
 }

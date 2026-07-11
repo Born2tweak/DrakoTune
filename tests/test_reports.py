@@ -42,7 +42,17 @@ class TestContent:
             assert "%" not in f  # no fake precision on confidence
 
     def test_actions_include_applied_and_skipped(self):
+        # Analyzer 1.2.0: the harsh fixture no longer produces a natural skip,
+        # so the skip-rendering contract is pinned with an explicit skip entry.
+        import dataclasses
+
         bundle, evaluation = _bundle_eval("harsh")
+        plan_with_skip = dataclasses.replace(
+            bundle.plan,
+            skipped_processors=bundle.plan.skipped_processors
+            + ("PeakFilter:sibilance (report-only: low confidence)",),
+        )
+        bundle = dataclasses.replace(bundle, plan=plan_with_skip)
         report = build_report(bundle, evaluation, "harsh")
         assert any(a.startswith("applied ") for a in report.actions)
         assert any(a.startswith("skipped ") for a in report.actions)

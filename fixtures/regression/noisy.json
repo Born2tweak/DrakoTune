@@ -16,12 +16,9 @@
   },
   "name": "noisy",
   "objectives": [
-    "reduce_noise",
-    "reduce_rumble"
+    "reduce_noise"
   ],
   "preflight_passed": true,
-  "report_finding_count": 3,
-  "skipped": [
-    "{\"issue\": \"rumble\", \"reason\": \"report_only\"}"
-  ]
+  "report_finding_count": 2,
+  "skipped": []
 }

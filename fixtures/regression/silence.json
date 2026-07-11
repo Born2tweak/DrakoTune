@@ -13,22 +13,19 @@
   "evaluation": {
     "failed": [
       "reduce_harshness",
-      "reduce_rumble",
-      "reduce_sibilance"
+      "reduce_rumble"
     ],
     "passed": []
   },
   "name": "silence",
   "objectives": [
     "reduce_harshness",
-    "reduce_rumble",
-    "reduce_sibilance"
+    "reduce_rumble"
   ],
   "preflight_passed": false,
-  "report_finding_count": 5,
+  "report_finding_count": 4,
   "skipped": [
     "{\"issue\": \"harshness\", \"reason\": \"enhancement_blocked\"}",
-    "{\"issue\": \"rumble\", \"reason\": \"enhancement_blocked\"}",
-    "{\"issue\": \"sibilance\", \"reason\": \"enhancement_blocked\"}"
+    "{\"issue\": \"rumble\", \"reason\": \"enhancement_blocked\"}"
   ]
 }

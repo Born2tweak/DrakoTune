@@ -24,8 +24,8 @@ EVALUATION_VERSION = "1.0.0"
 _OBJECTIVE_METRIC = {
     "reduce_harshness": ("harshness_ratio", -1),
     "reduce_muddiness": ("mud_ratio", -1),
-    "reduce_sibilance": ("sibilance_ratio", -1),
-    "reduce_rumble": ("rumble_ratio", -1),
+    "reduce_sibilance": ("sibilance_frame_p95", -1),
+    "reduce_rumble": ("rumble_fraction", -1),
     "reduce_noise": ("noise_floor_dbfs", -1),
     "stabilize_dynamics": ("consistency_cv", -1),
     "boost_air": ("air_ratio", +1),

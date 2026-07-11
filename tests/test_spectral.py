@@ -88,7 +88,7 @@ class TestContractAndDeterminism:
 
     def test_observations_confidence_scored(self):
         obs, _ = measure_spectral(_tone({200: 0.4, 3500: 0.3}), SR)
-        assert len(obs) == 7
+        assert len(obs) == 8  # +sibilance_frame_p95 (analyzer 1.2.0)
         for o in obs:
             assert 0.0 <= o.confidence <= 1.0
 
