@@ -72,8 +72,13 @@ def job_page(job_id: str):
     job = get_job(job_id)
     if job is None:
         return HTMLResponse(page("Not found", "<h1>Job not found</h1>"), status_code=404)
-    before_src = signed_url(job.id, "before") if job.before_path else None
-    after_src = signed_url(job.id, "after") if job.after_path else None
+    # Prefer loudness-matched previews for the comparison players (ADR 0004).
+    if getattr(job, "previews_matched", False):
+        before_src = signed_url(job.id, "before_preview")
+        after_src = signed_url(job.id, "after_preview")
+    else:
+        before_src = signed_url(job.id, "before") if job.before_path else None
+        after_src = signed_url(job.id, "after") if job.after_path else None
     return HTMLResponse(page(f"DrakoTune — {job.name}", render_result(job, before_src, after_src)))
 
 

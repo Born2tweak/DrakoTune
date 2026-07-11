@@ -29,7 +29,8 @@ class TestContent:
     def test_report_has_all_sections(self):
         bundle, evaluation = _bundle_eval("harsh")
         md = render_markdown(build_report(bundle, evaluation, "harsh"), evaluation)
-        for section in ("## Findings", "## Actions", "## Evaluation", "## Limitations"):
+        # Report engine 2.0.0 (M27): "Evaluation" became "What changed".
+        for section in ("## Findings", "## Actions", "## What changed", "## Limitations"):
             assert section in md
 
     def test_findings_use_confidence_bands_not_percentages(self):
@@ -86,3 +87,32 @@ class TestDeterminism:
     def test_report_has_stable_id(self):
         bundle, evaluation = _bundle_eval("muddy")
         assert build_report(bundle, evaluation, "muddy").id == "report:muddy"
+
+
+class TestReportV2:
+    def test_manifest_is_machine_readable_and_versioned(self):
+        import json
+
+        from src.reports import build_manifest
+
+        bundle, evaluation = _bundle_eval("harsh")
+        report = build_report(bundle, evaluation, "harsh")
+        manifest = build_manifest(bundle, evaluation, report)
+        json.dumps(manifest)  # must be serializable
+        assert manifest["report_engine_version"] == "2.0.0"
+        assert manifest["analyzers"]["spectral"].startswith("1.2")
+        assert manifest["plan"]["actions"] or manifest["plan"]["skipped"] is not None
+
+    def test_advisory_issues_surface_as_cannot_fix_guidance(self):
+        from src.shared_types import Interpretation
+
+        bundle, evaluation = _bundle_eval("harsh")
+        advisory = (Interpretation(
+            id="interp.hum", issue="hum", supporting_observation_ids=(),
+            confidence=0.8, rationale="test"),)
+        report = build_report(bundle, evaluation, "harsh",
+                              advisory_interpretations=advisory)
+        assert any("advisory hum" in f for f in report.findings)
+        assert any(lim.startswith("cannot fix — hum") for lim in report.limitations)
+        md = render_markdown(report, evaluation)
+        assert "cannot fix" in md.lower() and "rerecord" in md.lower()

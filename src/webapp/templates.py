@@ -129,7 +129,8 @@ def _players(job, before_src: str, after_src: str) -> str:
     return (
         '<h2>Before / After</h2>'
         '<p class="hint">Tab to a player and press Space to play. Compare the '
-        "original against the processed version.</p>"
+        "original against the processed version. Both players are "
+        "loudness-matched so the louder one cannot win unfairly.</p>"
         '<div class="ab">'
         f'<figure><figcaption>Original</figcaption>'
         f'<audio controls preload="none" src="{before_src}" '

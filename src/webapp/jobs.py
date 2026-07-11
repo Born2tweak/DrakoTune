@@ -15,8 +15,10 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from src.diagnostics.advisory import diagnose_advisory
 from src.dsp_engine import render_plan
 from src.evaluation import evaluate
+from src.evaluation.ab_export import export_matched_pair
 from src.ingestion import preflight
 from src.dsp.preprocess import preprocess
 from src.orchestration import analyze_and_plan
@@ -40,6 +42,10 @@ class Job:
     message: str = ""
     before_path: Path | None = None
     after_path: Path | None = None
+    # Loudness-matched preview pair (M27): fair comparison, ADR 0004.
+    before_preview_path: Path | None = None
+    after_preview_path: Path | None = None
+    previews_matched: bool = False
     report_markdown: str = ""
     objectives: tuple[str, ...] = ()
     warnings: tuple[str, ...] = ()
@@ -76,9 +82,14 @@ def get_job(job_id: str) -> Job | None:
 def audio_path(job_id: str, which: str) -> Path | None:
     """Resolve a job's before/after file by id + name only (no traversal)."""
     job = _JOBS.get(job_id)
-    if job is None or which not in ("before", "after"):
+    if job is None or which not in ("before", "after", "before_preview", "after_preview"):
         return None
-    path = job.before_path if which == "before" else job.after_path
+    path = {
+        "before": job.before_path,
+        "after": job.after_path,
+        "before_preview": job.before_preview_path,
+        "after_preview": job.after_preview_path,
+    }[which]
     return path if path and path.exists() else None
 
 
@@ -111,11 +122,24 @@ def process_upload(filename: str, data: bytes) -> Job:
         return job
 
     bundle = analyze_and_plan(str(normalized), report, asset_id=name)
+    _, advisory = diagnose_advisory(str(normalized), asset_id=name)
     processed = workdir / "after.wav"
     render_plan(str(normalized), str(processed), bundle.plan)
     evaluation = evaluate(str(normalized), str(processed), plan=bundle.plan, eval_id=name)
-    report_obj = build_report(bundle, evaluation, asset_name=name)
+    report_obj = build_report(bundle, evaluation, asset_name=name,
+                              advisory_interpretations=advisory)
     report_md = render_markdown(report_obj, evaluation)
+
+    # Loudness-matched previews (ADR 0004): the comparison players must not
+    # carry a loudness bias. On matcher refusal, fall back to the raw pair.
+    before_preview = workdir / "before_preview.wav"
+    after_preview = workdir / "after_preview.wav"
+    previews_matched = True
+    try:
+        export_matched_pair(str(normalized), str(processed),
+                            str(before_preview), str(after_preview))
+    except Exception:  # incl. LoudnessMatchError: refusal is by design
+        previews_matched = False
 
     job = Job(
         id=job_id,
@@ -124,6 +148,9 @@ def process_upload(filename: str, data: bytes) -> Job:
         message="Processed.",
         before_path=normalized,
         after_path=processed,
+        before_preview_path=before_preview if previews_matched else None,
+        after_preview_path=after_preview if previews_matched else None,
+        previews_matched=previews_matched,
         report_markdown=report_md,
         objectives=tuple(o.goal for o in bundle.plan.objectives),
         warnings=evaluation.warnings,
