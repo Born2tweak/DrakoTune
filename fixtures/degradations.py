@@ -31,7 +31,7 @@ import pyloudnorm
 import soundfile as sf
 from pedalboard import HighShelfFilter, LowShelfFilter, Pedalboard, PeakFilter
 
-DEGRADATION_LIBRARY_VERSION = "1.0.0"
+DEGRADATION_LIBRARY_VERSION = "1.1.0"  # 1.1.0 (M32): plosive family
 
 
 @dataclass(frozen=True)
@@ -137,6 +137,27 @@ def _to_level(audio: np.ndarray, sr: int, target_lufs: float) -> np.ndarray:
     return (audio * (10.0 ** ((target_lufs - current) / 20.0))).astype(np.float32)
 
 
+def _add_plosives(audio: np.ndarray, sr: int, count: int, amp: float, seed: int) -> np.ndarray:
+    """Seeded low-frequency 'p/b' thumps: 50-90 Hz decaying bursts placed at
+    energetic moments (a plosive rides the word onset, not silence)."""
+    rng = _rng(seed)
+    out = audio.copy()
+    frame = sr // 10
+    n_frames = max(len(audio) // frame - 1, 1)
+    frame_rms = np.array([_rms(audio[i * frame:(i + 1) * frame]) for i in range(n_frames)])
+    candidates = np.argsort(frame_rms)[-max(count * 3, count):]
+    positions = rng.choice(candidates, size=min(count, len(candidates)), replace=False)
+    burst_len = int(sr * 0.08)
+    t = np.arange(burst_len) / sr
+    for pos in sorted(positions):
+        freq = float(rng.uniform(50.0, 90.0))
+        thump = np.sin(2 * np.pi * freq * t) * np.exp(-t / 0.018)
+        i = pos * frame + int(rng.integers(0, frame // 2))
+        end = min(i + burst_len, len(out))
+        out[i:end] += (amp * _rms(audio) / 0.05) * thump[: end - i].astype(np.float32) * 0.5
+    return np.clip(out, -1.0, 1.0).astype(np.float32)
+
+
 def _codec_roundtrip(audio: np.ndarray, sr: int, bitrate_kbps: int) -> np.ndarray:
     """MP3 encode/decode via FFmpeg. Effect-validated, not bit-exact across builds."""
     with tempfile.TemporaryDirectory() as tmp:
@@ -177,6 +198,8 @@ def apply_recipe(audio: np.ndarray, sr: int, recipe: DegradationRecipe) -> np.nd
         return _eq(x, sr, LowShelfFilter(cutoff_frequency_hz=p["freq_hz"], gain_db=p["gain_db"], q=p["q"]))
     if recipe.family == "low_level":
         return _to_level(x, sr, p["target_lufs"])
+    if recipe.family == "plosive":
+        return _add_plosives(x, sr, p["count"], p["amp"], recipe.seed)
     if recipe.family == "codec":
         return _codec_roundtrip(x, sr, p["bitrate_kbps"])
     raise ValueError(f"unknown degradation family: {recipe.family}")
@@ -212,6 +235,8 @@ def _grid() -> tuple[DegradationRecipe, ...]:
     add("proximity", "moderate", {"freq_hz": 250.0, "gain_db": 6.0, "q": 0.7}, seed=0)
     for sev, lufs in (("moderate", -35.0), ("strong", -45.0)):
         add("low_level", sev, {"target_lufs": lufs}, seed=0)
+    for sev, (count, amp) in (("moderate", (3, 0.5)), ("strong", (6, 0.9))):
+        add("plosive", sev, {"count": count, "amp": amp}, seed=4000 + count)
     for sev, kbps in (("moderate", 96), ("strong", 64)):
         add("codec", sev, {"bitrate_kbps": kbps}, seed=0)
 
@@ -224,5 +249,5 @@ STANDARD_GRID: tuple[DegradationRecipe, ...] = _grid()
 # these carry a bit-exact regeneration guarantee. Codec is excluded by design.
 DETERMINISTIC_FAMILIES = (
     "noise", "hum", "clipping", "reverb", "harshness",
-    "sibilance", "proximity", "low_level",
+    "sibilance", "proximity", "low_level", "plosive",
 )

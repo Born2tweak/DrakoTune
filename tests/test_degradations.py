@@ -45,7 +45,7 @@ def _by_id(rid: str):
 def test_grid_covers_planned_families():
     families = {r.family for r in STANDARD_GRID}
     assert families == {"noise", "hum", "clipping", "reverb", "harshness",
-                        "sibilance", "proximity", "low_level", "codec"}
+                        "sibilance", "proximity", "low_level", "codec", "plosive"}
     assert len(STANDARD_GRID) == len({r.id for r in STANDARD_GRID}), "recipe ids must be unique"
     assert all(r.version == DEGRADATION_LIBRARY_VERSION for r in STANDARD_GRID)
 
@@ -122,3 +122,9 @@ def test_recipe_manifest_roundtrip():
     d = recipe.to_dict()
     assert d["family"] == "noise" and d["params"]["kind"] == "hvac"
     assert d["seed"] == recipe.seed and d["version"] == DEGRADATION_LIBRARY_VERSION
+
+
+def test_plosive_recipe_adds_lf_bursts(voice_like):
+    out = apply_recipe(voice_like, SR, _by_id("plosive_strong"))
+    assert not np.array_equal(out, voice_like)
+    assert _band_energy(out, 40, 120) > _band_energy(voice_like, 40, 120) * 1.5

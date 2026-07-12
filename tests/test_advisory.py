@@ -67,7 +67,10 @@ def test_reverb_estimator_fires_on_strong_reverb():
     assert "reverb" in issues
 
 
-def test_plosive_bursts_detected():
+def test_plosive_is_observation_only():
+    """M32 negative result: plosive frame-energy rules plateau at 31-55% clean
+    FP on real vocals — the rate is still measured, but no interpretation is
+    ever emitted (and therefore nothing can reach the planner)."""
     voice = _voice()
     rng = np.random.default_rng(7)
     t_burst = np.arange(int(SR * 0.06)) / SR
@@ -75,8 +78,10 @@ def test_plosive_bursts_detected():
     for pos_s in (0.5, 1.2, 2.1, 2.9, 3.5):
         i = int(pos_s * SR)
         voice[i:i + len(thump)] += 0.9 * thump * float(rng.uniform(0.8, 1.0))
-    issues, _ = _issues(voice)
-    assert "plosives" in issues
+    issues, obs = _issues(voice)
+    assert "plosives" not in issues
+    rate = next(o for o in obs if o.metric == "plosive_rate_per_min")
+    assert rate.value > 4.0  # the observation still measures the bursts
 
 
 def test_advisory_issues_produce_no_dsp_actions():

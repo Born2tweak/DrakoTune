@@ -47,8 +47,6 @@ _ADVISORY_GUIDANCE = {
                             "Record hotter (peaking around -12 to -6 dB) next time."),
     "recording_level_high": ("very hot recording level",
                              "Watch input gain; recordings this hot risk clipping."),
-    "plosives": ("low-frequency pops from 'p'/'b' sounds (experimental detector)",
-                 "A pop filter or singing slightly off-axis prevents these."),
 }
 
 # Evaluation delta -> friendly line ("what changed"), only when meaningful.

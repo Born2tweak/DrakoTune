@@ -45,10 +45,11 @@ EXPECTED = {
     "proximity": {"muddiness", "rumble"},
     "low_level": {"recording_level_low"},
     "codec": set(),  # no detector claims codec artifacts; spurious hits recorded
+    "plosive": set(),  # M32: observation-only (negative result); spurious hits recorded
 }
 
 ALL_ISSUES = sorted({i for s in EXPECTED.values() for i in s}
-                    | {"plosives", "recording_level_high"})
+                    | {"recording_level_high"})
 
 
 def detect_issues(path: Path) -> set[str]:

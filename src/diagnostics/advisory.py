@@ -24,7 +24,14 @@ import soundfile as sf
 
 from src.shared_types import DiagnosticResult, Interpretation, Observation
 
-ADVISORY_ANALYZER_VERSION = "1.0.0"
+ADVISORY_ANALYZER_VERSION = "1.1.0"
+# 1.1.0 (M32): plosive detection demoted to OBSERVATION-ONLY. Sweep on
+# corpus-v1 (80 real clean clips + seeded plosive recipes): every frame-
+# energy rule family plateaued at 31-55% clean FP — real singing onsets
+# (breath attacks, chest resonance) are indistinguishable from thumps by
+# LF energy/dominance/attack/shape heuristics, on BOTH studio (VocalSet)
+# and device (vocadito) material. The plosive_rate observation remains
+# recorded; no interpretation is emitted (see RESEARCH_GAPS RG-6b).
 
 # hum: a true mains hum is a narrow spectral spike that stands out from its
 # immediate spectral neighborhood at multiple harmonics. Contrast against the
@@ -66,7 +73,7 @@ PLOSIVE_RATE_MIN_PER_MIN = 4.0
 _FRAME = 2048
 _HOP = 512
 
-ADVISORY_ISSUES = ("hum", "recording_level_low", "recording_level_high", "reverb", "plosives")
+ADVISORY_ISSUES = ("hum", "recording_level_low", "recording_level_high", "reverb")
 
 
 def _mono(audio: np.ndarray) -> np.ndarray:
@@ -219,12 +226,8 @@ def interpret_advisory(observations: list[Observation]) -> list[Interpretation]:
             rationale=f"Elevated envelope floor ({floor:.2f}) decaying at {decay:.0f} dB/s "
                       f"(tail band {lo:.0f}-{hi:.0f}); reverb suspected (experimental)."))
 
-    plosive_rate = by["plosive_rate_per_min"].value
-    if plosive_rate > PLOSIVE_RATE_MIN_PER_MIN:
-        out.append(Interpretation(
-            id="interp.plosives", issue="plosives",
-            supporting_observation_ids=("advisory.plosive_rate",), confidence=0.55,
-            rationale=f"{plosive_rate:.1f} low-frequency transient bursts/min."))
+    # Plosives: OBSERVATION-ONLY since 1.1.0 (M32 negative result — 31-55%
+    # clean FP for every tested frame-energy rule). No interpretation emitted.
     return out
 
 
