@@ -15,7 +15,7 @@ from src.dsp_engine import render_plan
 from src.evaluation import evaluate
 from src.ingestion import preflight
 from src.orchestration import analyze_and_plan
-from src.reports import build_report, render_markdown
+from src.reports import build_manifest, build_report, render_markdown
 
 AUDIO_EXTS = {".wav", ".mp3", ".flac", ".ogg", ".m4a", ".aif", ".aiff"}
 
@@ -87,7 +87,7 @@ def _find_audio(input_dir: Path) -> list[Path]:
                   if p.is_file() and p.suffix.lower() in AUDIO_EXTS)
 
 
-def _process_one(src: Path, out_root: Path) -> BatchItem:
+def _process_one(src: Path, out_root: Path, preset: str = "clean") -> BatchItem:
     name = src.stem
     workdir = out_root / name
     workdir.mkdir(parents=True, exist_ok=True)
@@ -105,13 +105,17 @@ def _process_one(src: Path, out_root: Path) -> BatchItem:
                          message="preflight: " + ", ".join(pf.blockers),
                          warnings=pf.warnings)
 
-    bundle = analyze_and_plan(str(normalized), pf, asset_id=name)
+    bundle = analyze_and_plan(str(normalized), pf, asset_id=name, preset=preset)
     processed = workdir / "after.wav"
     render_plan(str(normalized), str(processed), bundle.plan)
     evaluation = evaluate(str(normalized), str(processed), plan=bundle.plan, eval_id=name)
-    report_md = render_markdown(build_report(bundle, evaluation, asset_name=name), evaluation)
+    report = build_report(bundle, evaluation, asset_name=name,
+                          advisory_interpretations=getattr(bundle, "advisory_interpretations", ()))
+    report_md = render_markdown(report, evaluation)
     report_path = workdir / "report.md"
     report_path.write_text(report_md, encoding="utf-8")
+    (workdir / "report.json").write_text(
+        json.dumps(build_manifest(bundle, evaluation, report), indent=2), encoding="utf-8")
 
     return BatchItem(
         name=name,
@@ -125,13 +129,14 @@ def _process_one(src: Path, out_root: Path) -> BatchItem:
     )
 
 
-def run_batch(input_dir: str | Path, output_dir: str | Path, write_summary: bool = True) -> BatchSummary:
+def run_batch(input_dir: str | Path, output_dir: str | Path, write_summary: bool = True,
+              preset: str = "clean") -> BatchSummary:
     """Process every audio file in input_dir; write per-file outputs + a summary."""
     input_dir = Path(input_dir)
     out_root = Path(output_dir)
     out_root.mkdir(parents=True, exist_ok=True)
 
-    summary = BatchSummary(items=[_process_one(src, out_root) for src in _find_audio(input_dir)])
+    summary = BatchSummary(items=[_process_one(src, out_root, preset=preset) for src in _find_audio(input_dir)])
 
     if write_summary:
         (out_root / "summary.json").write_text(

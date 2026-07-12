@@ -13,6 +13,7 @@ Runs the full Alpha 2.2 pipeline:
 import argparse
 import sys
 import tempfile
+import json
 import time
 from pathlib import Path
 
@@ -29,7 +30,7 @@ from src.dsp_engine import render_plan
 from src.evaluation import evaluate
 from src.ingestion import PreflightError, ensure_processable
 from src.orchestration import analyze_and_plan
-from src.reports import build_report, render_markdown
+from src.reports import build_manifest, build_report, render_markdown
 
 
 def main() -> None:
@@ -174,11 +175,17 @@ def main() -> None:
                 project_name=args.name,
             )
 
-            # Report (M11): every processed file produces a report.
-            report = build_report(bundle, evaluation, asset_name=args.name)
+            # Report (M11; advisory + manifest parity M37).
+            report = build_report(
+                bundle, evaluation, asset_name=args.name,
+                advisory_interpretations=getattr(bundle, "advisory_interpretations", ()))
             report_md = render_markdown(report, evaluation)
             report_path = Path(args.output_dir) / f"{args.name}_report.md"
             report_path.write_text(report_md, encoding="utf-8")
+            manifest_path = Path(args.output_dir) / f"{args.name}_report.json"
+            manifest_path.write_text(
+                json.dumps(build_manifest(bundle, evaluation, report), indent=2),
+                encoding="utf-8")
 
             elapsed = time.time() - start_time
             print()

@@ -19,6 +19,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="DrakoTune batch processor")
     parser.add_argument("input_dir", help="Directory of raw vocal files")
     parser.add_argument("--output-dir", default="batch_out", help="Output directory")
+    parser.add_argument("--preset", choices=("clean", "polished"), default="clean",
+                        help="clean = defect correction only; polished = adds gentle "
+                             "style compression (ADR 0005)")
     args = parser.parse_args()
 
     in_dir = Path(args.input_dir)
@@ -26,7 +29,7 @@ def main() -> None:
         print(f"Error: not a directory: {in_dir}")
         sys.exit(1)
 
-    summary = run_batch(in_dir, args.output_dir)
+    summary = run_batch(in_dir, args.output_dir, preset=args.preset)
     c = summary.counts()
     print(f"Processed {len(summary.items)} file(s): "
           f"{c['completed']} completed, {c['blocked']} blocked, {c['failed']} failed.")
