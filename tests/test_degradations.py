@@ -132,7 +132,12 @@ def test_plosive_recipe_adds_lf_bursts(voice_like):
 
 
 def test_dullness_and_thinness_recipes(voice_like):
-    dull = apply_recipe(voice_like, SR, _by_id("dullness_strong"))
-    assert _band_energy(dull, 5000, 12000) < _band_energy(voice_like, 5000, 12000) * 0.5
+    # The base fixture has ~zero energy above 5 kHz (harmonics stop at 1.1k),
+    # so give it real HF content — otherwise the assertion compares the
+    # filter's -75 dB float32 noise floor against numerical zero.
+    t = np.arange(len(voice_like)) / SR
+    bright = (voice_like + 0.05 * np.sin(2 * np.pi * 8000.0 * t).astype(np.float32))
+    dull = apply_recipe(bright, SR, _by_id("dullness_strong"))
+    assert _band_energy(dull, 5000, 12000) < _band_energy(bright, 5000, 12000) * 0.5
     thin = apply_recipe(voice_like, SR, _by_id("thinness_strong"))
     assert _band_energy(thin, 80, 250) < _band_energy(voice_like, 80, 250) * 0.5
