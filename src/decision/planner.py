@@ -61,8 +61,19 @@ _ISSUE_SPECS: dict[str, _Spec] = {
                        lambda s: {"cutoff_frequency_hz": 300.0, "gain_db": round(-4.0 * s, 2), "q": 0.8}),
     "harshness": _Spec("reduce_harshness", "PeakFilter", 21, True,
                        lambda s: {"cutoff_frequency_hz": 3500.0, "gain_db": round(-4.5 * s, 2), "q": 1.4}),
-    "sibilance": _Spec("reduce_sibilance", "PeakFilter", 22, True,
-                       lambda s: {"cutoff_frequency_hz": 6500.0, "gain_db": round(-3.5 * s, 2), "q": 3.5}),
+    # M30: static PeakFilter replaced by the frame-level DeEsser. Evidence:
+    # the static cut left the sibilance diagnosis firing on 3/3 user-tested
+    # processed files while listeners liked the overall brightness — so only
+    # sibilant frames are attenuated. Threshold matches the detector metric;
+    # depth scales with confidence strength, hard-capped (lisp guard).
+    # Order 45: de-essing runs AFTER compression (order 40) — compression
+    # lifts sibilant frames relative to the body (measured on 2/3 user files
+    # whose sibilance only emerged post-compression; also the standing chain
+    # order in docs/research/vocal_chain_research.md).
+    "sibilance": _Spec("reduce_sibilance", "DeEsser", 45, True,
+                       lambda s: {"band_lo_hz": 5000.0, "band_hi_hz": 9000.0,
+                                  "frame_threshold": 0.18,
+                                  "max_reduction_db": round(4.0 + 4.0 * s, 2)}),
     "noise_floor": _Spec("reduce_noise", "NoiseGate", 30, True,
                          lambda s: {"threshold_db": -42.0, "attack_ms": 1.0, "release_ms": 250.0}),
     # M28: only the strictly gated hum_confirmed interpretation maps here
@@ -156,6 +167,30 @@ def build_plan(
             reason=f"{interp.issue} ({band.value} confidence {interp.confidence:.2f}); "
                    f"{'conservative' if band == ConfidenceBand.MEDIUM else 'standard'} move.",
             objective_id=f"obj.{interp.issue}",
+            reversible=True,
+        )))
+
+    # Post-compression sibilance guard (M30): compression is known (and was
+    # measured on real files) to expose sibilance that input diagnosis cannot
+    # see. The DeEsser is self-gating at the frame level (transparent below
+    # its threshold, proven < -50 dB residual on non-sibilant content), so a
+    # conservative guard instance is added after any planned Compressor.
+    has_compressor = any(a.processor == "Compressor" for _, a in actions)
+    has_deesser = any(a.processor == "DeEsser" for _, a in actions)
+    if has_compressor and not has_deesser and not enhancement_blocked:
+        objectives.append(ProcessingObjective(
+            id="obj.sibilance_guard", goal="reduce_sibilance", priority=45,
+            confidence=0.6, constraints=()))
+        actions.append((45, ProcessingAction(
+            id="act.sibilance_guard",
+            processor="DeEsser",
+            parameters={"band_lo_hz": 5000.0, "band_hi_hz": 9000.0,
+                        "frame_threshold": 0.18, "max_reduction_db": 6.0},
+            strength=0.6,
+            reason="post-compression sibilance guard (self-gating: acts only on "
+                   "frames whose 5-9kHz fraction exceeds 0.18; compression "
+                   "exposes sibilance — measured on user-tested files).",
+            objective_id="obj.sibilance_guard",
             reversible=True,
         )))
 

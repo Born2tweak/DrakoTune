@@ -70,7 +70,10 @@ def execute_plan(
     """Render a plan over `audio`. Returns (processed_audio, ExecutionResult)."""
     work = audio.reshape(-1, 1) if audio.ndim == 1 else audio.astype(np.float32)
 
-    plugins = []
+    # Build the ordered execution sequence. Consecutive plugin actions are
+    # batched into one Pedalboard segment; array processors (M30: DeEsser)
+    # run inline between segments so plan order is preserved exactly.
+    segments: list[tuple[str, object]] = []  # ("board", [plugins]) | ("array", (spec, params))
     applied: list[AppliedAction] = []
     skipped: list[str] = list(plan.skipped_processors)
 
@@ -80,7 +83,12 @@ def execute_plan(
             skipped.append(f"{action.processor} (unknown processor)")
             continue
         params, clamped = clamp_params(action.processor, action.parameters)
-        plugins.append(spec.factory(params))
+        if spec.process is not None:
+            segments.append(("array", (spec, params)))
+        else:
+            if not segments or segments[-1][0] != "board":
+                segments.append(("board", []))
+            segments[-1][1].append(spec.factory(params))
         applied.append(AppliedAction(
             processor=action.processor,
             parameters=params,
@@ -88,11 +96,15 @@ def execute_plan(
             objective_id=action.objective_id,
         ))
 
-    if plugins:
-        board = Pedalboard(plugins)
-        processed = board(work.T.astype(np.float32), sample_rate).T
-    else:
-        processed = work.astype(np.float32)
+    processed = work.astype(np.float32)
+    for kind, payload in segments:
+        if kind == "board":
+            processed = Pedalboard(payload)(processed.T.astype(np.float32), sample_rate).T
+        else:
+            spec, params = payload
+            mono = processed[:, 0] if processed.ndim == 2 else processed
+            mono = np.asarray(spec.process(mono, sample_rate, params), dtype=np.float32)
+            processed = mono.reshape(-1, 1)
 
     if apply_output_safety:
         processed = _apply_ceiling(processed)

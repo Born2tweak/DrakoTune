@@ -25,6 +25,8 @@ _VALID_PARAMS = {
     "NoiseGate": {"threshold_db": -42.0, "attack_ms": 1.0, "release_ms": 250.0},
     "Limiter": {"threshold_db": -1.0, "release_ms": 250.0},
     "HumNotch": {"base_hz": 60.0, "gain_db": -12.0, "q": 8.0, "harmonics": 3},
+    "DeEsser": {"band_lo_hz": 5000.0, "band_hi_hz": 9000.0,
+                "frame_threshold": 0.18, "max_reduction_db": 8.0},
 }
 
 
@@ -36,7 +38,13 @@ def _tone(freq: float, amp: float, seconds: float = 1.0) -> np.ndarray:
 class TestProcessors:
     @pytest.mark.parametrize("name", sorted(PROCESSORS))
     def test_processor_builds_and_processes(self, name):
-        plugin = PROCESSORS[name].factory(_VALID_PARAMS[name])
+        spec = PROCESSORS[name]
+        if spec.process is not None:  # array processor (M30): run it directly
+            audio = _tone(440.0, 0.3, seconds=1.0)
+            out = spec.process(audio, SR, _VALID_PARAMS[name])
+            assert out is not None and len(out) == len(audio)
+            return
+        plugin = spec.factory(_VALID_PARAMS[name])
         from pedalboard import Pedalboard
 
         out = Pedalboard([plugin])(_tone(440, 0.3).reshape(1, -1), SR)

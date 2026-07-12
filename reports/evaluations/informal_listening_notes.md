@@ -59,3 +59,21 @@ user-reported residual failure on real material, (b) objective post-processing
 detector confirmation on 3/3 files, and (c) a localized frequency signature.
 Remaining before implementation: the lisp-artifact gate design and a blinded
 per-defect listening check per the standing evidence policy.
+
+## 2026-07-11 — M30 resolution check on the same three files
+
+Reprocessed the three `before` files with the M30 chain (dynamic DeEsser after
+the compressor + post-compression self-gating guard):
+
+| file | old-output sib p95 | new-output sib p95 | detector on output |
+|---|--:|--:|---|
+| before.wav | 0.3987 | 0.1988 | 0.05 conf (negligible) |
+| before (1).wav | 0.3343 | 0.1686 | silent |
+| before (2).wav | 0.2926 | 0.1620 | silent |
+
+Mechanism finding: on 2/3 files the sibilance only emerged **after
+compression** (input diagnosis could not see it) — hence the guard and the
+order change (de-ess after compressor, matching
+docs/research/vocal_chain_research.md). Perceptual confirmation (does the
+"peaked" impression disappear without lisping?) still requires ears — next
+webapp listen + the blinded M24 session.

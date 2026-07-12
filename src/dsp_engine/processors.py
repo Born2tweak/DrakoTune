@@ -23,19 +23,29 @@ from pedalboard import (
     Pedalboard,
 )
 
-PROCESSOR_ENGINE_VERSION = "1.0.0"
+from src.dsp_engine.deesser import de_ess
+
+PROCESSOR_ENGINE_VERSION = "1.1.0"  # 1.1.0 (M30): array processors + DeEsser
 
 
 @dataclass(frozen=True)
 class ProcessorSpec:
-    """How to safely realize one named processor."""
+    """How to safely realize one named processor.
+
+    Exactly one of `factory` (returns a pedalboard plugin) or `process`
+    (pure array function: (mono float32, sample_rate, params) -> mono float32)
+    is set. Array processors let the executor run DSP that pedalboard has no
+    plugin for (M30: the frame-level de-esser) while keeping the same bounded,
+    clamped, plan-authored contract.
+    """
 
     processor: str
     objective: str
     safe_ranges: dict[str, tuple[float, float]]
     artifact_risk: str  # low | medium | high
     reversible: bool
-    factory: Callable[[dict], object]
+    factory: Callable[[dict], object] | None = None
+    process: Callable[..., object] | None = None
 
 
 PROCESSORS: dict[str, ProcessorSpec] = {
@@ -77,6 +87,18 @@ PROCESSORS: dict[str, ProcessorSpec] = {
         {"threshold_db": (-12.0, 0.0), "release_ms": (10.0, 1000.0)},
         "low", True,
         lambda p: Limiter(**p),
+    ),
+    # M30: frame-level dynamic de-esser (array processor; pedalboard has no
+    # de-esser plugin). Evidence: static sibilance cut left the sibilance
+    # diagnosis firing on 3/3 user-tested processed files (informal_listening_
+    # notes.md). Attenuates only sibilant frames' band bins, hard-capped depth
+    # (lisp guard), smoothed release.
+    "DeEsser": ProcessorSpec(
+        "DeEsser", "reduce_sibilance",
+        {"band_lo_hz": (4000.0, 6000.0), "band_hi_hz": (7000.0, 11000.0),
+         "frame_threshold": (0.10, 0.50), "max_reduction_db": (2.0, 10.0)},
+        "medium", True,
+        process=lambda audio, sr, p: de_ess(audio, sr, **p),
     ),
     # M28: narrow notches at the mains base + harmonics. Only reachable via
     # the strictly gated "hum_confirmed" interpretation (0% clean FP on
