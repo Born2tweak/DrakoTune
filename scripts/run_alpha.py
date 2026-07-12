@@ -64,6 +64,11 @@ def main() -> None:
         help="Use the generic Alpha 1 fixed chain (implies --legacy)",
     )
     parser.add_argument(
+        "--preset", choices=("clean", "polished"), default="clean",
+        help="clean = strict defect correction (default); polished = adds "
+             "gentle style compression + de-esser guard (ADR 0005)",
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="Bypass preflight blockers (silent/too-short/corrupt) and process anyway",
@@ -143,7 +148,8 @@ def main() -> None:
             print()
             print("[plan] Decision-driven plan execution (v2 engine)")
             processed_path = Path(tmpdir) / "processed.wav"
-            bundle = analyze_and_plan(str(normalized_path), preflight_report)
+            bundle = analyze_and_plan(str(normalized_path), preflight_report,
+                                      preset=args.preset)
             exec_result = render_plan(str(normalized_path), str(processed_path), bundle.plan)
             goals = ", ".join(o.goal for o in bundle.plan.objectives) or "none"
             print(f"      objectives: {goals}")

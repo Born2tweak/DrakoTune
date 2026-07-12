@@ -93,7 +93,7 @@ def audio_path(job_id: str, which: str) -> Path | None:
     return path if path and path.exists() else None
 
 
-def process_upload(filename: str, data: bytes) -> Job:
+def process_upload(filename: str, data: bytes, preset: str = "clean") -> Job:
     """Run the deterministic pipeline on an uploaded file and store the job."""
     job_id = uuid.uuid4().hex
     name = Path(filename or "vocal").stem or "vocal"
@@ -121,7 +121,9 @@ def process_upload(filename: str, data: bytes) -> Job:
         _JOBS[job_id] = job
         return job
 
-    bundle = analyze_and_plan(str(normalized), report, asset_id=name)
+    if preset not in ("clean", "polished"):
+        preset = "clean"
+    bundle = analyze_and_plan(str(normalized), report, asset_id=name, preset=preset)
     _, advisory = diagnose_advisory(str(normalized), asset_id=name)
     processed = workdir / "after.wav"
     render_plan(str(normalized), str(processed), bundle.plan)

@@ -204,6 +204,38 @@ def build_plan(
             reversible=True,
         )))
 
+    # Style preset (M34, ADR 0005): 'polished' adds a gentle style compressor
+    # regardless of the dynamics diagnosis. Its threshold is relative to the
+    # measured input RMS *after* any planned level restore, so it engages at
+    # any input level. Explicitly labeled style, not defect correction; the
+    # overcompression abstention still applies (never polish the crushed).
+    if preset_profile == "polished" and not enhancement_blocked:
+        crest = next((o.value for o in (loudness_observations or [])
+                      if o.metric == "crest_factor_db"), 99.0)
+        dr = next((o.value for o in (loudness_observations or [])
+                   if o.metric == "dynamic_range_db"), 99.0)
+        already_has_comp = any(a.processor == "Compressor" for _, a in actions)
+        if not already_has_comp and crest >= OVERCOMP_CREST_MAX_DB and dr >= OVERCOMP_DR_MIN_DB:
+            rms_dbfs = next((o.value for o in (loudness_observations or [])
+                             if o.metric == "rms_dbfs"), -20.0)
+            planned_gain = next((a.parameters.get("gain_db", 0.0)
+                                 for _, a in actions if a.processor == "Gain"), 0.0)
+            style_threshold = round(min(0.0, max(-60.0, rms_dbfs + planned_gain - 4.0)), 2)
+            objectives.append(ProcessingObjective(
+                id="obj.style_polish", goal="style_polish", priority=40,
+                confidence=0.9, constraints=("style",)))
+            actions.append((40, ProcessingAction(
+                id="act.style_polish", processor="Compressor",
+                parameters={"threshold_db": style_threshold, "ratio": 2.5,
+                            "attack_ms": 15.0, "release_ms": 75.0},
+                strength=0.6,
+                reason="'polished' style preset: gentle glue compression "
+                       "(user-selected style, NOT defect correction; ADR 0005).",
+                objective_id="obj.style_polish", reversible=True)))
+        elif not already_has_comp:
+            skipped.append("Compressor:style_polish (input already heavily "
+                           "compressed; style preset abstains)")
+
     # Post-compression sibilance guard (M30): compression is known (and was
     # measured on real files) to expose sibilance that input diagnosis cannot
     # see. The DeEsser is self-gating at the frame level (transparent below

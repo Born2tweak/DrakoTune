@@ -74,6 +74,11 @@ def render_upload() -> str:
         '<label for="file">Vocal file</label>'
         '<input id="file" type="file" name="file" accept="audio/*" required '
         'aria-describedby="fhint">'
+        '<label for="preset">Preset</label> '
+        '<select id="preset" name="preset" aria-label="Processing preset">'
+        '<option value="clean" selected>Clean — fix only measured problems</option>'
+        '<option value="polished">Polished — adds gentle glue compression</option>'
+        '</select>'
         '<button type="submit">Analyze</button>'
         '<span id="fhint" class="hint">Your audio stays private.</span>'
         "</form></div>"

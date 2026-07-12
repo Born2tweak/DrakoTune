@@ -38,7 +38,8 @@ class PlanBundle:
     advisory_interpretations: tuple[Interpretation, ...] = ()
 
 
-def analyze_and_plan(audio_path: str, preflight_report=None, asset_id: str = "input") -> PlanBundle:
+def analyze_and_plan(audio_path: str, preflight_report=None, asset_id: str = "input",
+                     preset: str = "clean") -> PlanBundle:
     """Run diagnostics + decision to produce a ProcessingPlan. Renders no audio."""
     safety = diagnose_safety(audio_path, asset_id=asset_id)
     loudness = diagnose_loudness(audio_path, asset_id=asset_id)
@@ -63,6 +64,7 @@ def analyze_and_plan(audio_path: str, preflight_report=None, asset_id: str = "in
         loudness_observations=list(loudness.observations),
         spectral_observations=list(spectral.observations),
         advisory_observations=list(advisory_result.observations),
+        preset_profile=preset,
     )
     return PlanBundle(
         plan=plan,

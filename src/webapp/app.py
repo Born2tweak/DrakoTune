@@ -39,16 +39,16 @@ def index() -> str:
 
 
 @app.post("/api/audio/upload")
-async def api_upload(file: UploadFile) -> JSONResponse:
+async def api_upload(file: UploadFile, preset: str = Form("clean")) -> JSONResponse:
     data = await file.read()
-    job = process_upload(file.filename or "vocal", data)
+    job = process_upload(file.filename or "vocal", data, preset=preset)
     return JSONResponse(_job_response(job))
 
 
 @app.post("/upload")
-async def form_upload(file: UploadFile) -> RedirectResponse:
+async def form_upload(file: UploadFile, preset: str = Form("clean")) -> RedirectResponse:
     data = await file.read()
-    job = process_upload(file.filename or "vocal", data)
+    job = process_upload(file.filename or "vocal", data, preset=preset)
     return RedirectResponse(url=f"/jobs/{job.id}", status_code=303)
 
 
