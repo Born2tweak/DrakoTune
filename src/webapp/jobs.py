@@ -20,7 +20,7 @@ from src.dsp_engine import render_plan
 from src.evaluation import evaluate
 from src.evaluation.ab_export import export_matched_pair
 from src.ingestion import preflight
-from src.dsp.preprocess import preprocess
+from src.dsp.preprocess import preprocess, probe_channels
 from src.orchestration import analyze_and_plan
 from src.reports import build_report, render_markdown
 
@@ -106,6 +106,7 @@ def process_upload(filename: str, data: bytes, preset: str = "clean") -> Job:
     raw_path = workdir / f"raw{suffix}"
     raw_path.write_bytes(data)
 
+    input_channels = probe_channels(raw_path)
     normalized = workdir / "before.wav"
     try:
         preprocess(raw_path, normalized)
@@ -158,7 +159,8 @@ def process_upload(filename: str, data: bytes, preset: str = "clean") -> Job:
         previews_matched=previews_matched,
         report_markdown=report_md,
         objectives=tuple(o.goal for o in bundle.plan.objectives),
-        warnings=evaluation.warnings,
+        warnings=evaluation.warnings + (
+            ("stereo_input_summed_to_mono",) if (input_channels or 1) > 1 else ()),
         workdir=workdir,
         report=report_obj,
         evaluation=evaluation,

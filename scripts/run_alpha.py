@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.dsp.diagnose import diagnose, print_profile, scan_artifacts, print_artifacts
 from src.dsp.export import export_before_after
 from src.dsp.pipeline import process_audio
-from src.dsp.preprocess import preprocess
+from src.dsp.preprocess import preprocess, probe_channels
 from src.decision import evaluate_safety
 from src.diagnostics import diagnose_loudness, diagnose_safety
 from src.dsp_engine import render_plan
@@ -113,6 +113,9 @@ def main() -> None:
             print()
             print("Processing stopped for safety. Re-run with --force to override.")
             sys.exit(2)
+        if (probe_channels(args.input) or 1) > 1:
+            print("Note: stereo input was summed to mono (DrakoTune processes "
+                  "isolated mono vocals; upload a mono export for full control).")
         for w in preflight_report.warnings:
             print(f"      preflight warning: {w}")
 

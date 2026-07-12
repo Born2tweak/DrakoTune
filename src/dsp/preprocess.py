@@ -38,6 +38,21 @@ def _find_ffmpeg() -> str:
     )
 
 
+def probe_channels(input_path: str | Path) -> int | None:
+    """Channel count of the ORIGINAL upload (M41 honesty advisory).
+
+    Uses soundfile where the container is supported; falls back to None for
+    exotic formats rather than shelling out — a missing probe only means the
+    stereo-summed warning is skipped, never a failure.
+    """
+    try:
+        import soundfile as sf
+
+        return int(sf.info(str(input_path)).channels)
+    except Exception:
+        return None
+
+
 def preprocess(input_path: str | Path, output_path: str | Path) -> Path:
     """Normalize a vocal file to 44100Hz, 16-bit, mono WAV using FFmpeg.
 

@@ -86,3 +86,21 @@ class TestEnforcement:
     def test_ensure_passes_valid(self):
         report = ensure_processable(_fixture_path("clean_tone"), enforce=True)
         assert report.passed
+
+
+def test_probe_channels_reports_stereo(tmp_path):
+    """M41: the original upload's channel count is probed so users are told
+    when their stereo file was summed to mono."""
+    import numpy as np
+    import soundfile as sf
+
+    from src.dsp.preprocess import probe_channels
+
+    mono = tmp_path / "m.wav"
+    stereo = tmp_path / "s.wav"
+    x = (0.1 * np.sin(2 * np.pi * 220 * np.arange(44100) / 44100)).astype("float32")
+    sf.write(mono, x, 44100)
+    sf.write(stereo, np.stack([x, x], axis=1), 44100)
+    assert probe_channels(mono) == 1
+    assert probe_channels(stereo) == 2
+    assert probe_channels(tmp_path / "missing.xyz") is None
