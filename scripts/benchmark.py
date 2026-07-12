@@ -67,10 +67,10 @@ def _flatten(audio: np.ndarray) -> np.ndarray:
     return audio[:, 0] if audio.ndim == 2 else audio
 
 
-def run_engine(engine: str, degraded_path: Path) -> np.ndarray:
+def run_engine(engine: str, degraded_path: Path, preset: str = "clean") -> np.ndarray:
     """Process one file with one engine; returns mono float32."""
     if engine == "v2":
-        bundle = analyze_and_plan(str(degraded_path))
+        bundle = analyze_and_plan(str(degraded_path), preset=preset)
         audio, _ = sf.read(degraded_path, dtype="float32")
         processed, _ = execute_plan(audio, SR, bundle.plan)
         return _flatten(processed).astype(np.float32)
@@ -116,7 +116,8 @@ def measure_pair(clean: np.ndarray, degraded: np.ndarray, processed: np.ndarray,
     return result
 
 
-def run(corpus_version: str, engines: list[str], limit: int | None) -> Path:
+def run(corpus_version: str, engines: list[str], limit: int | None,
+        preset: str = "clean") -> Path:
     corpus_root = REPO / "data" / "derived" / corpus_version
     manifest = json.loads((corpus_root / "corpus_manifest.json").read_text(encoding="utf-8"))
 
@@ -135,7 +136,7 @@ def run(corpus_version: str, engines: list[str], limit: int | None) -> Path:
         degraded, _ = sf.read(degraded_path, dtype="float32")
         recipe = deg["recipe"]
         for engine in engines:
-            processed = run_engine(engine, degraded_path)
+            processed = run_engine(engine, degraded_path, preset=preset)
             metrics = measure_pair(clean, degraded, processed, recipe["family"])
             records.append({
                 "clip_id": clip["clip_id"], "source_dataset": clip["source_dataset"],
@@ -168,7 +169,7 @@ def run(corpus_version: str, engines: list[str], limit: int | None) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "benchmark.json").write_text(json.dumps({
         "benchmark_version": BENCHMARK_VERSION, "corpus_version": corpus_version,
-        "engines": engines, "pair_count": len(pairs), "records": records,
+        "engines": engines, "preset": preset, "pair_count": len(pairs), "records": records,
         "aggregates": aggregates,
     }, indent=2), encoding="utf-8")
 
@@ -199,8 +200,10 @@ def main() -> None:
     parser.add_argument("--engines", nargs="+", default=["v2", "legacy", "generic"],
                         choices=["v2", "legacy", "generic"])
     parser.add_argument("--limit", type=int, default=None, help="limit degraded pairs (smoke runs)")
+    parser.add_argument("--preset", default="clean", choices=("clean", "polished"),
+                        help="v2 preset (ADR 0005); legacy/generic ignore this")
     args = parser.parse_args()
-    run(args.corpus, args.engines, args.limit)
+    run(args.corpus, args.engines, args.limit, preset=args.preset)
 
 
 if __name__ == "__main__":
