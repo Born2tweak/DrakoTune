@@ -77,3 +77,39 @@ order change (de-ess after compressor, matching
 docs/research/vocal_chain_research.md). Perceptual confirmation (does the
 "peaked" impression disappear without lisping?) still requires ears — next
 webapp listen + the blinded M24 session.
+
+## 2026-07-11 — independent cross-validation ("Music By Mattie" free vocal analyzer, before(2)/after(2))
+
+Third-party analyzer reports on the same pair (its "after" identified by peak
+−2.2 dB, matching our measured −2.16 dBFS). Treated as convergent signal, not
+ground truth (free marketing tool, "scored against 3,054 Billboard hits,"
+methodology unpublished). Points of agreement with our measurements:
+
+1. **Input not harsh/sibilant — agreed.** Before(2): harshness 5.3% (below
+   its hit range 5.9–13.1%), sibilance 3.0% (in range). Matches DrakoTune's
+   input diagnosis, which fired neither issue on before(2).
+2. **Residual sibilance spikes on the old output — independently confirmed.**
+   Its #3 fix for the after file: "592 sibilance spikes around **6250 Hz**" —
+   the exact band we localized (5–8 kHz, hottest frames) and the defect M30's
+   de-esser now removes. (These PDFs predate M30.)
+3. **Harshness moved INTO its hit zone after processing** (5.3% → 7.2%,
+   range 5.9–13.1) — consistent with our matched-loudness +1.6 dB harsh-band
+   delta reading as added presence rather than pain.
+4. **NEW FINDING — slight over-compression on the output.** Its short-term
+   dynamics measure: 16.4 dB (input, "right in the pocket," hits cluster
+   15–17 dB) → 14.9 dB (output, "more compressed than 90% of hit vocals").
+   Recommends easing off (3–6 dB gain reduction target). DrakoTune's
+   dynamics objective fired on input consistency-CV and compressed material
+   whose short-term dynamics were already hit-typical. **Backlog (M31
+   candidate): dynamics objective should consider a target window (e.g.,
+   crest/short-term-dynamics floor ~15 dB) and reduce or skip compression
+   when input is already in range; add an over-compression check to
+   evaluation warnings.**
+5. Its remaining wishes ("more 2–5 kHz presence," "more air above 8 kHz,"
+   "more body below 500 Hz") are **enhancement**, which DrakoTune
+   deliberately does not do yet (cleanup-first scope).
+
+Both DrakoTune and the external tool agree the processing preserved hit-range
+loudness (−15.2 → −16.7 LUFS) and sibilance percentage while the *transient*
+sibilant spikes were the real defect — which is precisely the frame-level
+metric distinction M26/M30 were built on.
