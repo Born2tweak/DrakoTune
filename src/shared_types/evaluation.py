@@ -19,6 +19,10 @@ class EvaluationResult:
     warnings: tuple[str, ...] = ()
     passed_checks: tuple[str, ...] = ()
     failed_checks: tuple[str, ...] = ()
+    # M31: issues the diagnosis layer STILL detects in the processed output
+    # ("issue (confidence)") — the system auditing its own result. This loop,
+    # run manually, is what exposed the de-esser gap; now it is built in.
+    residual_issues: tuple[str, ...] = ()
 
     def to_dict(self) -> dict:
         return {
@@ -29,6 +33,7 @@ class EvaluationResult:
             "warnings": list(self.warnings),
             "passed_checks": list(self.passed_checks),
             "failed_checks": list(self.failed_checks),
+            "residual_issues": list(self.residual_issues),
         }
 
     @classmethod
@@ -41,4 +46,5 @@ class EvaluationResult:
             warnings=tuple(d.get("warnings", ())),
             passed_checks=tuple(d.get("passed_checks", ())),
             failed_checks=tuple(d.get("failed_checks", ())),
+            residual_issues=tuple(d.get("residual_issues", ())),
         )

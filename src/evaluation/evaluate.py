@@ -15,10 +15,17 @@ import soundfile as sf
 
 from src.diagnostics.loudness import measure_loudness
 from src.diagnostics.safety import measure_safety
-from src.diagnostics.spectral import measure_spectral
+from src.diagnostics.spectral import interpret_spectral, measure_spectral
 from src.shared_types import EvaluationResult, ProcessingPlan
 
-EVALUATION_VERSION = "1.0.0"
+EVALUATION_VERSION = "1.1.0"  # 1.1.0 (M31): residual-issue self-audit
+
+# Objective goal -> the diagnosis issue it tries to remove (for residual warns).
+_GOAL_ISSUE = {
+    "reduce_harshness": "harshness", "reduce_muddiness": "muddiness",
+    "reduce_sibilance": "sibilance", "reduce_rumble": "rumble",
+    "reduce_noise": "noise_floor",
+}
 
 # Objective -> (metric, desired_direction). -1 = should decrease, +1 = increase.
 _OBJECTIVE_METRIC = {
@@ -54,6 +61,13 @@ def evaluate_arrays(
     before_metrics = _collect_metrics(before, sample_rate)
     after_metrics = _collect_metrics(after, sample_rate)
 
+    # M31 self-audit: what does the diagnosis layer still detect in the output?
+    after_spectral_obs, _ = measure_spectral(after, sample_rate)
+    residual_issues = tuple(
+        f"{i.issue} ({i.confidence:.2f})"
+        for i in sorted(interpret_spectral(after_spectral_obs), key=lambda i: i.issue)
+    )
+
     deltas = {
         k: round(after_metrics[k] - before_metrics[k], 6)
         for k in before_metrics
@@ -79,6 +93,14 @@ def evaluate_arrays(
         warnings.append("loudness_increase_may_bias_comparison")
     if after_metrics.get("harshness_ratio", 0.0) > before_metrics.get("harshness_ratio", 0.0) + IMPROVE_EPS:
         warnings.append("harshness_increased")
+    # A plan-targeted issue surviving processing is a named warning: the run
+    # tried to remove it and the output still triggers its diagnosis.
+    if plan is not None:
+        residual_names = {r.split(" ")[0] for r in residual_issues}
+        for obj in plan.objectives:
+            issue = _GOAL_ISSUE.get(obj.goal)
+            if issue and issue in residual_names and "report_only" not in obj.constraints:
+                warnings.append(f"residual_after_processing:{issue}")
 
     passed: list[str] = []
     failed: list[str] = []
@@ -104,6 +126,7 @@ def evaluate_arrays(
         warnings=tuple(warnings),
         passed_checks=tuple(passed),
         failed_checks=tuple(failed),
+        residual_issues=residual_issues,
     )
 
 

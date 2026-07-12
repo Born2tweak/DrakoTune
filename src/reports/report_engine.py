@@ -149,6 +149,9 @@ def render_markdown(report: Report, evaluation: EvaluationResult) -> str:
 
     worsened = [f"- {c}" for c in evaluation.failed_checks]
     worsened += [f"- warning: {w}" for w in evaluation.warnings]
+    residuals = getattr(evaluation, "residual_issues", ())
+    if residuals:
+        worsened += [f"- still detected in the output: {r}" for r in residuals]
     if worsened:
         lines += ["", "## What may have worsened or did not improve"] + worsened
 
