@@ -118,6 +118,27 @@ Still-open manual checkpoints (optional extensions, not blockers):
   or kept for future work. A 67 GB `Unconfirmed 736357.crdownload` in
   `Downloads/` is an incomplete browser download (unidentified).
 
+## Post-M29 continuation (M30-M33)
+
+| Milestone | Status |
+|-----------|--------|
+| M30 — Dynamic de-esser + post-compression guard (executor array processors) | ✅ complete |
+| M31 — Self-auditing evaluation (residual-issue detection) + session/benchmark refresh | ✅ complete |
+| M32 — Plosive detection (NEGATIVE RESULT: demoted to observation-only; degradation family kept) | ✅ complete |
+| M33 — Dynamics policy: CV recalibration (0.40→0.90), level-restore promotion, overcompression abstention | ✅ complete |
+
+**⚠ DECISION NEEDED (product owner): compression policy.**
+M33's evidence showed the old CV threshold compressed 100% of real vocals —
+including the files you listened to and liked. With the recalibrated
+threshold, typical natural-dynamics vocals (including yours) now get NO
+compressor (and therefore no post-compression de-esser guard). Objectively
+cleaner; perceptually different from what you approved. Options:
+(a) keep 0.90 — compression only for extreme inconsistency (current state);
+(b) reintroduce gentle compression as an explicit style preset (off by
+default, user-selectable), keeping defect-correction at 0.90;
+(c) pick an intermediate threshold after A/B listening your files both ways.
+The benchmark cannot decide this — only ears can.
+
 Standing constraints: no new processors, no threshold tuning, no frontend
 rebuild, no ML, no data collection before their gates (ADR 0002–0004,
 `docs/RISK_REGISTER.md`, `docs/data/DATASET_GOVERNANCE.md`,
