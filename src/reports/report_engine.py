@@ -47,6 +47,9 @@ _ADVISORY_GUIDANCE = {
                             "Record hotter (peaking around -12 to -6 dB) next time."),
     "recording_level_high": ("very hot recording level",
                              "Watch input gain; recordings this hot risk clipping."),
+    "overcompressed": ("dynamics sound heavily compressed already",
+                       "DrakoTune will not compress this further. If this is a "
+                       "processed mix or master, upload the dry vocal instead."),
 }
 
 # Evaluation delta -> friendly line ("what changed"), only when meaningful.

@@ -63,7 +63,7 @@ class TestConflictResolution:
     def test_cleanup_before_dynamics_ordering(self):
         interps = [_interp("harshness", 0.85)]
         loud = [Observation(id="loudness.consistency_cv", metric="consistency_cv",
-                            value=0.7, units="ratio", window="frame", confidence=0.9)]
+                            value=1.1, units="ratio", window="frame", confidence=0.9)]  # M33: >0.90 fires
         plan = build_plan(interps, _safe(), loudness_observations=loud)
         processors = [a.processor for a in plan.actions]
         assert "PeakFilter" in processors and "Compressor" in processors
@@ -71,7 +71,7 @@ class TestConflictResolution:
 
     def test_dynamics_objective_from_loudness(self):
         loud = [Observation(id="loudness.consistency_cv", metric="consistency_cv",
-                            value=0.7, units="ratio", window="frame", confidence=0.9)]
+                            value=1.1, units="ratio", window="frame", confidence=0.9)]  # M33: >0.90 fires
         plan = build_plan([], _safe(), loudness_observations=loud)
         assert any(o.goal == "stabilize_dynamics" for o in plan.objectives)
 

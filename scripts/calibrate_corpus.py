@@ -46,6 +46,8 @@ EXPECTED = {
     "low_level": {"recording_level_low"},
     "codec": set(),  # no detector claims codec artifacts; spurious hits recorded
     "plosive": set(),  # M32: observation-only (negative result); spurious hits recorded
+    "overcompression": {"overcompressed"},
+    "gain_jumps": set(),  # dynamics interpretation lives in the planner, not detect_issues
 }
 
 ALL_ISSUES = sorted({i for s in EXPECTED.values() for i in s}

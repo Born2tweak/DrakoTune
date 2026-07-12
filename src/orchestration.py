@@ -15,7 +15,11 @@ from dataclasses import dataclass
 
 from src.decision import build_plan, evaluate_safety
 from src.decision.records import SafetyDecision
-from src.diagnostics.advisory import diagnose_advisory, promoted_hum_interpretation
+from src.diagnostics.advisory import (
+    diagnose_advisory,
+    promoted_hum_interpretation,
+    promoted_level_interpretation,
+)
 from src.diagnostics import diagnose_loudness, diagnose_safety, diagnose_spectral
 from src.shared_types import DiagnosticResult, Interpretation, ProcessingPlan
 
@@ -48,6 +52,9 @@ def analyze_and_plan(audio_path: str, preflight_report=None, asset_id: str = "in
     hum_confirmed = promoted_hum_interpretation(list(advisory_result.observations))
     if hum_confirmed is not None:
         plan_inputs.append(hum_confirmed)
+    level_confirmed = promoted_level_interpretation(list(advisory_result.observations))
+    if level_confirmed is not None:
+        plan_inputs.append(level_confirmed)
 
     decision = evaluate_safety(preflight_report, safety)
     plan = build_plan(

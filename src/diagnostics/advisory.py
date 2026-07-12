@@ -73,7 +73,8 @@ PLOSIVE_RATE_MIN_PER_MIN = 4.0
 _FRAME = 2048
 _HOP = 512
 
-ADVISORY_ISSUES = ("hum", "recording_level_low", "recording_level_high", "reverb")
+ADVISORY_ISSUES = ("hum", "recording_level_low", "recording_level_high", "reverb",
+                   "overcompressed")
 
 
 def _mono(audio: np.ndarray) -> np.ndarray:
@@ -130,6 +131,22 @@ def measure_advisory(audio: np.ndarray, sample_rate: int) -> tuple[list[Observat
     observations.append(Observation(
         id="advisory.integrated_lufs", metric="advisory_integrated_lufs", value=lufs,
         units="LUFS", confidence=0.9 if lufs > -70 else 0.2, evidence="BS.1770 integrated"))
+
+    # --- crest factor / dynamic range (overcompression advisory, M33) ---
+    peak = float(np.max(np.abs(mono))) + 1e-12
+    rms_all = float(np.sqrt(np.mean(mono.astype(np.float64) ** 2))) + 1e-12
+    crest_db = 20.0 * math.log10(peak / rms_all)
+    frame_rms_oc = librosa.feature.rms(y=mono, frame_length=_FRAME, hop_length=_HOP)[0]
+    active = frame_rms_oc[frame_rms_oc > np.percentile(frame_rms_oc, 10)]
+    dr_db = (20.0 * math.log10((float(np.percentile(active, 95)) + 1e-12)
+                               / (float(np.percentile(active, 5)) + 1e-12))
+             if len(active) else 0.0)
+    observations.append(Observation(
+        id="advisory.crest_factor_db", metric="advisory_crest_factor_db",
+        value=crest_db, units="dB", confidence=0.9, evidence="peak/RMS"))
+    observations.append(Observation(
+        id="advisory.dynamic_range_db", metric="advisory_dynamic_range_db",
+        value=dr_db, units="dB", confidence=0.8, evidence="active-frame RMS p95/p5"))
 
     # --- envelope floor + decay (reverb, experimental) ---
     rms = librosa.feature.rms(y=mono, frame_length=_FRAME, hop_length=_HOP)[0]
@@ -228,6 +245,20 @@ def interpret_advisory(observations: list[Observation]) -> list[Interpretation]:
 
     # Plosives: OBSERVATION-ONLY since 1.1.0 (M32 negative result — 31-55%
     # clean FP for every tested frame-energy rule). No interpretation emitted.
+
+    # Overcompression (M33): crest<14 dB or DR<15 dB — corpus gate 3.8% clean
+    # FP, 81%/52%+ recall. Advisory; the planner separately abstains from
+    # compressing such inputs (an abstention may safely use loudness data).
+    crest = by.get("advisory_crest_factor_db")
+    dr = by.get("advisory_dynamic_range_db")
+    if crest is not None and dr is not None and (crest.value < 14.0 or dr.value < 15.0):
+        out.append(Interpretation(
+            id="interp.overcompressed", issue="overcompressed",
+            supporting_observation_ids=("advisory.crest_factor_db",
+                                        "advisory.dynamic_range_db"),
+            confidence=0.7,
+            rationale=f"Crest factor {crest.value:.1f} dB / dynamic range "
+                      f"{dr.value:.1f} dB — consistent with heavy prior compression."))
     return out
 
 
@@ -252,6 +283,28 @@ def promoted_hum_interpretation(observations: list[Observation]) -> Interpretati
             rationale=f"{count:.0f}/{HUM_HARMONICS} mains harmonics with contrast "
                       f"{contrast:.0f}x (gate: >= {HUM_CONTROL_COUNT_MIN} harmonics, "
                       f">= {HUM_CONTROL_CONTRAST_MIN:.0f}x; 0% clean FP on corpus-v1).")
+    return None
+
+
+def promoted_level_interpretation(observations: list[Observation]) -> Interpretation | None:
+    """Strictly gated low-level confirmation that MAY control a Gain restore.
+
+    Distinct issue name ("level_confirmed") so the plain advisory stays
+    spec-less. Gate = the M25-calibrated advisory condition itself (100%
+    recall, 2.5% clean FP on corpus-v1) with a margin: LUFS must be more than
+    2 LU below the policy minimum, so borderline-quiet inputs stay advisory.
+    """
+    by = {o.metric: o for o in observations}
+    if not by:
+        return None
+    lufs = by["advisory_integrated_lufs"].value
+    if -70.0 < lufs < LEVEL_LOW_LUFS - 2.0:
+        return Interpretation(
+            id="interp.level_confirmed", issue="level_confirmed",
+            supporting_observation_ids=("advisory.integrated_lufs",),
+            confidence=0.85,
+            rationale=f"Integrated loudness {lufs:.1f} LUFS, well below the "
+                      f"{LEVEL_LOW_LUFS} LUFS policy minimum (gate margin 2 LU).")
     return None
 
 

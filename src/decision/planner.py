@@ -37,7 +37,18 @@ from src.shared_types import (
 STRENGTH_BY_BAND = {ConfidenceBand.HIGH: 1.0, ConfidenceBand.MEDIUM: 0.6}
 
 # Dynamics objective fires when frame-level consistency CV exceeds this.
-DYNAMICS_CV_MIN = 0.40
+# M33 recalibration: 0.40 (synthetic-tone era) fired on 100% of clean real
+# vocals — natural singing sits at CV 0.54-0.82 (corpus-v1, n=80). At 0.90:
+# 3.8% clean FP, 68% recall on strong gain-jump inconsistency (moderate
+# inconsistency falls below control — recorded limitation). Compression is
+# the highest-artifact-risk processor; it must be rare, not default.
+DYNAMICS_CV_MIN = 0.90
+
+# M33 abstention (conflict rule 6): do not compress the already-crushed.
+# Corpus gate: crest<14 dB or dynamic range<15 dB -> 3.8% clean FP,
+# 81%/52%+ overcompression recall (moderate/strong).
+OVERCOMP_CREST_MAX_DB = 14.0
+OVERCOMP_DR_MIN_DB = 15.0
 
 # Noise-floor observation above this (dBFS) suppresses air boosts.
 NOISE_SUPPRESS_AIR_DBFS = -50.0
@@ -79,6 +90,11 @@ _ISSUE_SPECS: dict[str, _Spec] = {
     # M28: only the strictly gated hum_confirmed interpretation maps here
     # (advisory "hum" stays spec-less). base_hz is filled from the advisory
     # observation in build_plan.
+    # M33: strictly gated promotion of the recording_level_low advisory
+    # (M25 evidence: 100% recall, 2.5% clean FP — the best candidate).
+    # gain_db is computed from the measured LUFS in build_plan.
+    "level_confirmed": _Spec("restore_level", "Gain", 5, False,
+                             lambda s: {"gain_db": 0.0}),
     "hum_confirmed": _Spec("reduce_hum", "HumNotch", 15, True,
                            lambda s: {"gain_db": round(-12.0 * s, 2), "q": 8.0, "harmonics": 3}),
     "dynamics": _Spec("stabilize_dynamics", "Compressor", 40, False,
@@ -151,9 +167,27 @@ def build_plan(
         if band == ConfidenceBand.LOW:
             skipped.append(f"{spec.processor}:{interp.issue} (report-only: low confidence)")
             continue
+        # Conflict rule 6 (M33): never compress an already-crushed input.
+        if interp.issue == "dynamics":
+            crest = next((o.value for o in (loudness_observations or [])
+                          if o.metric == "crest_factor_db"), 99.0)
+            dr = next((o.value for o in (loudness_observations or [])
+                       if o.metric == "dynamic_range_db"), 99.0)
+            if crest < OVERCOMP_CREST_MAX_DB or dr < OVERCOMP_DR_MIN_DB:
+                skipped.append(f"{spec.processor}:dynamics (input already heavily "
+                               f"compressed: crest {crest:.1f} dB, DR {dr:.1f} dB)")
+                continue
 
         strength = STRENGTH_BY_BAND[band]
         parameters = spec.build(strength)
+        if interp.issue == "level_confirmed":
+            # M33: gain restore toward the -23 LUFS working level, bounded by
+            # the Gain safe range (+12 dB max: a -45 LUFS input is only
+            # partially restored — recorded honestly in the action reason).
+            lufs = next(
+                (o.value for o in (advisory_observations or [])
+                 if o.metric == "advisory_integrated_lufs"), -23.0)
+            parameters["gain_db"] = round(min(12.0, max(0.0, -23.0 - lufs)), 2)
         if interp.issue == "hum_confirmed":
             parameters["base_hz"] = next(
                 (o.value for o in (advisory_observations or []) if o.metric == "hum_base_hz"),
@@ -184,8 +218,13 @@ def build_plan(
         actions.append((45, ProcessingAction(
             id="act.sibilance_guard",
             processor="DeEsser",
+            # Guard threshold 0.25 is STRICTER than the diagnosis threshold
+            # (0.18): benchmark 20260712-095014 showed the 0.18 guard paying a
+            # fidelity cost by taming the reference's own normal esses on
+            # otherwise-clean quiet clips. The user-measured real residuals
+            # (0.29-0.40) remain well above 0.25.
             parameters={"band_lo_hz": 5000.0, "band_hi_hz": 9000.0,
-                        "frame_threshold": 0.18, "max_reduction_db": 6.0},
+                        "frame_threshold": 0.25, "max_reduction_db": 6.0},
             strength=0.6,
             reason="post-compression sibilance guard (self-gating: acts only on "
                    "frames whose 5-9kHz fraction exceeds 0.18; compression "

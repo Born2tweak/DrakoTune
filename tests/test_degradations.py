@@ -45,7 +45,8 @@ def _by_id(rid: str):
 def test_grid_covers_planned_families():
     families = {r.family for r in STANDARD_GRID}
     assert families == {"noise", "hum", "clipping", "reverb", "harshness",
-                        "sibilance", "proximity", "low_level", "codec", "plosive"}
+                        "sibilance", "proximity", "low_level", "codec", "plosive",
+                        "overcompression", "gain_jumps"}
     assert len(STANDARD_GRID) == len({r.id for r in STANDARD_GRID}), "recipe ids must be unique"
     assert all(r.version == DEGRADATION_LIBRARY_VERSION for r in STANDARD_GRID)
 

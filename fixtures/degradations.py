@@ -31,7 +31,7 @@ import pyloudnorm
 import soundfile as sf
 from pedalboard import HighShelfFilter, LowShelfFilter, Pedalboard, PeakFilter
 
-DEGRADATION_LIBRARY_VERSION = "1.1.0"  # 1.1.0 (M32): plosive family
+DEGRADATION_LIBRARY_VERSION = "1.3.0"  # 1.1: plosive; 1.2: overcompression; 1.3: gain_jumps
 
 
 @dataclass(frozen=True)
@@ -158,6 +158,41 @@ def _add_plosives(audio: np.ndarray, sr: int, count: int, amp: float, seed: int)
     return np.clip(out, -1.0, 1.0).astype(np.float32)
 
 
+def _overcompress(audio: np.ndarray, sr: int, ratio: float, threshold_db: float) -> np.ndarray:
+    """Crush dynamics with a heavy compressor, then restore the original
+    integrated loudness — models an already-overcompressed upload."""
+    from pedalboard import Compressor
+    squashed = Pedalboard([Compressor(threshold_db=threshold_db, ratio=ratio,
+                                      attack_ms=1.0, release_ms=60.0)])(audio, sr)
+    try:
+        before = pyloudnorm.Meter(sr).integrated_loudness(audio.astype(np.float64))
+        after = pyloudnorm.Meter(sr).integrated_loudness(squashed.astype(np.float64))
+        if math.isfinite(before) and math.isfinite(after) and before > -70 and after > -70:
+            squashed = squashed * (10.0 ** ((before - after) / 20.0))
+    except Exception:
+        pass
+    return np.clip(squashed, -1.0, 1.0).astype(np.float32)
+
+
+def _gain_jumps(audio: np.ndarray, sr: int, jump_db: float, seed: int) -> np.ndarray:
+    """Per-segment random gain jumps (bad mic technique / inconsistent takes):
+    ~0.7 s segments at +-jump_db, 50 ms crossfades to avoid clicks."""
+    rng = _rng(seed)
+    seg = int(sr * 0.7)
+    fade = int(sr * 0.05)
+    gains = np.ones(len(audio), dtype=np.float32)
+    pos = 0
+    while pos < len(audio):
+        g = 10.0 ** (float(rng.uniform(-jump_db, jump_db)) / 20.0)
+        end = min(pos + seg, len(audio))
+        gains[pos:end] = g
+        pos = end
+    # smooth transitions
+    kernel = np.ones(fade, dtype=np.float32) / fade
+    gains = np.convolve(gains, kernel, mode="same")
+    return np.clip(audio * gains, -1.0, 1.0).astype(np.float32)
+
+
 def _codec_roundtrip(audio: np.ndarray, sr: int, bitrate_kbps: int) -> np.ndarray:
     """MP3 encode/decode via FFmpeg. Effect-validated, not bit-exact across builds."""
     with tempfile.TemporaryDirectory() as tmp:
@@ -200,6 +235,10 @@ def apply_recipe(audio: np.ndarray, sr: int, recipe: DegradationRecipe) -> np.nd
         return _to_level(x, sr, p["target_lufs"])
     if recipe.family == "plosive":
         return _add_plosives(x, sr, p["count"], p["amp"], recipe.seed)
+    if recipe.family == "overcompression":
+        return _overcompress(x, sr, p["ratio"], p["threshold_db"])
+    if recipe.family == "gain_jumps":
+        return _gain_jumps(x, sr, p["jump_db"], recipe.seed)
     if recipe.family == "codec":
         return _codec_roundtrip(x, sr, p["bitrate_kbps"])
     raise ValueError(f"unknown degradation family: {recipe.family}")
@@ -237,6 +276,10 @@ def _grid() -> tuple[DegradationRecipe, ...]:
         add("low_level", sev, {"target_lufs": lufs}, seed=0)
     for sev, (count, amp) in (("moderate", (3, 0.5)), ("strong", (6, 0.9))):
         add("plosive", sev, {"count": count, "amp": amp}, seed=4000 + count)
+    for sev, (ratio, thr) in (("moderate", (8.0, -30.0)), ("strong", (20.0, -45.0))):
+        add("overcompression", sev, {"ratio": ratio, "threshold_db": thr}, seed=0)
+    for sev, jump in (("moderate", 6.0), ("strong", 10.0)):
+        add("gain_jumps", sev, {"jump_db": jump}, seed=5000 + int(jump))
     for sev, kbps in (("moderate", 96), ("strong", 64)):
         add("codec", sev, {"bitrate_kbps": kbps}, seed=0)
 
@@ -249,5 +292,5 @@ STANDARD_GRID: tuple[DegradationRecipe, ...] = _grid()
 # these carry a bit-exact regeneration guarantee. Codec is excluded by design.
 DETERMINISTIC_FAMILIES = (
     "noise", "hum", "clipping", "reverb", "harshness",
-    "sibilance", "proximity", "low_level", "plosive",
+    "sibilance", "proximity", "low_level", "plosive", "overcompression", "gain_jumps",
 )
