@@ -165,7 +165,11 @@ def render_result(job, before_src: str, after_src: str | None) -> str:
     report = job.report
     evaluation = job.evaluation
 
-    body = [f"<h1>{name}</h1>"]
+    preset = getattr(job, "preset", "clean")
+    preset_label = ("Polished — style compression added (user-selected)"
+                    if preset == "polished" else "Clean — defect correction only")
+    body = [f"<h1>{name}</h1>",
+            f'<p><span class="badge">{html.escape(preset)}</span> {html.escape(preset_label)}</p>']
     if job.blocked_targets:
         body.append(
             '<div class="banner banner-warn" role="alert">Enhancement limited for safety: '
@@ -175,6 +179,15 @@ def render_result(job, before_src: str, after_src: str | None) -> str:
 
     findings = "".join(_finding_li(f) for f in report.findings) or "<li>none</li>"
     body.append(f'<h2>Findings</h2><div class="card"><ul class="clean">{findings}</ul></div>')
+
+    residuals = tuple(getattr(evaluation, "residual_issues", ()) or ())
+    if residuals:
+        items = "".join(f"<li>{html.escape(r)}</li>" for r in residuals)
+        body.append(
+            '<h2>Still detected in the output</h2>'
+            '<div class="card"><p class="hint">The diagnosis layer re-ran on the '
+            "processed result; these issues remain (honesty over silence):</p>"
+            f'<ul class="clean">{items}</ul></div>')
 
     applied = [a for a in report.actions if a.startswith("applied ")]
     skipped = [a for a in report.actions if a.startswith("skipped ")]

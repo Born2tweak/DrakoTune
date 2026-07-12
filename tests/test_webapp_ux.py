@@ -71,3 +71,21 @@ class TestClearStates:
         text = _result_html("clipped")
         # Enhancement is blocked for severe clipping; the UI must say so.
         assert 'role="alert"' in text and "limited for safety" in text
+
+
+class TestPresetVisibility:
+    def test_result_page_shows_preset_badge_and_preset_flows(self):
+        """M39: the preset is visible on the result page; polished flows through."""
+        data = (AUDIO_DIR / "harsh.wav").read_bytes()
+        r = client.post("/upload", files={"file": ("v.wav", data, "audio/wav")},
+                        data={"preset": "polished"}, follow_redirects=True)
+        assert r.status_code == 200
+        assert "polished" in r.text and "style compression" in r.text.lower()
+
+        r2 = client.post("/upload", files={"file": ("v.wav", data, "audio/wav")},
+                         follow_redirects=True)
+        assert "Clean — defect correction only" in r2.text
+
+    def test_upload_form_offers_preset_choice(self):
+        text = client.get("/").text
+        assert 'name="preset"' in text and "Polished" in text

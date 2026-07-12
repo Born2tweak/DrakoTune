@@ -42,6 +42,7 @@ class Job:
     message: str = ""
     before_path: Path | None = None
     after_path: Path | None = None
+    preset: str = "clean"  # processing preset used (M39; ADR 0005)
     # Loudness-matched preview pair (M27): fair comparison, ADR 0004.
     before_preview_path: Path | None = None
     after_preview_path: Path | None = None
@@ -69,6 +70,7 @@ class Job:
             "objectives": list(self.objectives),
             "warnings": list(self.warnings),
             "has_report": bool(self.report_markdown),
+            "preset": self.preset,
         }
 
 
@@ -150,6 +152,7 @@ def process_upload(filename: str, data: bytes, preset: str = "clean") -> Job:
         message="Processed.",
         before_path=normalized,
         after_path=processed,
+        preset=preset,
         before_preview_path=before_preview if previews_matched else None,
         after_preview_path=after_preview if previews_matched else None,
         previews_matched=previews_matched,
