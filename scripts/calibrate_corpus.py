@@ -48,6 +48,8 @@ EXPECTED = {
     "plosive": set(),  # M32: observation-only (negative result); spurious hits recorded
     "overcompression": {"overcompressed"},
     "gain_jumps": set(),  # dynamics interpretation lives in the planner, not detect_issues
+    "dullness": set(),   # M35: observation-only (negative result, RG-13)
+    "thinness": set(),   # M35: observation-only (negative result, RG-13)
 }
 
 ALL_ISSUES = sorted({i for s in EXPECTED.values() for i in s}

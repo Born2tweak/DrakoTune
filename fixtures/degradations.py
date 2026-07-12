@@ -29,9 +29,10 @@ from pathlib import Path
 import numpy as np
 import pyloudnorm
 import soundfile as sf
-from pedalboard import HighShelfFilter, LowShelfFilter, Pedalboard, PeakFilter
+from pedalboard import (HighpassFilter, HighShelfFilter, LowpassFilter,
+                        LowShelfFilter, Pedalboard, PeakFilter)
 
-DEGRADATION_LIBRARY_VERSION = "1.3.0"  # 1.1: plosive; 1.2: overcompression; 1.3: gain_jumps
+DEGRADATION_LIBRARY_VERSION = "1.4.0"  # 1.3: gain_jumps; 1.4 (M35): dullness/thinness
 
 
 @dataclass(frozen=True)
@@ -239,6 +240,10 @@ def apply_recipe(audio: np.ndarray, sr: int, recipe: DegradationRecipe) -> np.nd
         return _overcompress(x, sr, p["ratio"], p["threshold_db"])
     if recipe.family == "gain_jumps":
         return _gain_jumps(x, sr, p["jump_db"], recipe.seed)
+    if recipe.family == "dullness":
+        return _eq(x, sr, LowpassFilter(cutoff_frequency_hz=p["cutoff_hz"]))
+    if recipe.family == "thinness":
+        return _eq(x, sr, HighpassFilter(cutoff_frequency_hz=p["cutoff_hz"]))
     if recipe.family == "codec":
         return _codec_roundtrip(x, sr, p["bitrate_kbps"])
     raise ValueError(f"unknown degradation family: {recipe.family}")
@@ -280,6 +285,10 @@ def _grid() -> tuple[DegradationRecipe, ...]:
         add("overcompression", sev, {"ratio": ratio, "threshold_db": thr}, seed=0)
     for sev, jump in (("moderate", 6.0), ("strong", 10.0)):
         add("gain_jumps", sev, {"jump_db": jump}, seed=5000 + int(jump))
+    for sev, cutoff in (("moderate", 5000.0), ("strong", 3000.0)):
+        add("dullness", sev, {"cutoff_hz": cutoff}, seed=0)
+    for sev, cutoff in (("moderate", 300.0), ("strong", 450.0)):
+        add("thinness", sev, {"cutoff_hz": cutoff}, seed=0)
     for sev, kbps in (("moderate", 96), ("strong", 64)):
         add("codec", sev, {"bitrate_kbps": kbps}, seed=0)
 
@@ -292,5 +301,5 @@ STANDARD_GRID: tuple[DegradationRecipe, ...] = _grid()
 # these carry a bit-exact regeneration guarantee. Codec is excluded by design.
 DETERMINISTIC_FAMILIES = (
     "noise", "hum", "clipping", "reverb", "harshness",
-    "sibilance", "proximity", "low_level", "plosive", "overcompression", "gain_jumps",
+    "sibilance", "proximity", "low_level", "plosive", "overcompression", "gain_jumps", "dullness", "thinness",
 )

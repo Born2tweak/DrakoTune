@@ -1,0 +1,74 @@
+{
+  "profile_version": "1.0.0",
+  "source": "corpus-v1 clean clips (n=80; VocalSet + vocadito, CC BY 4.0 \u2014 see data/licenses/ATTRIBUTIONS.md)",
+  "bands_hz": {
+    "low": [
+      80,
+      250
+    ],
+    "lowmid": [
+      250,
+      800
+    ],
+    "mid": [
+      800,
+      2500
+    ],
+    "presence": [
+      2500,
+      5000
+    ],
+    "air": [
+      5000,
+      12000
+    ]
+  },
+  "note": "Reference percentiles of band-energy fractions across clean real vocals. OBSERVATION-ONLY (M35 negative result): absolute tonal gates cannot detect dullness/thinness on singing \u2014 clean presence+air spans a ~75x range across singers/registers (RG-13). Used for neutral 'where does this recording sit' context in reports, never for interpretations or DSP.",
+  "percentiles": {
+    "low": {
+      "p5": 6.4e-05,
+      "p10": 0.000101,
+      "p25": 0.020788,
+      "p50": 0.105768,
+      "p75": 0.247219,
+      "p90": 0.430071,
+      "p95": 0.461423
+    },
+    "lowmid": {
+      "p5": 0.348139,
+      "p10": 0.399494,
+      "p25": 0.476501,
+      "p50": 0.588565,
+      "p75": 0.703472,
+      "p90": 0.768487,
+      "p95": 0.814049
+    },
+    "mid": {
+      "p5": 0.040306,
+      "p10": 0.053917,
+      "p25": 0.086291,
+      "p50": 0.179225,
+      "p75": 0.30886,
+      "p90": 0.476003,
+      "p95": 0.531654
+    },
+    "presence": {
+      "p5": 0.001758,
+      "p10": 0.003329,
+      "p25": 0.00571,
+      "p50": 0.015075,
+      "p75": 0.029764,
+      "p90": 0.088545,
+      "p95": 0.143345
+    },
+    "air": {
+      "p5": 0.000361,
+      "p10": 0.00048,
+      "p25": 0.000917,
+      "p50": 0.001743,
+      "p75": 0.004427,
+      "p90": 0.013048,
+      "p95": 0.016748
+    }
+  }
+}

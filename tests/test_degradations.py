@@ -46,7 +46,7 @@ def test_grid_covers_planned_families():
     families = {r.family for r in STANDARD_GRID}
     assert families == {"noise", "hum", "clipping", "reverb", "harshness",
                         "sibilance", "proximity", "low_level", "codec", "plosive",
-                        "overcompression", "gain_jumps"}
+                        "overcompression", "gain_jumps", "dullness", "thinness"}
     assert len(STANDARD_GRID) == len({r.id for r in STANDARD_GRID}), "recipe ids must be unique"
     assert all(r.version == DEGRADATION_LIBRARY_VERSION for r in STANDARD_GRID)
 
@@ -129,3 +129,10 @@ def test_plosive_recipe_adds_lf_bursts(voice_like):
     out = apply_recipe(voice_like, SR, _by_id("plosive_strong"))
     assert not np.array_equal(out, voice_like)
     assert _band_energy(out, 40, 120) > _band_energy(voice_like, 40, 120) * 1.5
+
+
+def test_dullness_and_thinness_recipes(voice_like):
+    dull = apply_recipe(voice_like, SR, _by_id("dullness_strong"))
+    assert _band_energy(dull, 5000, 12000) < _band_energy(voice_like, 5000, 12000) * 0.5
+    thin = apply_recipe(voice_like, SR, _by_id("thinness_strong"))
+    assert _band_energy(thin, 80, 250) < _band_energy(voice_like, 80, 250) * 0.5
