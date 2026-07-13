@@ -6,7 +6,7 @@ the before/after result and report. Audio-first: the result page leads with the
 before/after players. No accounts, billing, or AI (out of scope).
 """
 
-from fastapi import FastAPI, Form, UploadFile
+from fastapi import FastAPI, Form, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
 from src.webapp.feedback import record_feedback
@@ -16,6 +16,7 @@ from src.webapp.jobs import (
     get_job,
     process_upload,
 )
+from src.webapp import listening
 from src.webapp.security import signed_url, verify
 from src.webapp.templates import page, render_privacy, render_result, render_upload
 
@@ -108,3 +109,69 @@ def serve_audio(job_id: str, which: str, exp: int = 0, sig: str = ""):
     if path is None:
         return JSONResponse({"error": "audio_not_found"}, status_code=404)
     return FileResponse(str(path), media_type="audio/wav", filename=f"{which}.wav")
+
+
+# --- Blinded listening-session runner (M43) --------------------------------
+
+@app.get("/listen")
+def listen(listener_id: str = "", listener_type: str = "listener"):
+    session = listening.session_dir()
+    if session is None:
+        return HTMLResponse(page("DrakoTune — listening test",
+                                 "<h1>No session configured</h1>"
+                                 '<p class="hint">Set DRAKOTUNE_LISTENING_SESSION to a '
+                                 "prepared session directory and restart.</p>"))
+    trials = listening.trial_ids(session)
+    if not listener_id:
+        return HTMLResponse(page("DrakoTune — listening test",
+                                 listening.render_start_page(len(trials))))
+    remaining = [t for t in trials if t not in listening.answered_trials(session, listener_id)]
+    if not remaining:
+        return HTMLResponse(page("DrakoTune — listening test",
+                                 listening.render_done_page(listener_id)))
+    trial = remaining[0]
+    a_src = signed_url(f"listen-{trial}", "A")
+    b_src = signed_url(f"listen-{trial}", "B")
+    return HTMLResponse(page(
+        "DrakoTune — listening test",
+        listening.render_trial_page(trial, len(remaining), len(trials),
+                                    listener_id, listener_type,
+                                    f"/listen/audio/{trial}/A?{a_src.split('?', 1)[1]}",
+                                    f"/listen/audio/{trial}/B?{b_src.split('?', 1)[1]}")))
+
+
+@app.post("/listen")
+async def listen_submit(request: Request):
+    session = listening.session_dir()
+    if session is None:
+        return JSONResponse({"error": "no_session"}, status_code=404)
+    form = await request.form()
+    try:
+        listening.record_response(
+            session,
+            listener_id=str(form.get("listener_id", ""))[:40],
+            listener_type=str(form.get("listener_type", "listener")),
+            trial=str(form.get("trial", "")),
+            preference=str(form.get("preference", "")),
+            strength=str(form.get("strength", "")),
+            artifacts=[str(a) for a in form.getlist("artifacts")],
+            notes=str(form.get("notes", "")),
+        )
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    from urllib.parse import quote
+    return RedirectResponse(
+        url=f"/listen?listener_id={quote(str(form.get('listener_id', '')))}"
+            f"&listener_type={quote(str(form.get('listener_type', 'listener')))}",
+        status_code=303)
+
+
+@app.get("/listen/audio/{trial}/{side}")
+def listen_audio(trial: str, side: str, exp: int = 0, sig: str = ""):
+    session = listening.session_dir()
+    if session is None or not verify(f"listen-{trial}", side, exp, sig):
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+    path = listening.stimulus_path(session, trial, side)
+    if path is None:
+        return JSONResponse({"error": "not_found"}, status_code=404)
+    return FileResponse(str(path), media_type="audio/wav", filename=f"{trial}_{side}.wav")
