@@ -118,26 +118,38 @@ Still-open manual checkpoints (optional extensions, not blockers):
   or kept for future work. A 67 GB `Unconfirmed 736357.crdownload` in
   `Downloads/` is an incomplete browser download (unidentified).
 
-## Post-M29 continuation (M30-M33)
+## Post-M29 continuation (M30-M43)
 
 | Milestone | Status |
 |-----------|--------|
 | M30 — Dynamic de-esser + post-compression guard (executor array processors) | ✅ complete |
 | M31 — Self-auditing evaluation (residual-issue detection) + session/benchmark refresh | ✅ complete |
-| M32 — Plosive detection (NEGATIVE RESULT: demoted to observation-only; degradation family kept) | ✅ complete |
+| M32 — Plosive detection | ✅ complete (**negative result** — observation-only; RG-6b) |
 | M33 — Dynamics policy: CV recalibration (0.40→0.90), level-restore promotion, overcompression abstention | ✅ complete |
+| M34 — Style presets: clean (default) / polished (**product-owner decision (b)**, ADR 0005) | ✅ complete |
+| M35 — Tonal-balance detection | ✅ complete (**negative result** — profile committed as reference; RG-13) |
+| M36 — Long-file performance benchmark (~0.07× realtime; ~180 MB/audio-min, linear) + budget gate | ✅ complete |
+| M37 — CLI/batch parity (advisory + JSON manifest; batch --preset) | ✅ complete |
+| M38 — Polished-preset objective benchmark + owner A/B export (`Downloads/drakotune_preset_ab/`) | ✅ complete |
+| M39 — Webapp result page: preset badge + residual-issues card | ✅ complete |
+| M40 — corpus-v2 evidence refresh (37-recipe grid) | ✅ complete |
+| M41 — Stereo-input honesty advisory (summed-to-mono warning) | ✅ complete |
+| M42 — Codec-artifact detection | ✅ complete (**insufficient evidence** — no detector; RG-14) |
+| M43 — In-browser blinded listening runner (`/listen`, one URL per listener) | ✅ complete |
 
-**⚠ DECISION NEEDED (product owner): compression policy.**
-M33's evidence showed the old CV threshold compressed 100% of real vocals —
-including the files you listened to and liked. With the recalibrated
-threshold, typical natural-dynamics vocals (including yours) now get NO
-compressor (and therefore no post-compression de-esser guard). Objectively
-cleaner; perceptually different from what you approved. Options:
-(a) keep 0.90 — compression only for extreme inconsistency (current state);
-(b) reintroduce gentle compression as an explicit style preset (off by
-default, user-selectable), keeping defect-correction at 0.90;
-(c) pick an intermediate threshold after A/B listening your files both ways.
-The benchmark cannot decide this — only ears can.
+**corpus-v2 evidence freeze (reports/evaluations/corpus-v2/):** calibration —
+hum/clipping/low_level/overcompression 100% recall, noise ≥93%, rumble FP
+2.5%, overcompressed FP 10%; clean-preset v2 benchmark now shows **positive**
+fidelity deltas where the chain acts: harshness/strong +2.0 dB, hum/strong
++9.2 dB (band −0.63), gain_jumps/strong +1.6 dB, low_level/moderate 0.0
+(transparent restore), overcompression 0.0 (perfect abstention); output
+clipping 0.0000 everywhere. Watch items: proximity detection 0/4 on this
+grid assignment (n=4; was 4/4 on corpus-v1 — clip-dependent), reverb
+estimator remains weak (known, research-only), sibilance moderate 25%.
+
+**Compression policy: RESOLVED** — product owner chose (b); see ADR 0005 and
+the M34/M38 rows. Matched clean-vs-polished pairs of the owner's own files
+await their ears in `Downloads/drakotune_preset_ab/`.
 
 Standing constraints: no new processors, no threshold tuning, no frontend
 rebuild, no ML, no data collection before their gates (ADR 0002–0004,
