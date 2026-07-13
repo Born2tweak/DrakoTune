@@ -20,6 +20,15 @@ primary_region = "iad"   # change to your nearest region (e.g. "lhr", "fra", "sj
   auto_start_machines = true
   min_machines_running = 0        # set to 1 if you want it always warm (no cold start)
 
+  # Cost protection (M44): caps concurrent in-flight requests at the Fly proxy
+  # itself, on top of the app-level rate limiter + job-slot semaphore in
+  # src/webapp/ratelimit.py. hard_limit rejects (fails fast) past this count
+  # rather than queuing indefinitely on a single small machine.
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 8
+    hard_limit = 16
+
   [[http_service.checks]]
     interval = "15s"
     timeout = "3s"

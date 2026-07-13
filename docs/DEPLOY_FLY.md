@@ -10,10 +10,12 @@ Files in this repo that make it deployable: `Dockerfile`, `fly.toml`,
 `.dockerignore`, and the `/health` endpoint.
 
 > **Public-exposure note.** Per the product owner's decision this deploys
-> **fully public with no access gate**. The app has no authentication or
-> rate limiting. It carries an "experimental pilot" banner and a 50 MB upload
-> cap (memory guard, not access control). `docs/PILOT.md` recommends keeping
-> access private; going public is an explicit, owner-approved override.
+> **fully public with no login gate**. There is no authentication. Because
+> the owner is cost-sensitive, it does carry real **abuse/cost protection**
+> (M44, see below): per-IP rate limits, a server-wide concurrency cap, a
+> proxy-level request cap, an "experimental pilot" banner, and a 50 MB upload
+> cap. `docs/PILOT.md` recommends keeping access private; going public is an
+> explicit, owner-approved override, mitigated by the limits below.
 
 ## One-time setup
 
@@ -61,6 +63,42 @@ curl https://<your-app>.fly.dev/health   # -> {"status":"ok","service":"drakotun
 
 Then upload a short WAV/MP3 through the UI and confirm the before/after players
 and report render.
+
+## Abuse / cost protection (M44)
+
+Three independent layers, all active with sane defaults out of the box —
+nothing to configure to get protection, only to adjust it:
+
+| Layer | Where | Default | Purpose |
+|---|---|---|---|
+| Proxy request concurrency | `fly.toml` `[http_service.concurrency]` | soft 8 / hard 16 | Fly itself queues (soft) then rejects (hard) before requests reach the app |
+| Per-IP rate limit | `src/webapp/ratelimit.py` (middleware) | 5 uploads/min, 60 requests/min per IP | Stops one client (or a simple script) from hammering the endpoint |
+| Server-wide job concurrency | `src/webapp/ratelimit.py` (`job_slot`) | 2 concurrent DSP jobs | Caps CPU time in flight regardless of how many different IPs are asking |
+
+The `/health` check is exempt from the per-IP limiter so the container
+orchestrator's own probe can never be rate-limited into a false "unhealthy".
+
+Tune via secrets (each takes effect on next request, no redeploy needed):
+
+```bash
+fly secrets set DRAKOTUNE_RATE_LIMIT_UPLOADS_PER_MIN=3   # tighter
+fly secrets set DRAKOTUNE_RATE_LIMIT_REQUESTS_PER_MIN=30
+fly secrets set DRAKOTUNE_MAX_CONCURRENT_JOBS=1           # stricter cost ceiling
+```
+
+A client past the per-IP limit gets `429` with a `Retry-After` header; past
+the concurrency cap gets `503` ("server busy, try again shortly") — both are
+fast, cheap responses, not queued processing.
+
+**Caveat:** limiter state is in-memory and per-process. It resets on every
+restart/redeploy/cold-start-from-scale-to-zero, and (by design, single
+instance) is not shared across machines — which is fine since you must run
+exactly one machine anyway (see below).
+
+**Hard spend ceiling:** Fly has no built-in dollar cap in the CLI. If you
+want an absolute stop, set a billing alert/limit in the
+[Fly dashboard billing settings](https://fly.io/dashboard/personal/billing)
+in addition to the limits above.
 
 ## Operating notes
 

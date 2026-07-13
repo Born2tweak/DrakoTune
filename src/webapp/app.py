@@ -19,6 +19,13 @@ from src.webapp.jobs import (
     process_upload,
 )
 from src.webapp import listening
+from src.webapp.ratelimit import (
+    ServerBusyError,
+    client_ip,
+    general_limiter,
+    job_slot,
+    upload_limiter,
+)
 from src.webapp.security import signed_url, verify
 from src.webapp.templates import page, render_privacy, render_result, render_upload
 
@@ -30,14 +37,31 @@ app = FastAPI(title="DrakoTune", version="0.1.0")
 MAX_UPLOAD_MB = int(os.environ.get("DRAKOTUNE_MAX_UPLOAD_MB", "50"))
 _MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 
+# Endpoints that trigger a DSP run (expensive; get the tight rate limit).
+_UPLOAD_PATHS = frozenset({"/api/audio/upload", "/upload"})
+
 
 @app.middleware("http")
-async def _limit_upload_size(request: Request, call_next):
+async def _cost_guards(request: Request, call_next):
+    """Combined size + rate-limit guard. Runs before any handler, including
+    the health check (which is exempted so the container orchestrator's
+    probe is never itself rate-limited into a false 'unhealthy')."""
+    if request.url.path == "/health":
+        return await call_next(request)
+
     if request.method == "POST":
         length = request.headers.get("content-length")
         if length and length.isdigit() and int(length) > _MAX_UPLOAD_BYTES:
             return JSONResponse(
                 {"error": "file_too_large", "max_mb": MAX_UPLOAD_MB}, status_code=413)
+
+    ip = client_ip(request.headers, request.client.host if request.client else "unknown")
+    limiter = upload_limiter if request.url.path in _UPLOAD_PATHS else general_limiter
+    allowed, retry_after = limiter.allow(ip)
+    if not allowed:
+        return JSONResponse(
+            {"error": "rate_limited", "retry_after_seconds": round(retry_after, 1)},
+            status_code=429, headers={"Retry-After": str(int(retry_after) + 1)})
     return await call_next(request)
 
 
@@ -66,14 +90,24 @@ def index() -> str:
 @app.post("/api/audio/upload")
 async def api_upload(file: UploadFile, preset: str = Form("clean")) -> JSONResponse:
     data = await file.read()
-    job = process_upload(file.filename or "vocal", data, preset=preset)
+    try:
+        with job_slot():
+            job = process_upload(file.filename or "vocal", data, preset=preset)
+    except ServerBusyError as exc:
+        return JSONResponse({"error": "server_busy", "detail": str(exc)}, status_code=503)
     return JSONResponse(_job_response(job))
 
 
 @app.post("/upload")
-async def form_upload(file: UploadFile, preset: str = Form("clean")) -> RedirectResponse:
+async def form_upload(file: UploadFile, preset: str = Form("clean")):
     data = await file.read()
-    job = process_upload(file.filename or "vocal", data, preset=preset)
+    try:
+        with job_slot():
+            job = process_upload(file.filename or "vocal", data, preset=preset)
+    except ServerBusyError as exc:
+        return HTMLResponse(
+            page("DrakoTune — busy", f"<h1>Busy right now</h1><p>{exc}. Please retry shortly.</p>"),
+            status_code=503)
     return RedirectResponse(url=f"/jobs/{job.id}", status_code=303)
 
 
