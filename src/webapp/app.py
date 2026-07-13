@@ -6,6 +6,8 @@ the before/after result and report. Audio-first: the result page leads with the
 before/after players. No accounts, billing, or AI (out of scope).
 """
 
+import os
+
 from fastapi import FastAPI, Form, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
@@ -21,6 +23,28 @@ from src.webapp.security import signed_url, verify
 from src.webapp.templates import page, render_privacy, render_result, render_upload
 
 app = FastAPI(title="DrakoTune", version="0.1.0")
+
+# Operational safety for a public deployment (NOT access control): the pipeline
+# holds whole files in memory (~180 MB per audio-minute, M36 benchmark), so an
+# unbounded upload would OOM the container. Reject oversized bodies up front.
+MAX_UPLOAD_MB = int(os.environ.get("DRAKOTUNE_MAX_UPLOAD_MB", "50"))
+_MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
+
+
+@app.middleware("http")
+async def _limit_upload_size(request: Request, call_next):
+    if request.method == "POST":
+        length = request.headers.get("content-length")
+        if length and length.isdigit() and int(length) > _MAX_UPLOAD_BYTES:
+            return JSONResponse(
+                {"error": "file_too_large", "max_mb": MAX_UPLOAD_MB}, status_code=413)
+    return await call_next(request)
+
+
+@app.get("/health")
+def health() -> JSONResponse:
+    """Liveness probe (no DSP) for the container host's health check."""
+    return JSONResponse({"status": "ok", "service": "drakotune"})
 
 
 def _job_response(job) -> dict:

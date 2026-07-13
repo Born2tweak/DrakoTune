@@ -1,0 +1,32 @@
+# Keep the build context small and free of local audio / evidence artifacts.
+.git
+.gitignore
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local datasets, corpora, benchmark outputs — never needed at runtime and
+# often large / gitignored. The service reads none of these.
+data/
+reports/
+output/
+docs/
+tests/
+scripts/
+fixtures/
+
+# Agent / editor / venv noise
+.venv/
+venv/
+env/
+.agent/
+.autoclaw/
+.claude/
+.idea/
+.vscode/
+*.wav
+*.mp3
+*.flac

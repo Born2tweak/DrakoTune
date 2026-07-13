@@ -52,6 +52,10 @@ def page(title: str, body: str) -> str:
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         f"<title>{html.escape(title)}</title><style>{CSS}</style></head><body>"
         '<a class="skip" href="#main">Skip to content</a>'
+        '<div role="alert" style="background:#3a2a00;color:#ffd98a;text-align:center;'
+        'padding:8px 12px;font-size:.85rem;line-height:1.4;border-bottom:1px solid var(--line)">'
+        "<strong>Experimental pilot</strong> — public test build. Results are unvalidated and "
+        "this is <strong>not</strong> a professional mix. Don’t upload anything confidential.</div>"
         f'<header><span class="brand">DrakoTune</span>'
         f'<span class="tag">{html.escape(BRAND_TAGLINE)}</span></header>'
         f'<main id="main">{body}</main>'

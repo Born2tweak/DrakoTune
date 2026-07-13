@@ -1,0 +1,36 @@
+# Fly.io configuration for the DrakoTune web service.
+#
+# IMPORTANT: `app` must be globally unique across Fly. `fly launch` will offer
+# to rename it; if you edit by hand, pick something like "drakotune-<you>".
+#
+# SINGLE INSTANCE IS REQUIRED. The job store is in-memory, so all requests for
+# one upload must hit the same machine. Keep the machine count at 1
+# (`fly scale count 1`); do not enable multi-machine autoscaling.
+
+app = "drakotune"
+primary_region = "iad"   # change to your nearest region (e.g. "lhr", "fra", "sjc")
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"     # scale to zero when idle (cheap); wakes on request
+  auto_start_machines = true
+  min_machines_running = 0        # set to 1 if you want it always warm (no cold start)
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "3s"
+    grace_period = "20s"          # cold import of librosa/numba takes a few seconds
+    method = "get"
+    path = "/health"
+
+# ~180 MB of Python-tracked allocation per audio-minute (M36 benchmark); true
+# RSS runs higher with libs + STFT copies. 2 GB comfortably handles a 5-minute
+# vocal. Drop to 1 GB only if you cap uploads to short clips.
+[[vm]]
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 1
