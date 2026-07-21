@@ -2,8 +2,8 @@
 
 **State date:** 2026-07-21  
 **Audited commit:** `a3c51637a0c2ed18994a6950a45a72ccb753a93d`  
-**Planning epoch:** post-M44 / pre-DT-45  
-**Delivery posture:** research and specification complete; implementation not started
+**Planning epoch:** H0 execution / DT-45 complete  
+**Delivery posture:** planning package accepted (PR #1 merged); DT-45 complete; DT-46/DT-47/DT-50 ready, DT-53 discovery ready (scope decision human-gated)  
 **Planning package:** Aurelian v1.2
 
 ## Verified baseline
@@ -34,9 +34,16 @@ DrakoTune is a deterministic, inspectable vocal-processing prototype. It is not 
 
 ## Immediate execution boundary
 
-The next milestone is `DT-45 Evidence Semantics and Claim Quarantine`. It may begin only after a human accepts this planning package. No model adoption, paid recruiting, dataset acquisition, public claim, or binary distribution is authorized by this state record.
+The planning package was accepted on 2026-07-21 (PR #1 merged to `main`) and `DT-45 Evidence Semantics and Claim Quarantine` is **complete** (evidence: `07_DATA_AND_PROVENANCE/dt45_evidence/`). No model adoption, paid recruiting, dataset acquisition, public claim, or binary distribution is authorized by this state record.
 
-Once DT-45 is complete, dependency-independent internal work may run automatically in up to four lanes under the canonical autonomy policy. Routine engineering, research, documentation, and reversible implementation do not require repeated approval; money, people, credentials, rights/legal decisions, public claims, production/release, and irreversible deletion remain human-only.
+Now ready: DT-46 (Identity/Provenance Schema v2) and DT-47 (Metric Applicability Registry) in the `evidence` lane; DT-50 (Reproducible Environment and SBOM) in the `build` lane; DT-53 (Product Promise Discovery) discovery work in `product_data` — its scope decision is a human-only `product_scope` gate. Dependency-independent internal work runs automatically in up to four lanes under the canonical autonomy policy. Routine engineering, research, documentation, and reversible implementation do not require repeated approval; money, people, credentials, rights/legal decisions, public claims, production/release, and irreversible deletion remain human-only.
+
+### Verified baseline (DT-45 execution environment)
+
+- Python 3.14.0 (Windows) system interpreter; all declared runtime deps import.
+- `python -m pytest -q`: 412 passed, 4 warnings (baseline 362 + 50 new DT-45 tests).
+- `python scripts/audio_regression.py`: 6/6 fixtures match goldens (no audio change).
+- Env note: the 2 tests recorded as skipped under Python 3.12 execute and pass under 3.14; recorded as an environment difference, not a behavior change.
 
 `05_ROADMAP/MILESTONE_REGISTRY.yaml` is the machine authority for each milestone's status, dependencies, lane, execution profile, resource class, write set, completion-evidence key, claim impact, and default quarantine behavior. The milestone detail documents are execution contracts; their Field 15 rows distinguish automatic checks from human-only gates.
 
