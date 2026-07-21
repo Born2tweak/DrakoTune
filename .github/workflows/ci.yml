@@ -7,6 +7,14 @@ on:
 
 jobs:
   test:
+    # DT-50: two independent clean environments install from the same declared
+    # deps and must both pass the suite and the audio goldens. This matrix is
+    # the machine authority for the "two clean environments resolve identical
+    # artifacts" acceptance criterion that the in-process suite cannot prove.
+    strategy:
+      fail-fast: false
+      matrix:
+        clean_env: [a, b]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,10 +27,11 @@ jobs:
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Install package
+      - name: Install package (clean env ${{ matrix.clean_env }})
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,web]"
+          pip check
 
       - name: Run tests
         run: pytest -q
@@ -30,10 +39,21 @@ jobs:
       - name: Audio regression check
         run: python scripts/audio_regression.py
 
+      - name: Regenerate and validate SBOM + fingerprint
+        run: |
+          PYTHONPATH=. python scripts/build_sbom.py
+          pytest -q tests/test_reproducibility.py
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ matrix.clean_env }}
+          path: AURELIAN/08_TOOLING/sbom.json
+
       - name: Upload regression artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: audio-regression-artifacts
+          name: audio-regression-artifacts-${{ matrix.clean_env }}
           path: artifacts/
           if-no-files-found: ignore
