@@ -1,0 +1,177 @@
+schema_version: "1.2.0"
+roadmap_version: "1.2"
+updated_at: "2026-07-21"
+state_authority: true
+initialization:
+  max_in_progress: 0
+  only_ready: [DT-45]
+execution_policy:
+  max_parallel_lanes: 4
+  policy: AUTONOMY_AND_PARALLEL_EXECUTION.md
+  automatic_readiness: true
+  automatic_completion: true
+allowed_statuses:
+  - proposed
+  - ready
+  - in_progress
+  - blocked
+  - complete
+  - failed_experiment
+  - superseded
+milestones:
+  - {id: DT-45, title: Evidence Semantics and Claim Quarantine, horizon: H0, status: ready, depends_on: [], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-46, title: Identity and Provenance Schema v2, horizon: H0, status: blocked, depends_on: [DT-45], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-47, title: Metric Applicability Registry, horizon: H0, status: blocked, depends_on: [DT-45], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-48, title: Multiaxis Verdict Engine, horizon: H0, status: blocked, depends_on: [DT-46, DT-47], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-49, title: Rights Consent and Withdrawal Graph, horizon: H0, status: blocked, depends_on: [DT-46], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-50, title: Reproducible Environment and SBOM, horizon: H0, status: blocked, depends_on: [DT-45], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-51, title: Desktop Distribution Branch Decision, horizon: H0, status: blocked, depends_on: [DT-49, DT-50], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-52, title: Application and DSP Seam Characterization, horizon: H0, status: blocked, depends_on: [DT-48, DT-50], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-53, title: Product Promise Discovery and Scope Decision, horizon: H1, status: blocked, depends_on: [DT-45], detail: MILESTONES/DT_53_60.md}
+  - {id: DT-54, title: Target-Genre and Recording Strata Taxonomy, horizon: H1, status: blocked, depends_on: [DT-53], detail: MILESTONES/DT_53_60.md}
+  - {id: DT-55, title: Rights-Clean Acquisition and Consent Plan, horizon: H1, status: blocked, depends_on: [DT-49, DT-54], detail: MILESTONES/DT_53_60.md}
+  - {id: DT-56, title: Listening Protocol and Immutable Response Schema, horizon: H1, status: blocked, depends_on: [DT-46, DT-47, DT-54], detail: MILESTONES/DT_53_60.md}
+  - {id: DT-57, title: Statistical Preregistration and Adversarial Validation, horizon: H1, status: blocked, depends_on: [DT-48, DT-56], detail: MILESTONES/DT_53_60.md}
+  - {id: DT-58, title: Expert Pilot Budget Contracts and Recruitment Approval, horizon: H1, status: blocked, depends_on: [DT-55, DT-57], detail: MILESTONES/DT_53_60.md}
+  - {id: DT-59, title: Professional Engineer Pilot, horizon: H1, status: blocked, depends_on: [DT-58], detail: MILESTONES/DT_53_60.md}
+  - {id: DT-60, title: Confirmatory Design Power and Threshold Lock, horizon: H1, status: blocked, depends_on: [DT-59], detail: MILESTONES/DT_53_60.md}
+  - {id: DT-61, title: Listening Platform Production Hardening, horizon: H2, status: blocked, depends_on: [DT-56, DT-60], detail: MILESTONES/DT_61_68.md}
+  - {id: DT-62, title: Rights-Clean Seed Corpus Acquisition, horizon: H2, status: blocked, depends_on: [DT-55], detail: MILESTONES/DT_61_68.md}
+  - {id: DT-63, title: Grouped Splits and Corpus Validation, horizon: H2, status: blocked, depends_on: [DT-46, DT-62], detail: MILESTONES/DT_61_68.md}
+  - {id: DT-64, title: Champion Calibration on Held-Out Real Data, horizon: H2, status: blocked, depends_on: [DT-48, DT-52, DT-63], detail: MILESTONES/DT_61_68.md}
+  - {id: DT-65, title: Independent Professional Treatments and References, horizon: H2, status: blocked, depends_on: [DT-58, DT-62], detail: MILESTONES/DT_61_68.md}
+  - {id: DT-66, title: Clean Preserve Do-No-Harm Confirmatory Study, horizon: H2, status: blocked, depends_on: [DT-60, DT-61, DT-63, DT-65], detail: MILESTONES/DT_61_68.md}
+  - {id: DT-67, title: Repair-Efficacy Confirmatory Study, horizon: H2, status: blocked, depends_on: [DT-60, DT-61, DT-64, DT-65], detail: MILESTONES/DT_61_68.md}
+  - {id: DT-68, title: Evidence Synthesis and Bounded Claim Decision, horizon: H2, status: blocked, depends_on: [DT-66, DT-67], detail: MILESTONES/DT_61_68.md}
+  - {id: DT-69, title: Shared Project and Application Service, horizon: H3, status: blocked, depends_on: [DT-49, DT-52, DT-53], detail: MILESTONES/DT_69_76.md}
+  - {id: DT-70, title: Target-Hardware Performance and Duration Budgets, horizon: H3, status: blocked, depends_on: [DT-52, DT-53], detail: MILESTONES/DT_69_76.md}
+  - {id: DT-71, title: Desktop Framework and Build Spike, horizon: H3, status: blocked, depends_on: [DT-51, DT-69, DT-70], detail: MILESTONES/DT_69_76.md}
+  - {id: DT-72, title: Desktop Import Preflight and Analyze Slice, horizon: H3, status: blocked, depends_on: [DT-69, DT-71], detail: MILESTONES/DT_69_76.md}
+  - {id: DT-73, title: Desktop Plan Render and Revision Slice, horizon: H3, status: blocked, depends_on: [DT-48, DT-52, DT-72], detail: MILESTONES/DT_69_76.md}
+  - {id: DT-74, title: Level-Matched Audition Export and Accessibility, horizon: H3, status: blocked, depends_on: [DT-73], detail: MILESTONES/DT_69_76.md}
+  - {id: DT-75, title: Cancellation Crash Recovery and Long-File Memory, horizon: H3, status: blocked, depends_on: [DT-70, DT-74], detail: MILESTONES/DT_69_76.md}
+  - {id: DT-76, title: Closed Desktop Usability Pilot, horizon: H3, status: blocked, depends_on: [DT-68, DT-75], detail: MILESTONES/DT_69_76.md}
+  - {id: DT-77, title: Evidence-Led Failure Taxonomy and Improvement Brief, horizon: H4, status: blocked, depends_on: [DT-64, DT-66, DT-67, DT-76], detail: MILESTONES/DT_77_84.md}
+  - {id: DT-78, title: Deterministic Champion Improvement Preregistration, horizon: H4, status: blocked, depends_on: [DT-77], detail: MILESTONES/DT_77_84.md}
+  - {id: DT-79, title: Deterministic Champion Candidate Implementation, horizon: H4, status: blocked, depends_on: [DT-52, DT-78], detail: MILESTONES/DT_77_84.md}
+  - {id: DT-80, title: Champion Comparison and Promotion Decision, horizon: H4, status: blocked, depends_on: [DT-79], detail: MILESTONES/DT_77_84.md}
+  - {id: DT-81, title: Differentiable Model Candidate Reproduction, horizon: H4, status: blocked, depends_on: [DT-63, DT-68, DT-77], detail: MILESTONES/DT_77_84.md}
+  - {id: DT-82, title: Offline Challenger Sandbox and Promotion Gate, horizon: H4, status: blocked, depends_on: [DT-50, DT-80, DT-81], detail: MILESTONES/DT_77_84.md}
+  - {id: DT-83, title: Continuous Research Watcher v1, horizon: H4, status: blocked, depends_on: [DT-45, DT-50], detail: MILESTONES/DT_77_84.md}
+  - {id: DT-84, title: Integrated Security Privacy License and Claim Audit, horizon: H4, status: blocked, depends_on: [DT-68, DT-75, DT-82, DT-83], detail: MILESTONES/DT_77_84.md}
+  - {id: DT-85, title: Target-Genre Corpus Expansion, horizon: H5, status: blocked, depends_on: [DT-62, DT-68, DT-84], detail: MILESTONES/DT_85_92.md}
+  - {id: DT-86, title: Target-Genre Beta Protocol and Release Candidate Freeze, horizon: H5, status: blocked, depends_on: [DT-76, DT-80, DT-85], detail: MILESTONES/DT_85_92.md}
+  - {id: DT-87, title: Closed Target-Genre Beta Execution, horizon: H5, status: blocked, depends_on: [DT-86], detail: MILESTONES/DT_85_92.md}
+  - {id: DT-88, title: Cross-Platform Packaging and Distribution Proof, horizon: H5, status: blocked, depends_on: [DT-51, DT-75, DT-84, DT-86], detail: MILESTONES/DT_85_92.md}
+  - {id: DT-89, title: Signed Updates Rollback Deletion and Support Drill, horizon: H5, status: blocked, depends_on: [DT-88], detail: MILESTONES/DT_85_92.md}
+  - {id: DT-90, title: Replicated Quality and Usability Evidence, horizon: H5, status: blocked, depends_on: [DT-87, DT-89], detail: MILESTONES/DT_85_92.md}
+  - {id: DT-91, title: Public Release and Claims Gate, horizon: H5, status: blocked, depends_on: [DT-88, DT-89, DT-90], detail: MILESTONES/DT_85_92.md}
+  - {id: DT-92, title: General-Mixing Expansion Decision, horizon: H5, status: blocked, depends_on: [DT-91], detail: MILESTONES/DT_85_92.md}
+execution_profiles:
+  automatic_internal:
+    human_gate_categories: []
+    automatic_completion: true
+    default_quarantine: fail_closed_and_continue_other_lanes
+  product_scope:
+    human_gate_categories: [product_scope]
+    automatic_completion: false
+    default_quarantine: retain_narrow_scope
+  rights_spend:
+    human_gate_categories: [spending, people_contact, contract_consent, rights_legal_privacy]
+    automatic_completion: false
+    default_quarantine: block_external_use_and_continue_internal_work
+  method_before_people:
+    human_gate_categories: [confirmatory_method_freeze]
+    automatic_completion: false
+    default_quarantine: exploratory_only
+  human_study:
+    human_gate_categories: [spending, people_contact, contract_consent, unblinding]
+    automatic_completion: false
+    default_quarantine: stop_collection_and_quarantine_affected_records
+  distribution_decision:
+    human_gate_categories: [license_legal, distribution_posture]
+    automatic_completion: false
+    default_quarantine: internal_source_run_only
+  production_promotion:
+    human_gate_categories: [material_audio_promotion, production_change]
+    automatic_completion: false
+    default_quarantine: preserve_current_champion
+  public_release:
+    human_gate_categories: [public_claims, license_legal, signing_distribution, production_release]
+    automatic_completion: false
+    default_quarantine: hold_or_revoke_release
+  strategic_scope:
+    human_gate_categories: [product_scope, rights_legal_privacy, spending]
+    automatic_completion: false
+    default_quarantine: retain_released_scope
+lanes:
+  evidence:
+    max_active: 1
+    default_resource_class: low
+    milestone_ids: [DT-45, DT-46, DT-47, DT-48, DT-49]
+  build:
+    max_active: 1
+    default_resource_class: medium
+    milestone_ids: [DT-50, DT-51, DT-52, DT-69, DT-70, DT-71, DT-72, DT-73, DT-74, DT-75, DT-79, DT-80, DT-88, DT-89]
+  product_data:
+    max_active: 1
+    default_resource_class: low
+    milestone_ids: [DT-53, DT-54, DT-55, DT-58, DT-62, DT-65, DT-68, DT-76, DT-77, DT-85, DT-86, DT-87, DT-91, DT-92]
+  research_validation:
+    max_active: 1
+    default_resource_class: medium
+    milestone_ids: [DT-56, DT-57, DT-59, DT-60, DT-61, DT-63, DT-64, DT-66, DT-67, DT-78, DT-81, DT-82, DT-83, DT-84, DT-90]
+resource_classes:
+  low: {cpu: low, memory: low, network: optional_public_metadata, external_people: false}
+  medium: {cpu: medium, memory: medium, network: optional_authorized, external_people: false}
+  high: {cpu: high_bounded, memory: high_bounded, network: optional_authorized, external_people: false}
+  external_people: {cpu: medium, memory: medium, network: authorized_only, external_people: true}
+milestone_execution:
+  DT-45: {lane: evidence, profile: automatic_internal, resource_class: low, write_set: [evaluation_schema, claim_quarantine, compatibility_tests], evidence_key: dt45_semantic_suite, claim_impact: quarantine_only}
+  DT-46: {lane: evidence, profile: automatic_internal, resource_class: low, write_set: [identity_schema, provenance_schema, migration_fixtures], evidence_key: dt46_identity_graph_suite, claim_impact: none}
+  DT-47: {lane: evidence, profile: automatic_internal, resource_class: medium, write_set: [metric_registry, applicability_tests], evidence_key: dt47_metric_card_suite, claim_impact: narrows_objective_interpretation}
+  DT-48: {lane: evidence, profile: automatic_internal, resource_class: medium, write_set: [verdict_engine, evaluation_reports, adversarial_tests], evidence_key: dt48_multiaxis_adversarial_suite, claim_impact: blocks_false_passes}
+  DT-49: {lane: evidence, profile: rights_spend, resource_class: medium, write_set: [rights_schema, consent_store_interface, withdrawal_graph], evidence_key: dt49_withdrawal_drill, claim_impact: suspends_rights_invalid_claims}
+  DT-50: {lane: build, profile: automatic_internal, resource_class: medium, write_set: [dependency_lock, build_manifest, sbom, ci], evidence_key: dt50_clean_build_parity, claim_impact: exact_build_engineering_only}
+  DT-51: {lane: build, profile: distribution_decision, resource_class: low, write_set: [distribution_adr, license_policy], evidence_key: dt51_signed_distribution_adr, claim_impact: none}
+  DT-52: {lane: build, profile: automatic_internal, resource_class: medium, write_set: [application_interfaces, dsp_backend, characterization_tests], evidence_key: dt52_behavior_parity, claim_impact: preserves_baseline_only}
+  DT-53: {lane: product_data, profile: product_scope, resource_class: low, write_set: [product_research, product_spec, scope_decision], evidence_key: dt53_discovery_decision, claim_impact: defines_future_scope}
+  DT-54: {lane: product_data, profile: product_scope, resource_class: low, write_set: [strata_taxonomy, schema_vocabulary], evidence_key: dt54_taxonomy_review, claim_impact: scopes_future_claims}
+  DT-55: {lane: product_data, profile: rights_spend, resource_class: low, write_set: [acquisition_plan, consent_templates, budget_packet], evidence_key: dt55_approved_acquisition_packet, claim_impact: none}
+  DT-56: {lane: research_validation, profile: automatic_internal, resource_class: medium, write_set: [listening_schema, assignment_engine, response_store, legacy_import], evidence_key: dt56_listening_exploit_suite, claim_impact: protocol_only}
+  DT-57: {lane: research_validation, profile: method_before_people, resource_class: high, write_set: [statistical_analysis, simulation_fixtures, prereg_template], evidence_key: dt57_statistical_calibration, claim_impact: method_only}
+  DT-58: {lane: product_data, profile: rights_spend, resource_class: low, write_set: [recruitment_packet, pilot_budget, consent_contracts], evidence_key: dt58_signed_pilot_authority, claim_impact: none}
+  DT-59: {lane: research_validation, profile: human_study, resource_class: external_people, write_set: [pilot_records, protected_participant_data, pilot_results], evidence_key: dt59_immutable_pilot_package, claim_impact: exploratory_only}
+  DT-60: {lane: research_validation, profile: method_before_people, resource_class: high, write_set: [power_simulation, confirmatory_preregistration, threshold_lock], evidence_key: dt60_frozen_confirmatory_design, claim_impact: defines_future_gate}
+  DT-61: {lane: research_validation, profile: automatic_internal, resource_class: high, write_set: [listening_platform, study_operations, accessibility_tests], evidence_key: dt61_platform_dry_run, claim_impact: protocol_only}
+  DT-62: {lane: product_data, profile: rights_spend, resource_class: external_people, write_set: [protected_corpus, grant_manifests, acquisition_ledger], evidence_key: dt62_rights_clean_corpus_audit, claim_impact: none}
+  DT-63: {lane: research_validation, profile: automatic_internal, resource_class: medium, write_set: [split_manifests, leakage_validator, corpus_report], evidence_key: dt63_zero_leak_split_report, claim_impact: defines_evaluation_population}
+  DT-64: {lane: research_validation, profile: automatic_internal, resource_class: high, write_set: [calibration_registry, champion_config, lab_results], evidence_key: dt64_frozen_champion_calibration, claim_impact: bounded_objective_only}
+  DT-65: {lane: product_data, profile: rights_spend, resource_class: external_people, write_set: [professional_treatments, treatment_rights, reference_manifests], evidence_key: dt65_treatment_rights_qc, claim_impact: comparator_only}
+  DT-66: {lane: research_validation, profile: human_study, resource_class: external_people, write_set: [clean_study_data, clean_results, claim_candidate], evidence_key: dt66_clean_confirmatory_package, claim_impact: bounded_claim_candidate}
+  DT-67: {lane: research_validation, profile: human_study, resource_class: external_people, write_set: [repair_study_data, repair_results, claim_candidate], evidence_key: dt67_repair_confirmatory_package, claim_impact: bounded_claim_candidate}
+  DT-68: {lane: product_data, profile: product_scope, resource_class: medium, write_set: [claim_registry, champion_scope, evidence_synthesis], evidence_key: dt68_signed_claim_matrix, claim_impact: internal_claim_candidate}
+  DT-69: {lane: build, profile: automatic_internal, resource_class: medium, write_set: [project_schema, application_service, cli_web_adapters], evidence_key: dt69_atomic_project_suite, claim_impact: none}
+  DT-70: {lane: build, profile: product_scope, resource_class: high, write_set: [performance_harness, hardware_budget, duration_policy], evidence_key: dt70_target_hardware_budget, claim_impact: named_performance_only}
+  DT-71: {lane: build, profile: distribution_decision, resource_class: high, write_set: [desktop_spike, packaging_build, bundle_sbom], evidence_key: dt71_clean_machine_spike, claim_impact: feasibility_only}
+  DT-72: {lane: build, profile: automatic_internal, resource_class: high, write_set: [desktop_import_ui, preflight_ui, analysis_ui], evidence_key: dt72_import_analyze_e2e, claim_impact: supported_scope_only}
+  DT-73: {lane: build, profile: automatic_internal, resource_class: high, write_set: [desktop_plan_ui, render_ui, revision_history], evidence_key: dt73_render_revision_parity, claim_impact: no_quality_claim}
+  DT-74: {lane: build, profile: automatic_internal, resource_class: high, write_set: [audition_engine, export_service, accessibility], evidence_key: dt74_audition_export_e2e, claim_impact: level_matched_audition_only}
+  DT-75: {lane: build, profile: automatic_internal, resource_class: high, write_set: [streaming_runtime, cancellation, crash_recovery, performance_tests], evidence_key: dt75_long_file_recovery, claim_impact: named_duration_only}
+  DT-76: {lane: product_data, profile: human_study, resource_class: external_people, write_set: [usability_protocol, usability_data, ux_findings], evidence_key: dt76_usability_pilot_package, claim_impact: bounded_usability_only}
+  DT-77: {lane: product_data, profile: automatic_internal, resource_class: medium, write_set: [failure_registry, improvement_briefs], evidence_key: dt77_evidence_failure_taxonomy, claim_impact: may_narrow_only}
+  DT-78: {lane: research_validation, profile: automatic_internal, resource_class: medium, write_set: [improvement_preregistration, experiment_manifest], evidence_key: dt78_frozen_improvement_prereg, claim_impact: none}
+  DT-79: {lane: build, profile: automatic_internal, resource_class: high, write_set: [candidate_dsp, candidate_tests, candidate_build], evidence_key: dt79_candidate_verification, claim_impact: none}
+  DT-80: {lane: build, profile: production_promotion, resource_class: high, write_set: [champion_registry, promotion_adr, rollback_config], evidence_key: dt80_champion_comparison, claim_impact: invalidates_inherited_old_build_claims}
+  DT-81: {lane: research_validation, profile: rights_spend, resource_class: high, write_set: [research_environment, candidate_card, reproduction_results], evidence_key: dt81_candidate_reproduction, claim_impact: research_only}
+  DT-82: {lane: research_validation, profile: production_promotion, resource_class: high, write_set: [challenger_sandbox, artifact_registry, promotion_policy], evidence_key: dt82_sandbox_promotion_simulation, claim_impact: research_only}
+  DT-83: {lane: research_validation, profile: automatic_internal, resource_class: medium, write_set: [watcher_connectors, source_snapshots, proposal_log], evidence_key: dt83_deterministic_watcher_replay, claim_impact: may_suspend_stale_claims}
+  DT-84: {lane: research_validation, profile: public_release, resource_class: medium, write_set: [integrated_audit, threat_model, findings_register], evidence_key: dt84_integrated_assurance_audit, claim_impact: may_suspend_or_narrow}
+  DT-85: {lane: product_data, profile: rights_spend, resource_class: external_people, write_set: [expanded_corpus, coverage_manifests, split_manifests], evidence_key: dt85_expanded_corpus_audit, claim_impact: expands_test_population_only}
+  DT-86: {lane: product_data, profile: human_study, resource_class: high, write_set: [beta_protocol, rc_manifest, support_plan], evidence_key: dt86_frozen_beta_rc, claim_impact: beta_wording_only}
+  DT-87: {lane: product_data, profile: human_study, resource_class: external_people, write_set: [beta_distribution_log, beta_data, incidents, beta_results], evidence_key: dt87_closed_beta_package, claim_impact: closed_study_only}
+  DT-88: {lane: build, profile: public_release, resource_class: high, write_set: [platform_installers, signing_manifests, sbom_notices], evidence_key: dt88_cross_platform_distribution_proof, claim_impact: platform_facts_only}
+  DT-89: {lane: build, profile: public_release, resource_class: high, write_set: [update_channel_simulation, rollback_drill, support_incident_records], evidence_key: dt89_operations_drill, claim_impact: operations_facts_only}
+  DT-90: {lane: research_validation, profile: human_study, resource_class: external_people, write_set: [replication_data, replication_results, claim_eligibility], evidence_key: dt90_replication_package, claim_impact: public_review_candidate}
+  DT-91: {lane: product_data, profile: public_release, resource_class: high, write_set: [release_decision, public_claim_matrix, release_artifacts], evidence_key: dt91_signed_release_packet, claim_impact: exact_public_claims}
+  DT-92: {lane: product_data, profile: strategic_scope, resource_class: low, write_set: [scope_decision, next_roadmap_epoch], evidence_key: dt92_signed_scope_decision, claim_impact: no_automatic_expansion}

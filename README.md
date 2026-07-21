@@ -1,15 +1,18 @@
 # DrakoTune
 
-Deterministic, explainable vocal cleanup. Upload a raw vocal, DrakoTune
-diagnoses what's actually wrong with it (harshness, sibilance, mud, rumble,
-noise floor, uneven dynamics, mains hum, low recording level...), applies
-only the bounded DSP moves justified by that diagnosis, and shows you a
-loudness-matched before/after plus a plain-language report of what it did
-and why.
+Deterministic, explainable vocal-cleanup research software. Give DrakoTune a
+raw vocal and it flags potential signal issues (such as harshness, sibilance,
+mud, rumble, noise floor, uneven dynamics, mains hum, or low recording level),
+applies bounded DSP moves when its current rules consider them applicable, and
+produces a before/after plus a plain-language report. Detector findings are
+measurements and hypotheses—not proof that a listener will hear a problem or
+prefer the processed result.
 
-**Live pilot:** [drakotune.fly.dev](https://drakotune.fly.dev) — experimental,
-public, unauthenticated. Not a professional mix or mastering engineer. See
-[docs/PILOT.md](docs/PILOT.md) before relying on it for anything real.
+**Hosted pilot URL:** [drakotune.fly.dev](https://drakotune.fly.dev). The
+repository includes an experimental, public, unauthenticated pilot, but its
+current deployment availability and configuration were not independently
+verified in the 2026-07-21 audit. It is not a professional mix or mastering
+engineer. See [docs/PILOT.md](docs/PILOT.md) before relying on it.
 
 ## What this is — and isn't
 
@@ -21,10 +24,10 @@ public, unauthenticated. Not a professional mix or mastering engineer. See
   "make it sound expensive" button. It will tell you what it *can't* fix
   (reverb, hum, an already-crushed master) and suggest rerecording instead of
   faking a fix.
-- **Is not (yet):** validated by blinded human listening at scale. Detection
-  thresholds are calibrated against a real-vocal corpus (VocalSet + vocadito,
-  both CC BY 4.0) with synthetic degradations; a blinded listening session is
-  built and ready (`/listen`) but needs volunteer listeners to run.
+- **Is not (yet):** validated by independent blinded human listening. Existing
+  listening tooling is exploratory and its former sample/do-no-harm rules are
+  not valid for confirmatory claims; the replacement protocol is specified in
+  [AURELIAN](AURELIAN/README.md).
 
 ## Quickstart
 
@@ -58,7 +61,7 @@ python -m uvicorn src.webapp.app:app --port 8000
 **Tests:**
 
 ```bash
-python -m pytest -q          # 362 tests
+python -m pytest -q          # audited baseline: 360 passed, 2 skipped (362 collected)
 python scripts/audio_regression.py   # golden-fixture audio regression
 ```
 
@@ -84,7 +87,8 @@ Current milestone status and evidence trail:
 |---|---|
 | Product brief / PRD | [docs/01-product-brief.md](docs/01-product-brief.md), [docs/02-prd.md](docs/02-prd.md) |
 | Architecture | [docs/03-architecture.md](docs/03-architecture.md) |
-| Milestone history & evidence | [CURRENT_MILESTONE.md](CURRENT_MILESTONE.md) |
+| Canonical post-M44 specifications & roadmap | [AURELIAN](AURELIAN/README.md) |
+| Historical milestone record | [CURRENT_MILESTONE.md](CURRENT_MILESTONE.md) |
 | Decisions (ADRs) | [docs/decisions/](docs/decisions/) |
 | Validation plan & alpha evidence | [docs/validation/DRAKOTUNE_ALPHA_VALIDATION_PLAN.md](docs/validation/DRAKOTUNE_ALPHA_VALIDATION_PLAN.md) |
 | Dataset governance & licensing | [docs/data/DATASET_GOVERNANCE.md](docs/data/DATASET_GOVERNANCE.md) |
@@ -101,18 +105,21 @@ store — it runs on a persistent container host, **not** serverless/edge
 platforms (Vercel, Netlify, etc. — see the reasoning in
 [docs/DEPLOY_FLY.md](docs/DEPLOY_FLY.md)). Ships as a `Dockerfile` +
 `fly.toml` for [Fly.io](https://fly.io); the same image runs on any Docker
-host. The public deploy carries rate limiting and a concurrency cap (see
-the deploy doc) since it has no login gate.
+host. The deployment configuration includes rate limiting and a concurrency
+cap (see the deploy doc) since it has no login gate; deployed behavior must be
+verified separately from source-code inspection.
 
 ## Status
 
 Deterministic core (diagnose → decide → execute → evaluate → report) is
-built, tested (362 tests, CI audio regression), and calibrated against a
-real-vocal corpus. Style presets, a gated de-esser, hum removal, and an
-in-browser blinded listening runner all ship. Not yet done: the blinded
-listening verdict itself (tooling is ready, needs volunteers), broader
-genre/microphone coverage, and legal sign-off on artist data collection.
-Details and exact evidence: [CURRENT_MILESTONE.md](CURRENT_MILESTONE.md).
+built and regression-tested (audited baseline: 360 passed, 2 skipped; six
+audio goldens). It has a synthetic-degradation corpus built from real-vocal
+sources, style presets, a gated de-esser, hum removal, and an exploratory
+in-browser listening runner. It is not yet supported by a statistically valid,
+independent listening verdict, representative target-genre evidence, or a
+desktop distribution decision. Canonical next work and exact claim boundaries:
+[AURELIAN](AURELIAN/README.md). Historical build evidence:
+[CURRENT_MILESTONE.md](CURRENT_MILESTONE.md).
 
 ## License
 

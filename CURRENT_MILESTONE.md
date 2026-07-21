@@ -1,6 +1,18 @@
-# Current Milestone Status
+---
+authority: historical
+automation_ingest: false
+superseded_by: AURELIAN/00_CONTROL/PROJECT_STATE.md
+roadmap_superseded_by: AURELIAN/05_ROADMAP/MILESTONE_REGISTRY.yaml
+---
 
-**Authoritative roadmap:** DrakoTune Implementation Roadmap (M00→M16), as
+# Historical Milestone Status (M00–M44)
+
+> This file preserves the implementation history. Canonical post-M44 state,
+> specifications, evidence gates, and DT-45+ roadmap live in
+> [`AURELIAN/`](AURELIAN/README.md). In particular, the former M24 `n >= 8`
+> listener gate is invalidated and must not support a perceptual claim.
+
+**Historical roadmap source:** DrakoTune Implementation Roadmap (M00→M16), as
 reconciled in [`docs/audit/M00_baseline_audit.md`](docs/audit/M00_baseline_audit.md).
 
 | Milestone | Status |
@@ -51,7 +63,7 @@ regenerated. Still open: real-vocal calibration and a subjective listening study
 
 ## Next phase: evidence layer (M21+)
 
-**Canonical M21+ roadmap:**
+**Historical M21+ roadmap:**
 [`docs/implementation/DRAKOTUNE_MASTER_EXECUTION_ROADMAP.md`](docs/implementation/DRAKOTUNE_MASTER_EXECUTION_ROADMAP.md)
 (derived from the post-research audit
 [`docs/audit/DRAKOTUNE_POST_DATASET_RESEARCH_AUDIT.md`](docs/audit/DRAKOTUNE_POST_DATASET_RESEARCH_AUDIT.md)
@@ -63,7 +75,7 @@ and the dataset research
 | M21 — Dataset governance & evidence scaffolding | ✅ complete |
 | M22 — Evaluation corpus v1 + synthetic degradation library | ✅ complete |
 | M23 — Evaluation harness v2 (loudness-matched A/B, SI-SDR, per-defect benchmark) | ✅ complete |
-| M24 — Blinded listening test v1 (**alpha verdict**) | 🟡 tooling complete; **awaiting ≥8 human listeners** (session prepared under `data/derived/listening/`) |
+| M24 — Blinded listening test v1 | ⚠️ exploratory tooling retained; former `n >= 8`/do-no-harm analysis invalidated; replaced by DT-56–DT-68 |
 | M25 — Diagnosis calibration v2 (graded severities; advisory diagnoses) | ✅ complete |
 | M26 — Evidence-based diagnosis recalibration + do-no-harm CI gates | ✅ complete (spectral 1.2.0) |
 | M27 — Report engine v2 + loudness-matched web previews | ✅ complete |
@@ -77,8 +89,8 @@ M23 benchmark (480 runs) → M25 confusion matrices → M26 recalibration
 M28 HumNotch behind a 0%-clean-FP promotion gate (hum_confirmed:
 ≥4 harmonics @ ≥100× contrast; advisory "hum" remains spec-less).
 
-**Open human gates:** (1) M24 listeners — the alpha verdict and every
-perceptual claim wait on this; (2) M29 consent-protocol legal approval;
+**Open human gates:** (1) the replacement listening/statistical protocol,
+pilot, and confirmatory study in DT-56–DT-68; (2) M29 consent-protocol legal approval;
 (3) optional corpus upgrades (VoiceBank-DEMAND/MUSAN/OpenSLR-28 downloads,
 SingVERSE license read, DAMP agreement).
 De-esser remains **deferred** until M24 shows a sibilance failure mode
@@ -163,9 +175,9 @@ Web skeleton (FastAPI, reuses the core): `pip install -e ".[web,dev]"` then
 `python -m uvicorn src.webapp.app:app --port 8000` and open http://localhost:8000
 (upload → before/after playback → report). Framework rationale: ADR 0001.
 
-The decision-driven v2 path (`--plan`) runs: diagnostics → decision → plan →
-bounded DSP execution. The legacy adaptive chain remains the default until v2 is
-A/B-validated on real vocals.
+The decision-driven v2 path is the audited CLI default: diagnostics → decision
+→ plan → bounded DSP execution. `--legacy` explicitly selects the legacy path;
+`--plan` is retained as a deprecated compatibility no-op.
 
 ## What runs today
 
@@ -181,6 +193,10 @@ diagnose (7 categories) → artifact scan → adaptive DSP → export before/aft
 overwritten.
 
 ## Guardrails (every milestone)
+
+> Historical guardrails below describe the M00–M44 execution era and are not
+> instructions for DT-45+. The canonical parallel/autonomy policy lives in
+> `AURELIAN/05_ROADMAP/AUTONOMY_AND_PARALLEL_EXECUTION.md`.
 
 - One milestone at a time; do not skip.
 - Full test suite stays green; audio must not regress.
