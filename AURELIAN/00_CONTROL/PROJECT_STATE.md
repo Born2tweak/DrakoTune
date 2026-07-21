@@ -1,0 +1,53 @@
+# Project State
+
+**State date:** 2026-07-21  
+**Audited commit:** `a3c51637a0c2ed18994a6950a45a72ccb753a93d`  
+**Planning epoch:** post-M44 / pre-DT-45  
+**Delivery posture:** research and specification complete; implementation not started
+**Planning package:** Aurelian v1.2
+
+## Verified baseline
+
+- Fresh Python 3.12 environment installs successfully with `.[dev,web]`; `pip check` is clean.
+- `python -m pytest -q`: 362 collected, 360 passed, 2 skipped, 5 warnings.
+- `python scripts/audio_regression.py`: all six fixtures match their goldens.
+- The v2 decision engine is the CLI default. `--legacy` selects the legacy chain; `--plan` is a deprecated no-op.
+- A representative `harsh.wav` v2 run completed and produced audio, report, manifest, trace, and objective results.
+- The public pilot code is a FastAPI upload/job/download service with retention, signed links, rate limiting, and concurrency controls.
+
+## Product truth
+
+DrakoTune is a deterministic, inspectable vocal-processing prototype. It is not yet validated as an automatic professional vocal mixer. It can analyze a mono vocal, construct a bounded DSP plan, render it, measure selected signal changes, and explain what it did. Its strongest assets are deterministic execution, traceability, tests, and a conservative safety layer. Its central weakness is that objective movement is too often treated as evidence of perceptual improvement.
+
+## Evidence status
+
+| Claim area | Current status | Consequence |
+|---|---|---|
+| Determinism and software regression | Supported locally | May describe as a tested deterministic prototype. |
+| Signal safety | Partially supported | Clipping/finite/output-ceiling checks are useful but incomplete. |
+| Defect reduction | Synthetic and metric evidence only | No generalized perceptual claim. |
+| Professional quality | Unsupported | Requires independent, rights-clean, preregistered listening evidence. |
+| Genre robustness | Unsupported | Current corpus is synthetic and not representative of rap/pop production variation. |
+| Clean-vocal do-no-harm | Unsupported | Existing analyzer can pass harmful outcomes. |
+| Desktop distribution | Undecided | Pedalboard/FFmpeg/Qt licensing and packaging branch must be resolved first. |
+| Public hosted pilot | Code exists | Live production status was not independently verified in this audit. |
+
+## Immediate execution boundary
+
+The next milestone is `DT-45 Evidence Semantics and Claim Quarantine`. It may begin only after a human accepts this planning package. No model adoption, paid recruiting, dataset acquisition, public claim, or binary distribution is authorized by this state record.
+
+Once DT-45 is complete, dependency-independent internal work may run automatically in up to four lanes under the canonical autonomy policy. Routine engineering, research, documentation, and reversible implementation do not require repeated approval; money, people, credentials, rights/legal decisions, public claims, production/release, and irreversible deletion remain human-only.
+
+`05_ROADMAP/MILESTONE_REGISTRY.yaml` is the machine authority for each milestone's status, dependencies, lane, execution profile, resource class, write set, completion-evidence key, claim impact, and default quarantine behavior. The milestone detail documents are execution contracts; their Field 15 rows distinguish automatic checks from human-only gates.
+
+## Known drift reconciled
+
+- The old statement that legacy processing is the default is false for the audited commit.
+- “362 tests” means collected tests at this baseline, not 362 passing tests.
+- M24’s former `n >= 8` listening gate is invalid because it counts rows, not independent listeners, and mishandles ties and clean-safety outcomes.
+- M29’s artist-consent protocol remains a draft requiring owner/legal review.
+- M44 rate-limiting code is present; completion evidence is preserved in history, while the next roadmap starts at DT-45.
+
+## Next review triggers
+
+Update this file when a milestone changes state, a blocking decision is made, external evidence materially changes, or a canonical specification is superseded.
