@@ -23,8 +23,8 @@ allowed_statuses:
 milestones:
   - {id: DT-45, title: Evidence Semantics and Claim Quarantine, horizon: H0, status: complete, depends_on: [], detail: MILESTONES/DT_45_52.md}
   - {id: DT-46, title: Identity and Provenance Schema v2, horizon: H0, status: complete, depends_on: [DT-45], detail: MILESTONES/DT_45_52.md}
-  - {id: DT-47, title: Metric Applicability Registry, horizon: H0, status: ready, depends_on: [DT-45], detail: MILESTONES/DT_45_52.md}
-  - {id: DT-48, title: Multiaxis Verdict Engine, horizon: H0, status: blocked, depends_on: [DT-46, DT-47], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-47, title: Metric Applicability Registry, horizon: H0, status: complete, depends_on: [DT-45], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-48, title: Multiaxis Verdict Engine, horizon: H0, status: ready, depends_on: [DT-46, DT-47], detail: MILESTONES/DT_45_52.md}
   - {id: DT-49, title: Rights Consent and Withdrawal Graph, horizon: H0, status: ready, depends_on: [DT-46], detail: MILESTONES/DT_45_52.md}
   - {id: DT-50, title: Reproducible Environment and SBOM, horizon: H0, status: ready, depends_on: [DT-45], detail: MILESTONES/DT_45_52.md}
   - {id: DT-51, title: Desktop Distribution Branch Decision, horizon: H0, status: blocked, depends_on: [DT-49, DT-50], detail: MILESTONES/DT_45_52.md}

@@ -1,0 +1,852 @@
+{
+  "cards": [
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:9282bd9ac790f2a04a9f726790f4967ff59ff2282d078925902f02351a6fcd80",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [
+        "intersample_peaks_missed"
+      ],
+      "license": "first_party",
+      "meaningful_threshold": 0.001,
+      "metric_id": "clipping_ratio",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "signal_safety",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "operational",
+      "uncertainty_method": "not_established",
+      "unit": "ratio"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:409131e8eeae34c811249be3d5953eb938a83012a228b83acdb6784847f8b33d",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "clip_flag_ratio",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "signal_safety",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "ratio"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:87385c8ee2642e4a53cf5fdf7371dc6c2caeb34e9c95b4190387b2db2b0f85ea",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "dc_offset",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "signal_safety",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "amplitude"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:d0c8697f0bcaa82e29e7753f9e61c1f374d3977f460ea6181bcf33bb061f7308",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "peak_dbfs",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "signal_safety",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dBFS"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:d241c91f63b4bb3718078a78e4eb022b1345317cfc6bbee3ff2bd83fa44bdbd8",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": -1.0,
+      "metric_id": "true_peak_dbtp",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "signal_safety",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": "ITU-R BS.1770-4 true-peak; common -1 dBTP delivery ceiling",
+      "threshold_status": "evidence_backed",
+      "uncertainty_method": "not_established",
+      "unit": "dBTP"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:aeebd1a8138190b2fb58f9edba89773f831723d81ea7f32cdfe458fe400fe392",
+      "direction": 1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "headroom_db",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "signal_safety",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dB"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:b40d01820acf1d07877f9ad90ec4c3ab68a44717e322bc48d0ea993819eeeee3",
+      "direction": 1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "headroom_min_db",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "signal_safety",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dB"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:0f8c986bc1c13f152c5d2968bc7e3c456d26aba9b4489a7a6c1b83e691524181",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "silence_percentage",
+      "prohibited_interpretations": [],
+      "reference_requirement": "none",
+      "role": "descriptive",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "percent"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:2fb6785c150eddc1ade771b930b82638f4d714351d7eff43790cb505fae7e830",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "silence_frame_dbfs",
+      "prohibited_interpretations": [],
+      "reference_requirement": "none",
+      "role": "descriptive",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dBFS"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:02ec497af6870818691a66348443bbd4fd0705a7056087395681932396d5603b",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "duration_seconds",
+      "prohibited_interpretations": [],
+      "reference_requirement": "none",
+      "role": "descriptive",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "seconds"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:03e1633c0f66aa3ed2b8d64c8b0335dc062e4d169b069b21fb8b90bfaf75df24",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "rms_dbfs",
+      "prohibited_interpretations": [
+        "loudness_is_not_quality",
+        "louder_is_not_better"
+      ],
+      "reference_requirement": "none",
+      "role": "comparability",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dBFS"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:72796b3212a4ee97f8a5da41a73f5af2c64037816f4e2339adcc87fd6f3cea66",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "integrated_lufs",
+      "prohibited_interpretations": [
+        "loudness_is_not_quality",
+        "louder_is_not_better"
+      ],
+      "reference_requirement": "none",
+      "role": "comparability",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "operational",
+      "uncertainty_method": "bs1770_gated",
+      "unit": "LUFS"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:1ad929f812b9220c09edc7011c336a3f9d8c7485057709e125e0d84302146cda",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "level_high_lufs",
+      "prohibited_interpretations": [
+        "loudness_is_not_quality",
+        "louder_is_not_better"
+      ],
+      "reference_requirement": "none",
+      "role": "comparability",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "LUFS"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:58f2e6b39b7b9033eafc01f35ea03b77f75ac7f066b6c9f557656ef71b24c6d5",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "level_low_lufs",
+      "prohibited_interpretations": [
+        "loudness_is_not_quality",
+        "louder_is_not_better"
+      ],
+      "reference_requirement": "none",
+      "role": "comparability",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "LUFS"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:b380a7c7d626d5aafc07a35c527b40de999d70bad600edc022f143ed84d2b758",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "advisory_integrated_lufs",
+      "prohibited_interpretations": [
+        "loudness_is_not_quality",
+        "louder_is_not_better"
+      ],
+      "reference_requirement": "none",
+      "role": "comparability",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "LUFS"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:9b82a88dfb25ce14f7af9e9c80d9e9094e89ccd659369842c170c84c330b808d",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "harshness_ratio",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "ratio"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:2d820f0e82abb73c4d10c14c2f6836173f7e7c537a9024999ef96c49e8db629d",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "mud_ratio",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "ratio"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:f0c09291686c750f503244083915c288ff1c8957eda8c78fe6e8743654953811",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "sibilance_frame_p95",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "ratio"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:f8f926a5f832221172018a7e54aee2fa0a3698bdb37506eb21193495b510513d",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "sibilance_ratio",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "ratio"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:1cdd1cbb6802aaa1d14b28047a7e2ae5284bb1ecf96abc1a43b946fbebd0bcc2",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "rumble_fraction",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "fraction"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:a4d4a6057d3f4b8196e2f2ac273e68b8d9a9ca693177879ff80e190876d363ca",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "noise_floor_dbfs",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dBFS"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:e025c126f44fb1bfca9b28c7caee94b52e7ea452d54df044f40d40cea1df626b",
+      "direction": 1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "air_ratio",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "ratio"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:739fe5e2fa5626ea58a816652c760e5b534a5b34f7a3f7f6f6aca9212ae3dc59",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "centroid_hz",
+      "prohibited_interpretations": [],
+      "reference_requirement": "none",
+      "role": "descriptive",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "Hz"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:3aa0518a40131204e2154696225e61ad148c5d726de59dbd7886eacbf9df5934",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "envelope_floor_ratio",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "ratio"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:bb8ee01a54067cb4b9faeb6fe1e95cae325b374ad998a54598beb96823474a9a",
+      "direction": 1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "decay_db_per_s",
+      "prohibited_interpretations": [
+        "reverb_is_advisory_not_removable",
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dB/s"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:c88bfcc768912891c91343f6cbb5797b3d77202f0fd4e1d01486d77793c3ffa8",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "hum_base_hz",
+      "prohibited_interpretations": [],
+      "reference_requirement": "none",
+      "role": "descriptive",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "Hz"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:ba3a25298a078a5c96c24cf51b9b53c42d726dce805bc2beb6c3b3fa7323f3bd",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "hum_contrast",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dB"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:d9d59d11ebe758b27da5dff040c3657ab1d18f5a5fac6afa2a48a74402b65e4b",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "hum_harmonic_count",
+      "prohibited_interpretations": [],
+      "reference_requirement": "none",
+      "role": "descriptive",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "count"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:90c53f2b648d25c8e101baf502d77cb2017134f76643290793ffca383ef7e126",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "plosive_rate_per_min",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "per_min"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:ef1fa8541f4f529c54f5166c3b72ff1046e678ef2425296a04462db938bab296",
+      "direction": -1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "consistency_cv",
+      "prohibited_interpretations": [
+        "metric_movement_is_not_perceived_improvement",
+        "requires_independent_listening_validation"
+      ],
+      "reference_requirement": "none",
+      "role": "defect_evidence",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "cv"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:4e8aa4570f48517e5ee48a212dd4cf00ce1d66e60112b448f429e11f83cbda78",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "crest_factor_db",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "descriptive",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dB"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:7e2e8733f7d067fcd087bcbb90f289a23a8353de40ddbb86df142b0fa7eee9a4",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "dynamic_range_db",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "descriptive",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dB"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:6a4bc0000eac74e817c9055ea50b157bf201cf913303089bafe2d076552de724",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "advisory_crest_factor_db",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "descriptive",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dB"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:f390d3649729b7e68109c88a6e34d74b069a08615d16eab43ed10c298edfbb61",
+      "direction": 0,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "advisory_dynamic_range_db",
+      "prohibited_interpretations": [
+        "not_a_musical_quality_verdict"
+      ],
+      "reference_requirement": "none",
+      "role": "descriptive",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dB"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:63da6402334e575e2a7bba2c4627e67b5c547ee64d67034409c2f9e5d3ca6888",
+      "direction": 1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [
+        "silent_reference_nan",
+        "misalignment_biases_score"
+      ],
+      "license": "first_party_impl_of_le_roux_2019",
+      "meaningful_threshold": null,
+      "metric_id": "si_sdr",
+      "prohibited_interpretations": [
+        "not_perceptual_quality",
+        "valid_only_with_valid_reference"
+      ],
+      "reference_requirement": "aligned_pair",
+      "role": "reference",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dB"
+    },
+    {
+      "calibration_id": "uncalibrated",
+      "content_hash": "sha256:34368b53c09837ba43ee017d19e5475592722173b464a1bf92e1281ee685bf37",
+      "direction": 1,
+      "domain": [
+        "vocal"
+      ],
+      "failure_modes": [
+        "silent_frames_excluded",
+        "misalignment_biases_score"
+      ],
+      "license": "first_party",
+      "meaningful_threshold": null,
+      "metric_id": "segmental_snr",
+      "prohibited_interpretations": [
+        "not_perceptual_quality",
+        "valid_only_with_valid_reference"
+      ],
+      "reference_requirement": "aligned_pair",
+      "role": "reference",
+      "schema": "drakotune.metric_card",
+      "schema_version": "1.0.0",
+      "threshold_evidence": null,
+      "threshold_status": "unset_pending_listening_study",
+      "uncertainty_method": "not_established",
+      "unit": "dB"
+    }
+  ],
+  "generated_for_milestone": "DT-47",
+  "note": "Reviewed metric applicability cards. Loudness/level metrics are comparability only; defect/perception thresholds are intentionally unset pending a listening study; only true-peak carries an evidence-backed safety ceiling.",
+  "schema": "drakotune.metric_registry",
+  "schema_version": "1.0.0"
+}
