@@ -27,6 +27,8 @@ Decisions are append-only. Reversals create a new entry and name the superseded 
 
 | D-021 | 2026-07-21 | Accepted | Complete DT-47: adopt the metric applicability registry (`src/evaluation/metric_registry/`, 36 reviewed cards). | Loudness/level are comparability, not quality; full-reference metrics need a valid reference; 33/36 perceptual thresholds are honestly unset pending a listening study; only true-peak carries an evidence-backed safety ceiling. 442 tests pass; goldens unchanged. Evidence: `07_DATA_AND_PROVENANCE/dt47_evidence/`. |
 
+| D-022 | 2026-07-21 | Accepted | Complete DT-48: adopt the multiaxis verdict engine (`src/evaluation/verdict/`) with ordered hard gates and claim-eligibility laddering; mechanically implements D-003, D-004, D-005. | Reproduces and refuses listening exploits N-002..N-006 and blocks N-001 collateral harm; the harsh fixture cannot receive an unqualified pass. Perceptual thresholds stay unset -> abstain rather than invent a pass. 460 tests pass; goldens unchanged. Evidence: `07_DATA_AND_PROVENANCE/dt48_evidence/`. |
+
 ## Decision acceptance rule
 
 An accepted decision must identify its authority, affected specifications/milestones, reversibility, and owner. Proposed decisions remain roadmap blockers where named.
