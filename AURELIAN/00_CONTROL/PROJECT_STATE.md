@@ -2,8 +2,8 @@
 
 **State date:** 2026-07-21  
 **Audited commit:** `a3c51637a0c2ed18994a6950a45a72ccb753a93d`  
-**Planning epoch:** H0 execution / DT-45 complete  
-**Delivery posture:** planning package accepted (PR #1 merged); DT-45 complete; DT-46/DT-47/DT-50 ready, DT-53 discovery ready (scope decision human-gated)  
+**Planning epoch:** H0 execution / DT-45, DT-46 complete  
+**Delivery posture:** planning package accepted (PR #1 merged); DT-45 + DT-46 complete; DT-47/DT-49/DT-50 ready, DT-53 discovery ready (scope decision human-gated)  
 **Planning package:** Aurelian v1.2
 
 ## Verified baseline
@@ -36,7 +36,7 @@ DrakoTune is a deterministic, inspectable vocal-processing prototype. It is not 
 
 The planning package was accepted on 2026-07-21 (PR #1 merged to `main`) and `DT-45 Evidence Semantics and Claim Quarantine` is **complete** (evidence: `07_DATA_AND_PROVENANCE/dt45_evidence/`). No model adoption, paid recruiting, dataset acquisition, public claim, or binary distribution is authorized by this state record.
 
-Now ready: DT-46 (Identity/Provenance Schema v2) and DT-47 (Metric Applicability Registry) in the `evidence` lane; DT-50 (Reproducible Environment and SBOM) in the `build` lane; DT-53 (Product Promise Discovery) discovery work in `product_data` — its scope decision is a human-only `product_scope` gate. Dependency-independent internal work runs automatically in up to four lanes under the canonical autonomy policy. Routine engineering, research, documentation, and reversible implementation do not require repeated approval; money, people, credentials, rights/legal decisions, public claims, production/release, and irreversible deletion remain human-only.
+Now ready: DT-47 (Metric Applicability Registry) and DT-49 (Rights/Consent/Withdrawal Graph — schema/graph/withdrawal-drill autonomous; consent/legal/deletion human-gated) in the `evidence` lane; DT-50 (Reproducible Environment and SBOM) in the `build` lane; DT-53 (Product Promise Discovery) discovery work in `product_data` — its scope decision is a human-only `product_scope` gate. DT-45 and DT-46 are complete. Dependency-independent internal work runs automatically in up to four lanes under the canonical autonomy policy. Routine engineering, research, documentation, and reversible implementation do not require repeated approval; money, people, credentials, rights/legal decisions, public claims, production/release, and irreversible deletion remain human-only.
 
 ### Verified baseline (DT-45 execution environment)
 
