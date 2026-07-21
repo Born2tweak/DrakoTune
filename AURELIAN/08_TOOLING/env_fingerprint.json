@@ -1,0 +1,33 @@
+{
+  "direct_dependency_versions": {
+    "fastapi": "0.139.0",
+    "httpx": "0.28.1",
+    "librosa": "0.11.0",
+    "numpy": "2.4.6",
+    "pedalboard": "0.9.23",
+    "pyloudnorm": "0.2.0",
+    "pytest": "9.0.3",
+    "python-multipart": "0.0.32",
+    "scipy": "1.17.1",
+    "soundfile": "0.13.1",
+    "uvicorn": "0.51.0"
+  },
+  "ffmpeg": {
+    "configuration": "--enable-gpl --enable-version3 --enable-static --disable-w32threads --disable-autodetect --enable-cairo --enable-fontconfig --enable-iconv --enable-gnutls --enable-lcms2 --enable-libxml2 --enable-gmp --enable-bzlib --enable-lzma --enable-libsnappy --enable-zlib --enable-librist --enable-libsrt --enable-libssh --enable-libzmq --enable-avisynth --enable-libbluray --enable-libcaca --enable-libdvdnav --enable-libdvdread --enable-sdl2 --enable-libaribb24 --enable-libaribcaption --enable-libdav1d --enable-libdavs2 --enable-libopenjpeg --enable-libquirc --enable-libuavs3d --enable-libxevd --enable-libzvbi --enable-liboapv --enable-libqrencode --enable-librav1e --enable-libsvtav1 --enable-libvvenc --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxavs2 --enable-libxeve --enable-libxvid --enable-libaom --enable-libjxl --enable-libsvtjpegxs --enable-libvpx --enable-mediafoundation --enable-libass --enable-frei0r --enable-libfreetype --enable-libfribidi --enable-libharfbuzz --enable-liblensfun --enable-libvidstab --enable-libvmaf --enable-libzimg --enable-amf --enable-cuda-llvm --enable-cuvid --enable-dxva2 --enable-d3d11va --enable-d3d12va --enable-ffnvcodec --enable-libvpl --enable-nvdec --enable-nvenc --enable-vaapi --enable-libshaderc --enable-vulkan --enable-libplacebo --enable-opencl --enable-libcdio --enable-openal --enable-libgme --enable-libmodplug --enable-libopenmpt --enable-libopencore-amrwb --enable-libmp3lame --enable-libshine --enable-libtheora --enable-libtwolame --enable-libvo-amrwbenc --enable-libcodec2 --enable-libilbc --enable-libgsm --enable-liblc3 --enable-libopencore-amrnb --enable-libopus --enable-libspeex --enable-libvorbis --enable-ladspa --enable-libbs2b --enable-libflite --enable-libmysofa --enable-librubberband --enable-libsoxr --enable-chromaprint --enable-whisper",
+    "configuration_sha256": "0362ec894c0f3036c9f870c013852609d6497973e1e88f02b012e59d86f35808",
+    "effective_license": "GPL-3.0-or-later",
+    "gpl": true,
+    "present": true,
+    "version": "8.1.1-full_build-www.gyan.dev",
+    "version3": true
+  },
+  "runtime": {
+    "implementation": "CPython",
+    "machine": "AMD64",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python_version": "3.14.0"
+  },
+  "sbom_content_hash": "sha256:0fc7667ec34f0ae948084d0e71a7e94c31a7042b73b905314fee32c3aa5d4ddf",
+  "schema": "drakotune.build_fingerprint",
+  "schema_version": "1.0.0"
+}

@@ -7,6 +7,14 @@ on:
 
 jobs:
   test:
+    # DT-50: two independent clean environments install from the same declared
+    # deps and must both pass the suite and the audio goldens. This matrix is
+    # the machine authority for the "two clean environments resolve identical
+    # artifacts" acceptance criterion that the in-process suite cannot prove.
+    strategy:
+      fail-fast: false
+      matrix:
+        clean_env: [a, b]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,10 +27,11 @@ jobs:
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Install package
+      - name: Install package (clean env ${{ matrix.clean_env }})
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,web]"
+          pip check
 
       - name: Run tests
         run: pytest -q
@@ -30,10 +39,66 @@ jobs:
       - name: Audio regression check
         run: python scripts/audio_regression.py
 
+      - name: Regenerate lock + SBOM in this clean env, then validate
+        run: |
+          python -m pip freeze --exclude-editable > AURELIAN/08_TOOLING/requirements.lock
+          PYTHONPATH=. python scripts/build_sbom.py
+          pytest -q tests/test_reproducibility.py
+
+      - name: Upload SBOM + lock for cross-env parity
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ matrix.clean_env }}
+          path: |
+            AURELIAN/08_TOOLING/sbom.json
+            AURELIAN/08_TOOLING/requirements.lock
+
+  parity:
+    # DT-50 two-clean-environment parity: the direct-dependency resolution and
+    # runtime fingerprint of the two independent clean environments must be
+    # byte-identical. This is the machine authority for the acceptance criterion.
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: sbom-a
+          path: a
+      - uses: actions/download-artifact@v4
+        with:
+          name: sbom-b
+          path: b
+      - name: Show downloaded artifact layout
+        run: find a b -type f | sort
+      - name: Compare direct-dependency + runtime resolution across clean envs
+        run: |
+          python - <<'PY'
+          import json, sys
+          # upload-artifact@v4 strips the common AURELIAN/08_TOOLING/ prefix, so
+          # the files land at the download root.
+          a = json.load(open("a/sbom.json"))
+          b = json.load(open("b/sbom.json"))
+          def key(s):
+              return {
+                  "python": s["runtime"]["python_version"],
+                  "ffmpeg": s["external_tools"]["ffmpeg"].get("version"),
+                  "direct": sorted((d["name"], d["version"]) for d in s["direct_dependencies"]),
+              }
+          ka, kb = key(a), key(b)
+          if ka != kb:
+              print("PARITY FAILURE: clean envs resolved different artifacts")
+              print("a:", json.dumps(ka, indent=2)); print("b:", json.dumps(kb, indent=2))
+              sys.exit(1)
+          print("PARITY OK: two clean environments resolved identical artifacts")
+          print(json.dumps(ka, indent=2))
+          PY
+          diff a/requirements.lock b/requirements.lock \
+            && echo "LOCK PARITY OK: identical lockfiles"
+
       - name: Upload regression artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: audio-regression-artifacts
+          name: audio-regression-artifacts-${{ matrix.clean_env }}
           path: artifacts/
           if-no-files-found: ignore
