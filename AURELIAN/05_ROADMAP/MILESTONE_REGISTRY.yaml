@@ -26,9 +26,9 @@ milestones:
   - {id: DT-47, title: Metric Applicability Registry, horizon: H0, status: complete, depends_on: [DT-45], detail: MILESTONES/DT_45_52.md}
   - {id: DT-48, title: Multiaxis Verdict Engine, horizon: H0, status: complete, depends_on: [DT-46, DT-47], detail: MILESTONES/DT_45_52.md}
   - {id: DT-49, title: Rights Consent and Withdrawal Graph, horizon: H0, status: ready, depends_on: [DT-46], detail: MILESTONES/DT_45_52.md}
-  - {id: DT-50, title: Reproducible Environment and SBOM, horizon: H0, status: ready, depends_on: [DT-45], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-50, title: Reproducible Environment and SBOM, horizon: H0, status: complete, depends_on: [DT-45], detail: MILESTONES/DT_45_52.md}
   - {id: DT-51, title: Desktop Distribution Branch Decision, horizon: H0, status: blocked, depends_on: [DT-49, DT-50], detail: MILESTONES/DT_45_52.md}
-  - {id: DT-52, title: Application and DSP Seam Characterization, horizon: H0, status: blocked, depends_on: [DT-48, DT-50], detail: MILESTONES/DT_45_52.md}
+  - {id: DT-52, title: Application and DSP Seam Characterization, horizon: H0, status: ready, depends_on: [DT-48, DT-50], detail: MILESTONES/DT_45_52.md}
   - {id: DT-53, title: Product Promise Discovery and Scope Decision, horizon: H1, status: ready, depends_on: [DT-45], detail: MILESTONES/DT_53_60.md}
   - {id: DT-54, title: Target-Genre and Recording Strata Taxonomy, horizon: H1, status: blocked, depends_on: [DT-53], detail: MILESTONES/DT_53_60.md}
   - {id: DT-55, title: Rights-Clean Acquisition and Consent Plan, horizon: H1, status: blocked, depends_on: [DT-49, DT-54], detail: MILESTONES/DT_53_60.md}

@@ -29,6 +29,8 @@ Decisions are append-only. Reversals create a new entry and name the superseded 
 
 | D-022 | 2026-07-21 | Accepted | Complete DT-48: adopt the multiaxis verdict engine (`src/evaluation/verdict/`) with ordered hard gates and claim-eligibility laddering; mechanically implements D-003, D-004, D-005. | Reproduces and refuses listening exploits N-002..N-006 and blocks N-001 collateral harm; the harsh fixture cannot receive an unqualified pass. Perceptual thresholds stay unset -> abstain rather than invent a pass. 460 tests pass; goldens unchanged. Evidence: `07_DATA_AND_PROVENANCE/dt48_evidence/`. |
 
+| D-023 | 2026-07-21 | Accepted | Complete DT-50: adopt the SBOM/fingerprint tooling (`scripts/build_sbom.py`, `src/tooling/`) and a two-clean-environment CI parity gate. | CI run 29864106617 proved two clean ubuntu/py3.12 envs resolve byte-identical artifacts+lockfile and pass suite+goldens. Surfaced N-013 (Windows dev host resolves different versions than canonical CI env) and a upload-artifact path bug, both preserved as negative results. FFmpeg build is GPL-3.0-or-later and pedalboard is GPL-3.0 — captured, not resolved (DT-51 human gate). Evidence: `07_DATA_AND_PROVENANCE/dt50_evidence/`. |
+
 ## Decision acceptance rule
 
 An accepted decision must identify its authority, affected specifications/milestones, reversibility, and owner. Proposed decisions remain roadmap blockers where named.
