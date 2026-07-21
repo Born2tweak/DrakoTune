@@ -2,8 +2,8 @@
 
 **State date:** 2026-07-21  
 **Audited commit:** `a3c51637a0c2ed18994a6950a45a72ccb753a93d`  
-**Planning epoch:** H0 execution / DT-45, DT-46 complete  
-**Delivery posture:** planning package accepted (PR #1 merged); DT-45 + DT-46 complete; DT-47/DT-49/DT-50 ready, DT-53 discovery ready (scope decision human-gated)  
+**Planning epoch:** H0 execution / DT-45, DT-46, DT-47 complete  
+**Delivery posture:** planning package accepted (PR #1 merged); DT-45–DT-47 complete; DT-48/DT-49/DT-50 ready, DT-53 discovery ready (scope decision human-gated)  
 **Planning package:** Aurelian v1.2
 
 ## Verified baseline
