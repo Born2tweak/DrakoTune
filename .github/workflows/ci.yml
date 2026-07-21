@@ -68,12 +68,16 @@ jobs:
         with:
           name: sbom-b
           path: b
+      - name: Show downloaded artifact layout
+        run: find a b -type f | sort
       - name: Compare direct-dependency + runtime resolution across clean envs
         run: |
           python - <<'PY'
           import json, sys
-          a = json.load(open("a/AURELIAN/08_TOOLING/sbom.json"))
-          b = json.load(open("b/AURELIAN/08_TOOLING/sbom.json"))
+          # upload-artifact@v4 strips the common AURELIAN/08_TOOLING/ prefix, so
+          # the files land at the download root.
+          a = json.load(open("a/sbom.json"))
+          b = json.load(open("b/sbom.json"))
           def key(s):
               return {
                   "python": s["runtime"]["python_version"],
@@ -83,12 +87,12 @@ jobs:
           ka, kb = key(a), key(b)
           if ka != kb:
               print("PARITY FAILURE: clean envs resolved different artifacts")
-              print("a:", ka); print("b:", kb)
+              print("a:", json.dumps(ka, indent=2)); print("b:", json.dumps(kb, indent=2))
               sys.exit(1)
           print("PARITY OK: two clean environments resolved identical artifacts")
           print(json.dumps(ka, indent=2))
           PY
-          diff a/AURELIAN/08_TOOLING/requirements.lock b/AURELIAN/08_TOOLING/requirements.lock \
+          diff a/requirements.lock b/requirements.lock \
             && echo "LOCK PARITY OK: identical lockfiles"
 
       - name: Upload regression artifacts on failure
