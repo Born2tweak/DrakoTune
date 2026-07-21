@@ -22,6 +22,7 @@ Decisions are append-only. Reversals create a new entry and name the superseded 
 | D-016 | 2026-07-21 | Proposed | Use a qualified professional-engineer pilot before a larger listener study. | A small pilot can expose protocol, compensation, task-duration, and effect-size assumptions before costly recruitment. |
 | D-017 | 2026-07-21 | Proposed | Set external evaluation compensation at or above the platform-recommended rate, with a professional premium for engineers. | Exact vendor, budget, and contract require owner approval. |
 | D-018 | 2026-07-21 | Accepted | Treat `MILESTONE_REGISTRY.yaml` as the complete machine execution manifest and milestone Markdown as validated contracts/views. | A single authority now owns status, dependencies, lanes, profiles, resources, write sets, evidence keys, claim impact, and quarantine; validators must reject drift. |
+| D-019 | 2026-07-21 | Accepted | Complete DT-45: adopt the typed evidence-semantics model (`src/evaluation/semantics/`) and the claim quarantine registry as the evaluation vocabulary; implements D-002 and D-005 mechanically. | Nine canonical statuses serialize; legacy `EvaluationResult` maps forward with no silent pass; the seeded claim inventory renders only the audited determinism/regression engineering claim as approved. 412 tests pass; 6/6 audio goldens unchanged. Evidence: `07_DATA_AND_PROVENANCE/dt45_evidence/`. Un-quarantining any claim remains a human-only public_claims gate. |
 
 ## Decision acceptance rule
 
