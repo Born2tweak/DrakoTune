@@ -25,12 +25,13 @@
     "audio_regression": "6/6 goldens bit-identical (recorded; DT-50/DT-52 evidence)",
     "pip_check": "clean"
   },
-  "active_milestone": "DT-53-autonomous-prep",
-  "active_branch": "agent/dt-49-rights-graph",
+  "active_milestone": "DT-51-autonomous-prep",
+  "active_branch": "agent/dt-53-discovery-framework",
   "open_pull_request": null,
   "completed_this_run": [
     "AR-00/01/02 reconciliation (merged PR #8)",
-    "DT-49 autonomous rights/consent/withdrawal engine: src/rights/*, 20 adversarial tests, evidence dt49_evidence/ (milestone stays human-gated for consent/legal/deletion)"
+    "DT-49 autonomous rights/consent/withdrawal engine: src/rights/*, 20 adversarial tests, evidence dt49_evidence/ (merged PR #9; milestone stays human-gated for consent/legal/deletion)",
+    "DT-53 autonomous discovery framework: src/product_discovery/*, 16 adversarial tests, protocol+promise falsifier framework, evidence dt53_evidence/ (milestone stays human-gated for scope decision + participant contact)"
   ],
   "ci": {
     "run_id": "29887064268",
@@ -44,9 +45,9 @@
     "acquired_at": "2026-07-21T23:25:00Z",
     "expires_at": "2026-07-22T01:25:00Z"
   },
-  "last_completed_action": "DT-49 autonomous rights engine implemented + verified (20 adversarial tests; full suite 498 passed). Milestone remains human-gated for consent/legal/deletion.",
-  "next_automatic_action": "Land DT-49 PR on green CI; then produce DT-53 discovery framework and DT-51 license-obligation inventory (both autonomous prep on synthetic/SBOM data), then consolidate one human-decision packet.",
-  "ready_queue": ["DT-53-autonomous-prep", "DT-51-autonomous-prep"],
+  "last_completed_action": "DT-53 autonomous discovery framework implemented + verified (16 adversarial tests). Milestone remains human-gated for scope decision + participant contact.",
+  "next_automatic_action": "Land DT-53 PR on green CI; then produce DT-51 license-obligation inventory + recommendation from the SBOM (autonomous), then consolidate one human-decision packet.",
+  "ready_queue": ["DT-51-autonomous-prep"],
   "retry_counters": {},
   "open_human_gates": [
     "HG-REAL-AUDIO-RIGHTS (DT-49 consent/legal/deletion; DT-55/DT-62 acquisition)",
