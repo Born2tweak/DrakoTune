@@ -1,0 +1,144 @@
+{
+  "schema": "drakotune.distribution_obligations",
+  "schema_version": "1.0.0",
+  "generated_for_milestone": "DT-51 (autonomous inventory; decision human-gated)",
+  "source_sbom": "AURELIAN/08_TOOLING/sbom.json",
+  "components": [
+    {
+      "name": "fastapi",
+      "version": "0.139.0",
+      "license": "MIT",
+      "kind": "python_dependency",
+      "copyleft": "permissive",
+      "blocks_permissive_binary": false
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "license": "BSD License",
+      "kind": "python_dependency",
+      "copyleft": "permissive",
+      "blocks_permissive_binary": false
+    },
+    {
+      "name": "librosa",
+      "version": "0.11.0",
+      "license": "ISC License (ISCL)",
+      "kind": "python_dependency",
+      "copyleft": "permissive",
+      "blocks_permissive_binary": false
+    },
+    {
+      "name": "numpy",
+      "version": "2.4.6",
+      "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+      "kind": "python_dependency",
+      "copyleft": "permissive",
+      "blocks_permissive_binary": false
+    },
+    {
+      "name": "pedalboard",
+      "version": "0.9.23",
+      "license": "GNU General Public License v3 (GPLv3)",
+      "kind": "python_dependency",
+      "copyleft": "strong",
+      "blocks_permissive_binary": true
+    },
+    {
+      "name": "pyloudnorm",
+      "version": "0.2.0",
+      "license": "MIT",
+      "kind": "python_dependency",
+      "copyleft": "permissive",
+      "blocks_permissive_binary": false
+    },
+    {
+      "name": "pytest",
+      "version": "9.0.3",
+      "license": "MIT",
+      "kind": "python_dependency",
+      "copyleft": "permissive",
+      "blocks_permissive_binary": false
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.32",
+      "license": "Apache-2.0",
+      "kind": "python_dependency",
+      "copyleft": "permissive",
+      "blocks_permissive_binary": false
+    },
+    {
+      "name": "scipy",
+      "version": "1.17.1",
+      "license": "BSD License",
+      "kind": "python_dependency",
+      "copyleft": "permissive",
+      "blocks_permissive_binary": false
+    },
+    {
+      "name": "soundfile",
+      "version": "0.13.1",
+      "license": "BSD License",
+      "kind": "python_dependency",
+      "copyleft": "permissive",
+      "blocks_permissive_binary": false
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.51.0",
+      "license": "BSD-3-Clause",
+      "kind": "python_dependency",
+      "copyleft": "permissive",
+      "blocks_permissive_binary": false
+    },
+    {
+      "name": "ffmpeg",
+      "version": "8.1.1-full_build-www.gyan.dev",
+      "license": "GPL-3.0-or-later",
+      "kind": "external_binary",
+      "configuration": "--enable-gpl --enable-version3 --enable-static --disable-w32threads --disable-autodetect --enable-cairo --enable-fontconfig --enable-iconv --enable-gnutls --enable-lcms2 --enable-libxml2 --enable-gmp --enable-bzlib --enable-lzma --enable-libsnappy --enable-zlib --enable-librist --enable-libsrt --enable-libssh --enable-libzmq --enable-avisynth --enable-libbluray --enable-libcaca --enable-libdvdnav --enable-libdvdread --enable-sdl2 --enable-libaribb24 --enable-libaribcaption --enable-libdav1d --enable-libdavs2 --enable-libopenjpeg --enable-libquirc --enable-libuavs3d --enable-libxevd --enable-libzvbi --enable-liboapv --enable-libqrencode --enable-librav1e --enable-libsvtav1 --enable-libvvenc --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxavs2 --enable-libxeve --enable-libxvid --enable-libaom --enable-libjxl --enable-libsvtjpegxs --enable-libvpx --enable-mediafoundation --enable-libass --enable-frei0r --enable-libfreetype --enable-libfribidi --enable-libharfbuzz --enable-liblensfun --enable-libvidstab --enable-libvmaf --enable-libzimg --enable-amf --enable-cuda-llvm --enable-cuvid --enable-dxva2 --enable-d3d11va --enable-d3d12va --enable-ffnvcodec --enable-libvpl --enable-nvdec --enable-nvenc --enable-vaapi --enable-libshaderc --enable-vulkan --enable-libplacebo --enable-opencl --enable-libcdio --enable-openal --enable-libgme --enable-libmodplug --enable-libopenmpt --enable-libopencore-amrwb --enable-libmp3lame --enable-libshine --enable-libtheora --enable-libtwolame --enable-libvo-amrwbenc --enable-libcodec2 --enable-libilbc --enable-libgsm --enable-liblc3 --enable-libopencore-amrnb --enable-libopus --enable-libspeex --enable-libvorbis --enable-ladspa --enable-libbs2b --enable-libflite --enable-libmysofa --enable-librubberband --enable-libsoxr --enable-chromaprint --enable-whisper",
+      "copyleft": "strong",
+      "blocks_permissive_binary": true
+    }
+  ],
+  "summary": {
+    "strong_copyleft": [
+      "ffmpeg",
+      "pedalboard"
+    ],
+    "weak_copyleft": [],
+    "unknown": []
+  },
+  "scenarios": {
+    "gpl_compatible_oss": {
+      "viable": true,
+      "blocked_by": [],
+      "obligation": "Release the whole distributed work under GPL-3.0-or-later and provide corresponding source. Accepts every strong-copyleft component as-is (ffmpeg, pedalboard).",
+      "reversible": false
+    },
+    "permissive_custom_dsp": {
+      "viable": false,
+      "blocked_by": [
+        "ffmpeg",
+        "pedalboard"
+      ],
+      "obligation": "Replace or re-implement every strong-copyleft runtime component (ffmpeg, pedalboard) with permissive/original DSP before a permissive binary can ship.",
+      "reversible": false
+    },
+    "hosted_only": {
+      "viable": true,
+      "blocked_by": [],
+      "obligation": "Serve over the network; do not distribute a binary. GPL/LGPL/MPL source-offer obligations are not triggered by hosting (no AGPL component is present). Keeps the binary branch decision open.",
+      "reversible": true
+    }
+  },
+  "recommendation": {
+    "note": "RECOMMENDATION ONLY \u2014 not a decision (DT-51 is a human product-owner + counsel gate). Lowest-risk reversible near-term option is `hosted_only`: it ships value without accepting an irreversible license posture and keeps both binary branches open. The binary choice (gpl_compatible_oss vs permissive_custom_dsp) is the consequential, harder-to-reverse decision and should be made with counsel once product scope (DT-53) is fixed.",
+    "suggested_reversible_default": "hosted_only",
+    "requires_human_gate": [
+      "gpl_compatible_oss",
+      "permissive_custom_dsp"
+    ]
+  }
+}
