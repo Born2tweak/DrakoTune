@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "repository_verified": false,
+  "rule": "No requirement is complete until exact repository evidence replaces null fields.",
+  "records": [
+    {
+      "requirement_id": "REQ-RECONCILIATION",
+      "milestone_id": "AR-01",
+      "commit_sha": null,
+      "production_paths": [],
+      "code_locations": [],
+      "test_locations": [],
+      "test_command": null,
+      "test_result": null,
+      "ci_run": null,
+      "environment_fingerprint": null,
+      "artifact_hashes": [],
+      "limitations": ["Repository has not yet been inspected by this package"],
+      "claim_effect": "All strong readiness and perceptual-quality claims remain prohibited",
+      "freshness": null,
+      "status": "missing"
+    }
+  ]
+}
+

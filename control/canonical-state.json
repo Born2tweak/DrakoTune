@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0",
+  "program": "drakotune-full-autonomous-remediation",
+  "repository": "Born2tweak/DrakoTune",
+  "default_branch": "main",
+  "verified_commit": "75cc057155261934ae63105f238e4cea401b6c63",
+  "state_verified_at": "2026-07-21T23:25:00Z",
+  "reconciliation": {
+    "greenfield_assumption_rejected": true,
+    "note": "The packaged templates assumed a fresh install (active_milestone AR-00, all RECONCILE_FROM_REPOSITORY). The real repository is far advanced: an AURELIAN/ governance plane already exists and DT-45..DT-48, DT-50, DT-52 are merged and CI-green. This control plane is installed as a durable restart/recovery layer that DEFERS to AURELIAN authority where they overlap.",
+    "milestone_authority": "AURELIAN/05_ROADMAP/MILESTONE_REGISTRY.yaml (state_authority: true)",
+    "ar_to_dt_mapping": {
+      "AR-00": "this installation + reconciliation (control/ present, schemas parse, facts reconciled)",
+      "AR-01": "reconciled: see control/RECONCILIATION_RECORD.md",
+      "AR-02": "reconciled against AURELIAN/00_CONTROL/RISK_REGISTER.md + deficiency-register.yaml",
+      "AR-03": "satisfied by DT-50 (Reproducible Environment & SBOM; CI parity run 29864106617)",
+      "AR-04..AR-06": "partially satisfied by DT-45/46/47/48/52; provenance+verdict integrated; DT-49 rights enforcement is the active autonomous build",
+      "AR-07..AR-09,AR-17": "autonomy controller — future (blocked DT-family)",
+      "AR-10..AR-18": "research/corpus/listening/audit — mostly human-gated (DT H1..H5)"
+    }
+  },
+  "verified_baseline": {
+    "python": "3.14.0 (Windows)",
+    "pytest": "478 passed, 4 warnings",
+    "audio_regression": "6/6 goldens bit-identical (recorded; DT-50/DT-52 evidence)",
+    "pip_check": "clean"
+  },
+  "active_milestone": "DT-49-autonomous",
+  "active_branch": "agent/ar-remediation-reconciliation",
+  "open_pull_request": null,
+  "ci": {
+    "run_id": "29887064268",
+    "status": "completed",
+    "conclusion": "success",
+    "checked_at": "2026-07-21T23:20:00Z",
+    "branch": "main"
+  },
+  "work_lease": {
+    "holder": "claude-code",
+    "acquired_at": "2026-07-21T23:25:00Z",
+    "expires_at": "2026-07-22T01:25:00Z"
+  },
+  "last_completed_action": "Installed + integrity-verified control plane; reconciled canonical state against real repository facts (478-test baseline verified).",
+  "next_automatic_action": "Implement DT-49 autonomous rights/consent/withdrawal engine on synthetic fixtures (fail-closed authorize + withdrawal propagation + claim suspension), push, pass CI, then DT-53 discovery framework and DT-51 obligation inventory, then consolidate one human-decision packet.",
+  "ready_queue": ["DT-49-autonomous", "DT-53-autonomous-prep", "DT-51-autonomous-prep"],
+  "retry_counters": {},
+  "open_human_gates": [
+    "HG-REAL-AUDIO-RIGHTS (DT-49 consent/legal/deletion; DT-55/DT-62 acquisition)",
+    "product_scope (DT-53 final scope decision)",
+    "distribution_decision (DT-51 branch choice; owner + counsel)"
+  ],
+  "release_blockers": [
+    "DT-49 consent/legal posture undecided (human)",
+    "DT-51 distribution branch undecided (human)",
+    "DT-53 product scope undecided (human)",
+    "No rights-cleared real-audio perceptual evidence (H1/H2 study family; human-gated acquisition)"
+  ],
+  "evidence_freshness": "current_as_of_verified_commit",
+  "terminal_state": false
+}

@@ -1,0 +1,80 @@
+schema_version: "1.0"
+program: drakotune-full-autonomous-remediation
+mode: continuous
+
+authority:
+  routine_repository_changes: autonomous
+  reversible_architecture_decisions: autonomous
+  research_and_experiment_preparation: autonomous
+  branch_push_pr_and_ci_repair: autonomous_subject_to_repository_policy
+  merge: autonomous_subject_to_repository_policy_and_green_gates
+  spending_usd: 0
+  public_release: human_if_repository_policy_requires
+  destructive_irreversible_actions: human
+
+continuation:
+  stop_after_audit: false
+  stop_after_plan: false
+  stop_after_documentation: false
+  stop_after_phase: false
+  stop_after_pr_open: false
+  stop_while_ci_pending: false
+  maintain_ready_lookahead_minimum: 10
+  maintain_ready_lookahead_target: 20
+  when_no_ready_work: classify_blockers_then_prepare_or_request_consolidated_decision
+
+selection:
+  order:
+    - release_blocking_safety
+    - production_bypass
+    - reproducibility
+    - dependency_unblock_count
+    - evidence_value
+    - product_quality_value
+    - implementation_cost
+  require_dependencies_complete: true
+  permit_parallel_independent_workstreams: true
+
+retry:
+  transient_max_attempts: 5
+  implementation_repair_max_cycles_before_replan: 3
+  ci_repair_max_cycles_before_root_cause_review: 3
+  backoff_seconds: [15, 30, 60, 120, 300]
+  preserve_state_before_retry: true
+  technical_failure_is_terminal: false
+
+completion:
+  require_production_reachability: true
+  require_acceptance_tests: true
+  require_adversarial_tests: true
+  require_full_regression: true
+  require_ci_evidence: true
+  require_artifact_hashes: true
+  require_limitations: true
+  require_claim_effect: true
+  require_rollback_target: true
+  require_state_reconciliation: true
+  permit_implementer_confidence_as_evidence: false
+
+reviews:
+  mandatory:
+    - architecture
+    - correctness
+    - security_privacy
+    - data_rights
+    - test_adequacy
+    - reproducibility
+    - product_integration
+    - claim_support
+    - documentation_drift
+    - roadmap_completeness
+  blocking_severities: [critical, high]
+  medium_findings_create_milestones: true
+
+human_gate_policy:
+  finish_safe_preparation_first: true
+  batch_related_decisions: true
+  recommendation_required: true
+  consequences_required: true
+  exact_resume_action_required: true
+

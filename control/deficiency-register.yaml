@@ -1,0 +1,82 @@
+schema_version: "1.0"
+reconciliation_status: not_started
+rule: Repository inspection must confirm, refine, add, close, or reject each initial deficiency.
+
+deficiencies:
+  - id: DEF-001
+    title: Production integration of DT-45 through DT-48 is unproven
+    severity: critical
+    status: requires_repository_reconciliation
+    affected_categories: [production_integration, repository_honesty, correctness]
+    required_evidence:
+      - Production callers from every applicable entry point
+      - End-to-end execution evidence
+      - Legacy-bypass adversarial tests
+    remediation_milestones: [AR-04, AR-05, AR-06]
+
+  - id: DEF-002
+    title: DT-50 dependency locking may include undeclared workstation state
+    severity: critical
+    status: requires_repository_reconciliation
+    affected_categories: [reproducibility, maintainability, security]
+    required_evidence:
+      - Declared dependency source mapping
+      - Clean supported-platform reconstruction
+      - Locked CI installation, SBOM, FFmpeg fingerprint, and equivalent outputs
+    remediation_milestones: [AR-03]
+
+  - id: DEF-003
+    title: Real-audio perceptual validation is insufficient for strong quality claims
+    severity: critical
+    status: open_until_validated
+    affected_categories: [perceptual_quality, generalization, product_advancement, claims]
+    required_evidence:
+      - Rights-cleared representative corpus
+      - Preregistered qualified blinded listening results
+      - Subgroup and collateral-harm analysis
+    remediation_milestones: [AR-12, AR-13, AR-14]
+
+  - id: DEF-004
+    title: Metric thresholds and roles are incompletely calibrated
+    severity: high
+    status: requires_repository_reconciliation
+    affected_categories: [evaluation_validity, correctness, claims]
+    required_evidence:
+      - Complete metric inventory
+      - Role, applicability, uncertainty, calibration, and abstention per verdict metric
+    remediation_milestones: [AR-10, AR-11]
+
+  - id: DEF-005
+    title: Autonomous continuation and recovery are not proven unattended
+    severity: high
+    status: open_until_rehearsal
+    affected_categories: [autonomy, execution_discipline, reliability]
+    required_evidence:
+      - Crash recovery
+      - CI failure repair
+      - Gap-to-milestone generation
+      - Full unattended seeded rehearsal
+    remediation_milestones: [AR-07, AR-08, AR-09, AR-17]
+
+  - id: DEF-006
+    title: Non-engineer usability, accessibility, and failure recovery are not fully validated
+    severity: high
+    status: requires_repository_reconciliation
+    affected_categories: [product_usability, accessibility, reliability]
+    required_evidence:
+      - Full workflow usability results
+      - Keyboard and screen-reader evidence
+      - Failure recovery and original-preservation tests
+    remediation_milestones: [AR-15]
+
+  - id: DEF-007
+    title: Release monitoring, quarantine, and rollback are not proven end to end
+    severity: high
+    status: requires_repository_reconciliation
+    affected_categories: [reliability, operations, claims]
+    required_evidence:
+      - Seeded regression detection
+      - Automatic quarantine and rollback
+      - Incident and audit records
+    remediation_milestones: [AR-16]
+

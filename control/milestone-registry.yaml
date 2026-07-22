@@ -1,0 +1,255 @@
+schema_version: "1.0"
+repository_state: RECONCILE_FROM_REPOSITORY
+statuses: [planned, ready, active, implemented, integrated, verified, validated, released, blocked, superseded]
+
+milestones:
+  - id: AR-00
+    title: Install and validate remediation control plane
+    phase: A
+    priority: critical
+    dependencies: []
+    status: ready
+    outcome: Package is installed, schemas validate, and repository-specific paths are mapped.
+    acceptance:
+      - All control files parse and required fields exist.
+      - Repository facts replace placeholders only when supported by evidence.
+      - Exact next automatic action is written to canonical state.
+    human_gate: null
+
+  - id: AR-01
+    title: Reconcile repository, PR, CI, milestones, and production entry points
+    phase: A
+    priority: critical
+    dependencies: [AR-00]
+    status: planned
+    outcome: One evidence-backed current state replaces transcript assumptions.
+    acceptance:
+      - Every production entry point is enumerated.
+      - Existing milestones are reclassified by evidence tier.
+      - Branch, PR, CI, tag, and release state agree with canonical state.
+      - Unsupported claims are frozen or quarantined.
+    human_gate: null
+
+  - id: AR-02
+    title: Build canonical deficiency and evidence registers
+    phase: A
+    priority: critical
+    dependencies: [AR-01]
+    status: planned
+    outcome: Every known gap is severity-ranked, dependency-placed, and evidence-linked.
+    acceptance:
+      - Disconnected modules and legacy bypasses are recorded.
+      - Missing and stale evidence is recorded.
+      - Each release blocker maps to at least one milestone.
+    human_gate: null
+
+  - id: AR-03
+    title: Repair declared dependency locking and clean-environment reconstruction
+    phase: B
+    priority: critical
+    dependencies: [AR-02]
+    status: planned
+    supersedes_or_reopens: DT-50
+    outcome: Supported environments reconstruct from declared committed locks.
+    acceptance:
+      - Dependency groups are separated and workstation leakage is absent.
+      - CI installs from committed locks in clean environments.
+      - FFmpeg fingerprint, SBOM, artifacts, tests, and audio goldens are recorded.
+      - Repeated renders meet deterministic tolerances.
+    human_gate: null
+
+  - id: AR-04
+    title: Integrate provenance and lineage across all production paths
+    phase: C
+    priority: critical
+    dependencies: [AR-02]
+    status: planned
+    related_existing_milestones: [DT-45, DT-46, DT-47, DT-48]
+    outcome: Every supported input, processing action, and output has enforced lineage.
+    acceptance:
+      - CLI, API, batch, web/listening, report, and promotion paths are covered where present.
+      - Missing or invalid provenance fails closed.
+      - End-to-end bypass tests pass.
+    human_gate: null
+
+  - id: AR-05
+    title: Integrate metric applicability, evidence semantics, and multiaxis verdicts
+    phase: C
+    priority: critical
+    dependencies: [AR-04]
+    status: planned
+    outcome: Unsupported metrics cannot produce quality passes and collateral harm blocks promotion.
+    acceptance:
+      - Every verdict includes applicability, uncertainty, safety, harm, and abstention.
+      - Conflicting or incomplete evidence fails closed.
+      - All real report surfaces use typed verdicts.
+    human_gate: null
+
+  - id: AR-06
+    title: Enforce claim quarantine and preset-promotion gates
+    phase: C
+    priority: critical
+    dependencies: [AR-05]
+    status: planned
+    outcome: No interface or release path can exceed current evidence.
+    acceptance:
+      - Claim escalation and promotion bypass attacks fail.
+      - Evidence expiration automatically downgrades or quarantines claims.
+      - Rollback target is recorded for every promotable preset.
+    human_gate: null
+
+  - id: AR-07
+    title: Implement readiness, selection, work lease, and crash recovery
+    phase: D
+    priority: high
+    dependencies: [AR-02]
+    status: planned
+    outcome: A new session resumes and selects safe work without user context.
+    acceptance:
+      - Readiness is calculated deterministically from the registry.
+      - Stale leases recover safely.
+      - Canonical state is reconciled rather than blindly trusted.
+    human_gate: null
+
+  - id: AR-08
+    title: Implement CI monitor, failure repair, and automatic continuation
+    phase: D
+    priority: high
+    dependencies: [AR-07, AR-03]
+    status: planned
+    outcome: Pending or failed CI no longer ends execution.
+    acceptance:
+      - Controller polls pending runs with bounded backoff.
+      - Actionable failures are classified, repaired, pushed, and reverified.
+      - Green completion immediately advances canonical state.
+    human_gate: null
+
+  - id: AR-09
+    title: Implement gap detection and rolling roadmap expansion
+    phase: D
+    priority: high
+    dependencies: [AR-07]
+    status: planned
+    outcome: Integration and evidence gaps automatically become dependency-safe milestones.
+    acceptance:
+      - Production-caller, bypass, requirement-trace, and evidence-gap checks run.
+      - Ready lookahead remains between 10 and 20 when justified work exists.
+      - Duplicate and circular milestones are rejected.
+    human_gate: null
+
+  - id: AR-10
+    title: Execute targeted research and convert findings into decisions
+    phase: E
+    priority: high
+    dependencies: [AR-02]
+    status: planned
+    outcome: Each research stream produces decisions, experiments, milestones, and claim limits.
+    acceptance:
+      - Primary or authoritative sources support technical conclusions.
+      - Findings include applicability and freshness.
+      - No stream ends as a literature summary only.
+    human_gate: null
+
+  - id: AR-11
+    title: Calibrate evaluation metrics and enforce abstention
+    phase: F
+    priority: high
+    dependencies: [AR-05, AR-10]
+    status: planned
+    outcome: Every verdict-influencing metric is calibrated and bounded.
+    acceptance:
+      - Metric roles, uncertainty, applicability, and prohibited interpretations are recorded.
+      - Silence, low-signal, clipping, mismatch, and alignment failures are tested.
+      - Uncalibrated metrics cannot influence promotion.
+    human_gate: null
+
+  - id: AR-12
+    title: Assemble rights-cleared representative evaluation corpus
+    phase: G
+    priority: high
+    dependencies: [AR-10]
+    status: planned
+    outcome: Evaluation corpus has defensible rights, coverage, lineage, and separation.
+    acceptance:
+      - Every asset has rights, retention, deletion, provenance, and leakage metadata.
+      - Coverage gaps are measured against declared product scope.
+      - Claims cannot exceed corpus coverage.
+    human_gate: HG-REAL-AUDIO-RIGHTS
+
+  - id: AR-13
+    title: Implement qualified blinded listening validation
+    phase: H
+    priority: high
+    dependencies: [AR-10, AR-11, AR-12]
+    status: planned
+    outcome: Perceptual claims use preregistered, qualified, statistically valid evidence.
+    acceptance:
+      - Protocol, sample size, exclusions, cancellation, and promotion thresholds are frozen.
+      - Randomization, loudness matching, attention checks, and subgroup analysis are verified.
+      - Negative and null outcomes are retained.
+    human_gate: HG-LISTENING-STUDY
+
+  - id: AR-14
+    title: Run closed-loop DSP improvement program
+    phase: I
+    priority: high
+    dependencies: [AR-11]
+    status: planned
+    outcome: Bounded treatments are promoted only after safety and relevant perceptual evidence.
+    acceptance:
+      - Every experiment has a frozen baseline and immutable manifest.
+      - Collateral harm and subgroup failures block promotion.
+      - Positive, negative, and null results persist.
+    human_gate: null
+
+  - id: AR-15
+    title: Validate non-engineer usability, accessibility, and failure recovery
+    phase: J
+    priority: high
+    dependencies: [AR-04, AR-05, AR-06]
+    status: planned
+    outcome: Supported users complete the full workflow and recover safely from failures.
+    acceptance:
+      - Upload-to-export succeeds without engineering assistance.
+      - Keyboard, screen-reader, warnings, slow-device, long-file, interruption, and storage/export failures are covered.
+      - Original audio remains protected.
+    human_gate: HG-USER-STUDY if_nonpublic_participants_required
+
+  - id: AR-16
+    title: Implement release monitoring, quarantine, rollback, and incident recovery
+    phase: K
+    priority: high
+    dependencies: [AR-06, AR-08]
+    status: planned
+    outcome: Regressions are detected and contained without claim inflation or data loss.
+    acceptance:
+      - Seeded regression triggers monitoring, quarantine, rollback, and an incident record.
+      - Preset versions and configurations are immutable.
+      - Backup, restore, deletion, and audit logs are verified.
+    human_gate: null
+
+  - id: AR-17
+    title: Run full unattended autonomy rehearsal
+    phase: D
+    priority: high
+    dependencies: [AR-08, AR-09, AR-16]
+    status: planned
+    outcome: Controller proves end-to-end continuation under seeded implementation and CI failures.
+    acceptance:
+      - It selects, implements, repairs, verifies, merges, reconciles, creates new work, and continues unattended.
+      - No routine human approval is requested.
+    human_gate: null
+
+  - id: AR-18
+    title: Conduct independent non-averaging final audit
+    phase: L
+    priority: critical
+    dependencies: [AR-13, AR-14, AR-15, AR-16, AR-17]
+    status: planned
+    outcome: Every scorecard category independently passes or automatically reopens remediation.
+    acceptance:
+      - Audit is independent of implementation.
+      - Failed categories create or reopen milestones.
+      - No discretionary override produces 10/10.
+    human_gate: HG-FINAL-RELEASE if_public_release_requested
+
