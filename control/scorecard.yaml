@@ -1,0 +1,70 @@
+schema_version: "1.0"
+scoring_rule: Every category must independently pass; averaging is prohibited.
+passing_score: 10
+release_rule: Any failed category blocks affected capabilities and claims.
+
+categories:
+  execution_discipline:
+    status: not_audited
+    graduation: Continuous selection, repair, CI recovery, independent review, and unattended continuation are proven.
+  documentation_evidence:
+    status: not_audited
+    graduation: Evidence is generated, immutable, traceable, freshness-checked, and sufficient for every completion.
+  repository_honesty:
+    status: not_audited
+    graduation: Every user-facing claim and state label is enforced by current repository evidence.
+  architecture:
+    status: not_audited
+    graduation: Canonical components have explicit boundaries and all applicable production callers.
+  implementation:
+    status: not_audited
+    graduation: No release-critical placeholder, disconnected system, or legacy bypass remains.
+  correctness:
+    status: not_audited
+    graduation: Unit, integration, adversarial, audio-golden, and end-to-end tests pass at the verified commit.
+  production_integration:
+    status: not_audited
+    graduation: Every applicable CLI, API, batch, web, report, listening, and promotion path uses canonical gates.
+  reproducibility:
+    status: not_audited
+    graduation: Supported clean environments reconstruct locked artifacts and equivalent verified outputs.
+  evaluation_validity:
+    status: not_audited
+    graduation: Verdict metrics have calibrated roles, applicability, uncertainty, and abstention.
+  audio_safety:
+    status: not_audited
+    graduation: Clipping, instability, loudness, artifact, and collateral-damage gates are validated.
+  perceptual_quality:
+    status: not_audited
+    graduation: Qualified blinded listening supports each promoted perceptual claim.
+  generalization:
+    status: not_audited
+    graduation: Claims remain within representative voice, genre, delivery, microphone, room, and defect coverage.
+  product_advancement:
+    status: not_audited
+    graduation: Promoted treatments meaningfully improve intended defects without unacceptable harm.
+  product_usability:
+    status: not_audited
+    graduation: Target non-engineers complete upload-to-export and understand errors and abstention.
+  accessibility:
+    status: not_audited
+    graduation: Keyboard, screen-reader, contrast, status, and warning behavior pass supported criteria.
+  privacy_rights:
+    status: not_audited
+    graduation: Provenance, consent, license, retention, deletion, and identity protections are enforced.
+  security:
+    status: not_audited
+    graduation: Threats, dependencies, secrets, inputs, abuse, and artifacts meet defined release policy.
+  reliability_operations:
+    status: not_audited
+    graduation: Recovery, idempotency, monitoring, quarantine, rollback, backup, and restore are proven.
+  claims:
+    status: not_audited
+    graduation: Every claim maps to current evidence, applicability, rights, subgroup coverage, and expiration.
+  autonomy:
+    status: not_audited
+    graduation: Safe work executes, recovers, expands, and resumes without routine user direction.
+  maintainability:
+    status: not_audited
+    graduation: Decisions, state, evidence, negative results, dependencies, and operational procedures remain durable.
+

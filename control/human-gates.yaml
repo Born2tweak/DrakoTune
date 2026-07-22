@@ -1,0 +1,60 @@
+schema_version: "1.0"
+policy:
+  routine_technical_approval_required: false
+  batch_related_decisions: true
+  finish_safe_preparation_first: true
+  continue_unrelated_ready_work: true
+
+gates:
+  - id: HG-REAL-AUDIO-RIGHTS
+    trigger: Non-public or ambiguously licensed real audio is required.
+    required_packet:
+      - Proposed assets and provenance
+      - Intended processing, evaluation, storage, and sharing uses
+      - Retention and deletion terms
+      - Recommended authorization option and alternatives
+      - Consequences of approval or refusal
+      - Exact automatic continuation action
+
+  - id: HG-LISTENING-STUDY
+    trigger: Participant-facing qualified listening study is ready to launch.
+    required_packet:
+      - Frozen protocol and participant terms
+      - Recruitment method and qualification
+      - Privacy, retention, exclusion, and cancellation rules
+      - Cost options with recommended zero-cost or lowest-cost viable choice
+      - Exact automatic continuation action
+
+  - id: HG-USER-STUDY
+    trigger: Non-public participants are needed for usability validation.
+    required_packet:
+      - Protocol and participant-facing terms
+      - Data collected and retention policy
+      - Recruitment and cost options
+      - Exact automatic continuation action
+
+  - id: HG-CREDENTIALS
+    trigger: Required credentials, verification code, CAPTCHA, or biometric step is unavailable.
+    required_packet:
+      - Exact credential or action required
+      - Work already completed
+      - Minimal secure handoff
+      - Exact automatic continuation action
+
+  - id: HG-LEGAL-LICENSING
+    trigger: Material unresolved legal, distribution, or license obligation affects the selected design.
+    required_packet:
+      - Source-backed issue summary
+      - Practical options and consequences
+      - Reversible recommended choice if available
+      - Exact automatic continuation action
+
+  - id: HG-FINAL-RELEASE
+    trigger: Public production release or strong professional-quality claim is fully prepared and repository policy reserves final authority.
+    required_packet:
+      - Complete non-averaging scorecard
+      - Independent audit
+      - Known limitations and eligible claims
+      - Rollback target and monitoring status
+      - Exact release and continuation actions
+

@@ -1,0 +1,97 @@
+schema_version: "1.0"
+completion_rule: A research stream is incomplete until findings become decisions, experiments, milestones, and claim constraints.
+
+streams:
+  - id: RS-01
+    title: Vocal audio-quality evaluation
+    questions:
+      - Which objective metrics are safety gates, diagnostics, controls, proxies, or prohibited for quality conclusions?
+      - What references, alignment, uncertainty, and abstention rules apply?
+      - Which metrics correlate with qualified listener judgments within declared domains?
+    required_outputs:
+      - Source-backed metric registry
+      - Calibration experiment plan
+      - Verdict and abstention rules
+      - Dependency-placed implementation milestones
+
+  - id: RS-02
+    title: Listening-study design
+    questions:
+      - Which A/B, ABX, preference, defect, or MUSHRA-style method fits each claim?
+      - What qualification, sample size, exclusion, cancellation, and statistical rules are defensible?
+      - How should remote listeners be recruited without depending on friends?
+    required_outputs:
+      - Executable preregistered protocol
+      - Analysis specification
+      - Recruitment and cost decision packet
+      - Implementation and validation milestones
+
+  - id: RS-03
+    title: Corpus and data rights
+    questions:
+      - Which public datasets permit processing, evaluation, storage, and required artifact handling?
+      - What voice, genre, delivery, microphone, room, and defect gaps remain?
+      - What consent, retention, deletion, identity, duplication, and leakage controls are necessary?
+    required_outputs:
+      - Dataset ledger and rights matrix
+      - Coverage and gap analysis
+      - Original-data collection protocol if needed
+      - Corpus assembly milestones
+
+  - id: RS-04
+    title: DSP and hybrid processing candidates
+    questions:
+      - Which classical DSP, lightweight ML, pretrained, or hybrid methods address observed weaknesses?
+      - What licenses, compute, latency, quality, and failure-mode constraints apply?
+      - Which candidates offer the best bounded experiments for plosives, sibilance, harshness, dynamics, tone, breath/noise, proximity, intelligibility, presence, and full-song consistency?
+    required_outputs:
+      - Ranked candidate treatments
+      - Architecture decisions
+      - Frozen baseline and experiment manifests
+      - Acceptance and rejection thresholds
+
+  - id: RS-05
+    title: Reproducibility and distribution
+    questions:
+      - Which locking and packaging strategy fits the supported Python and web surfaces?
+      - What are the supported OS boundaries and FFmpeg distribution obligations?
+      - Which SBOM, signing, update, rollback, and deterministic-render standards apply?
+    required_outputs:
+      - DT-50 architecture decision package
+      - Supported-platform matrix
+      - License and distribution matrix
+      - Clean-build verification plan
+
+  - id: RS-06
+    title: Product and user workflow
+    questions:
+      - What control level, processing time, comparison flow, export behavior, privacy, and abstention do non-engineer artists need?
+      - Which problems matter most and define the initial supported scope?
+    required_outputs:
+      - Frozen initial product scope
+      - Usability and accessibility protocol
+      - Product success and failure criteria
+      - Implementation milestones
+
+  - id: RS-07
+    title: Autonomous execution architecture
+    questions:
+      - Which durable-state, work-lease, milestone-selection, CI-monitoring, recovery, and roadmap-expansion patterns fit the repository environment?
+      - How will safe human gates be classified and consolidated?
+    required_outputs:
+      - Executable controller architecture
+      - Failure taxonomy and retry rules
+      - Crash recovery and unattended rehearsal suite
+      - Operations milestones
+
+monitoring:
+  recurring_topics:
+    - audio evaluation methods
+    - DSP and source-separation developments
+    - dependency and vulnerability changes
+    - licensing and dataset changes
+    - competitor capabilities
+    - production failures and user feedback
+    - metric calibration drift
+  change_policy: New evidence creates candidate milestones and never silently changes frozen production behavior.
+
