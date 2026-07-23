@@ -1,70 +1,175 @@
-schema_version: "1.0"
+schema_version: "1.1"
 scoring_rule: Every category must independently pass; averaging is prohibited.
 passing_score: 10
 release_rule: Any failed category blocks affected capabilities and claims.
 
+# --- Audit metadata (2026-07-23 reconciliation run) ---
+audit:
+  baseline_commit: 61fc94f
+  ci_run: "29963193991"          # CI success on main for HEAD 61fc94f (merge #12)
+  test_baseline: "536 collected/pass"
+  auditor: claude-code (reconciliation run)
+  method: honest scoring from cited repository evidence; sub-10 stays flagged
+  verdict_vocabulary:
+    pass: proven at 10 by current evidence
+    below_threshold: actionable, no external gate; not yet at 10
+    gated: blocked by a named human or external dependency
+  system_verdict: NOT RELEASABLE
+  system_verdict_reason: >
+    No category reaches 10 (non-averaging rule). Product is pre-release and
+    human-gated; perceptual/usability/generalization categories are correctly
+    gated on rights-clean corpus + listening studies + user studies. This is the
+    honest state, not a failure of the run.
+
 categories:
   execution_discipline:
-    status: not_audited
+    status: below_threshold
+    score: 7
+    evidence: >
+      Continuous milestone selection + CI recovery proven (PR #12 repaired a
+      missing test; run 29963193991 green). Independent review + fully unattended
+      continuation not rehearsed (DEF-005).
     graduation: Continuous selection, repair, CI recovery, independent review, and unattended continuation are proven.
   documentation_evidence:
-    status: not_audited
+    status: below_threshold
+    score: 8
+    evidence: >
+      Per-milestone COMPLETION_EVIDENCE dirs, typed evidence semantics (DT-45),
+      claim_inventory.json. Automated freshness-checking only partial.
     graduation: Evidence is generated, immutable, traceable, freshness-checked, and sufficient for every completion.
   repository_honesty:
-    status: not_audited
+    status: below_threshold
+    score: 9
+    evidence: >
+      Claim-quarantine registry (DT-45) enforced; no strong/perceptual claim
+      un-quarantined; state labels match MILESTONE_REGISTRY. "polished" (D-A)
+      routed as pending-evidence. Webapp user-facing strings not fully re-audited this run.
     graduation: Every user-facing claim and state label is enforced by current repository evidence.
   architecture:
-    status: not_audited
+    status: below_threshold
+    score: 8
+    evidence: >
+      Canonical components + DSP-seam characterization (DT-52); explicit
+      boundaries. "All applicable production callers" only partially proven (DEF-001).
     graduation: Canonical components have explicit boundaries and all applicable production callers.
   implementation:
-    status: not_audited
+    status: below_threshold
+    score: 7
+    evidence: >
+      Real DSP core (dsp_engine registry + executor, no core stubs). Legacy
+      pipeline.py path coexists; legacy-bypass adversarial coverage incomplete (DEF-001).
     graduation: No release-critical placeholder, disconnected system, or legacy bypass remains.
   correctness:
-    status: not_audited
+    status: below_threshold
+    score: 8
+    evidence: >
+      536 tests pass incl. adversarial, decision-fingerprint audio regression,
+      integration. No golden-audio float comparison; no desktop e2e.
     graduation: Unit, integration, adversarial, audio-golden, and end-to-end tests pass at the verified commit.
   production_integration:
-    status: not_audited
+    status: gated
+    score: 6
+    evidence: >
+      webapp/jobs.py wires the canonical gate chain (preprocess→preflight→
+      analyze_and_plan→render_plan→evaluate→report). DEF-001: production callers
+      from every applicable entry point (CLI/batch/desktop) not proven; desktop UI absent.
     graduation: Every applicable CLI, API, batch, web, report, listening, and promotion path uses canonical gates.
   reproducibility:
-    status: not_audited
+    status: below_threshold
+    score: 9
+    evidence: >
+      DEF-002 closed: two-clean-env CI parity (SBOM + requirements.lock byte-identical),
+      FFmpeg GPL fingerprint captured. Cross-platform audio-output equivalence
+      (Py3.14 win vs 3.12 CI) not byte-verified.
     graduation: Supported clean environments reconstruct locked artifacts and equivalent verified outputs.
   evaluation_validity:
-    status: not_audited
+    status: below_threshold
+    score: 7
+    evidence: >
+      Metric applicability registry (DT-47, 36 cards, 33 thresholds honestly unset),
+      multiaxis verdict (DT-48), abstention supported. Threshold calibration
+      incomplete (DEF-004).
     graduation: Verdict metrics have calibrated roles, applicability, uncertainty, and abstention.
   audio_safety:
-    status: not_audited
+    status: below_threshold
+    score: 8
+    evidence: >
+      Attenuate-only -0.2 dBFS ceiling, clip/peak safety measures, do_no_harm +
+      residual-audit + decision-safety tests. Validated on synthetic + 3 CC-BY
+      clips only; real-corpus safety gated.
     graduation: Clipping, instability, loudness, artifact, and collateral-damage gates are validated.
   perceptual_quality:
-    status: not_audited
+    status: gated
+    score: 0
+    evidence: >
+      No qualified blinded listening exists (DEF-003). All perceptual claims
+      prohibited. Gate: rights-clean corpus + recruitment (DT-55/62/56/57/66/67).
     graduation: Qualified blinded listening supports each promoted perceptual claim.
   generalization:
-    status: not_audited
+    status: gated
+    score: 0
+    evidence: No representative multi-voice/genre/mic/room corpus (DEF-003). Gated on acquisition.
     graduation: Claims remain within representative voice, genre, delivery, microphone, room, and defect coverage.
   product_advancement:
-    status: not_audited
+    status: gated
+    score: 2
+    evidence: >
+      2026-07-23 bounded DSP experiment yields one OBJECTIVE result only; perceptual
+      improvement unproven (DEF-003). Cannot pass without listening evidence.
     graduation: Promoted treatments meaningfully improve intended defects without unacceptable harm.
   product_usability:
-    status: not_audited
+    status: gated
+    score: 0
+    evidence: No non-engineer upload-to-export usability study (DEF-006). Gated on DT-76 human study.
     graduation: Target non-engineers complete upload-to-export and understand errors and abstention.
   accessibility:
-    status: not_audited
+    status: gated
+    score: 3
+    evidence: >
+      PRODUCT_SPEC requires keyboard/screen-reader/contrast; webapp exists but no
+      accessibility audit run (DEF-006). Gated on DT-76.
     graduation: Keyboard, screen-reader, contrast, status, and warning behavior pass supported criteria.
   privacy_rights:
-    status: not_audited
+    status: gated
+    score: 7
+    evidence: >
+      Consent/withdrawal engine (DT-49) + provenance graph on synthetic fixtures;
+      D-B "authorized non-private" posture adopted. Real deletion authority + legal
+      rights interpretation are human/counsel gates.
     graduation: Provenance, consent, license, retention, deletion, and identity protections are enforced.
   security:
-    status: not_audited
+    status: below_threshold
+    score: 6
+    evidence: >
+      SBOM + pip check, input validation (P-02 adversarial), rate-limit tests.
+      Full threat model / secrets / abuse audit not run this cycle (DT-84 gated for release).
     graduation: Threats, dependencies, secrets, inputs, abuse, and artifacts meet defined release policy.
   reliability_operations:
-    status: not_audited
+    status: gated
+    score: 4
+    evidence: >
+      Atomic project state + retention cleanup + crash-recovery spec (P-06).
+      Monitoring/quarantine/rollback not proven end-to-end (DEF-007; DT-82/83 downstream).
     graduation: Recovery, idempotency, monitoring, quarantine, rollback, backup, and restore are proven.
   claims:
-    status: not_audited
+    status: below_threshold
+    score: 8
+    evidence: >
+      Claim registry + quarantine enforced; D-A "polished" recorded as target
+      promise pending-evidence, distinct from the supportable claim. Expiration/subgroup
+      coverage not yet mechanized.
     graduation: Every claim maps to current evidence, applicability, rights, subgroup coverage, and expiration.
   autonomy:
-    status: not_audited
+    status: gated
+    score: 6
+    evidence: >
+      Safe work executes/recovers/resumes (this run + PR #8-12 demonstrate). Full
+      unattended seeded rehearsal not performed (DEF-005; AR-07/08/09/17 downstream).
     graduation: Safe work executes, recovers, expands, and resumes without routine user direction.
   maintainability:
-    status: not_audited
+    status: below_threshold
+    score: 8
+    evidence: >
+      Append-only DECISION_LOG, NEGATIVE_RESULTS, per-milestone evidence,
+      requirements.lock, REPRODUCE_RUNBOOK durable. Some registries hand-maintained.
     graduation: Decisions, state, evidence, negative results, dependencies, and operational procedures remain durable.
-

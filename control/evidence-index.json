@@ -1,25 +1,34 @@
 {
-  "schema_version": "1.0",
-  "repository_verified": false,
+  "schema_version": "1.1",
+  "repository_verified": true,
+  "verified_at": "2026-07-23",
+  "baseline_commit": "61fc94f",
+  "final_reconciliation_commit": null,
   "rule": "No requirement is complete until exact repository evidence replaces null fields.",
   "records": [
     {
       "requirement_id": "REQ-RECONCILIATION",
       "milestone_id": "AR-01",
-      "commit_sha": null,
-      "production_paths": [],
-      "code_locations": [],
-      "test_locations": [],
-      "test_command": null,
-      "test_result": null,
-      "ci_run": null,
-      "environment_fingerprint": null,
+      "commit_sha": "61fc94f",
+      "production_paths": ["src/webapp/jobs.py"],
+      "code_locations": [
+        "control/RECONCILIATION_RECORD.md (§6-§8)",
+        "control/scorecard.yaml",
+        "control/deficiency-register.yaml"
+      ],
+      "test_locations": ["tests/"],
+      "test_command": "python -m pytest -q",
+      "test_result": "536 collected/pass",
+      "ci_run": "29963193991",
+      "environment_fingerprint": "AURELIAN/08_TOOLING/env_fingerprint.json",
       "artifact_hashes": [],
-      "limitations": ["Repository has not yet been inspected by this package"],
-      "claim_effect": "All strong readiness and perceptual-quality claims remain prohibited",
-      "freshness": null,
-      "status": "missing"
+      "limitations": [
+        "Baseline audit only; scorecard has no category at 10 (system NOT RELEASABLE, by design pre-release)",
+        "Perceptual/usability/generalization gated on DEF-003/DEF-006 (rights-clean corpus + human studies)"
+      ],
+      "claim_effect": "Strong readiness and perceptual-quality claims remain prohibited",
+      "freshness": "2026-07-23",
+      "status": "verified"
     }
   ]
 }
-
