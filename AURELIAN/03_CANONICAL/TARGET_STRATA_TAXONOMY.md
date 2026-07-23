@@ -1,7 +1,8 @@
 # Target-Genre and Recording Strata Taxonomy (DT-54)
 
-**Status:** canonical v1.0.0 — autonomous framework complete; launch-critical
-selection (Q-014) + expert review are **human gates** (contract Field 15).
+**Status:** canonical v1.0.0 — framework complete; launch-critical selection
+**ACCEPTED by owner 2026-07-23 (D-028, Q-014 closed)**. Example-annotation
+inter-rater reliability report deferred to first real annotation (DT-55/56).
 **Source of truth:** `src/product_taxonomy/` (this doc is the human view; the
 machine snapshot is `07_DATA_AND_PROVENANCE/dt54_evidence/taxonomy_v1.json`).
 **Scope basis:** D-A / D-025 — dry single lead rap/pop vocal.

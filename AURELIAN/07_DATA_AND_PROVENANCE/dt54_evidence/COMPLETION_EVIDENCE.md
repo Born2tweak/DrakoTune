@@ -20,9 +20,13 @@
 - **Prioritized + minimum-coverage procedure**: `CoverageEntry(priority, min_coverage)`; sparse strata excluded from confirmatory claims. ✅ (values are a *recommendation* pending Q-014)
 - **Leakage groups**: `performer_session` on every entry (DT-63 grouped splits). ✅
 
-## Human gate remaining (Field 15 *Human-only*; Field 20 closes Q-014)
+## Human gate — RESOLVED 2026-07-23 (D-028)
 
-Owner + audio lead must accept/amend the launch-critical set, confirm no sensitive
-category is added, and provide expert review + an example-annotation reliability
-report. Q-014 stays **open** until then. No genre-generalization claim is made
-(Field 21). DT-55/DT-56 receive the strata as a *proposed* freeze.
+Owner **accepted** the recommended launch-critical set (Q-014 closed): genre
+rap/melodic_rap/pop; presentation spoken_rapped/melodic; language english;
+recording home_untreated/plosive_prone/sibilant_prone. No sensitive category added
+(sensitive-proxy guard enforced). Strata are now **frozen** for DT-55 (acquisition)
+and DT-56 (listening protocol). Outstanding QA (not a blocker): the example-
+annotation inter-rater reliability report is deferred to first real annotation;
+**no genre-generalization claim** is permitted until strata are populated +
+validated (Field 21).

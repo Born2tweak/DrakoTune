@@ -47,7 +47,7 @@
     "expires_at": "2026-07-22T01:25:00Z"
   },
   "last_completed_action": "DT-51 autonomous distribution obligation inventory implemented + verified (22 tests). Milestone remains human-gated for the branch decision.",
-  "next_automatic_action": "DT-54 autonomous framework complete (src/product_taxonomy/, 22 tests; evidence dt54_evidence/). Frontier is now the Q-014 human gate: owner + audio lead accept/amend the launch-critical strata set + expert review. Next autonomous milestone after that gate: DT-56 listening protocol (DT-55 needs rights-clean acquisition, human-gated).",
+  "next_automatic_action": "DT-54 complete (Q-014 accepted, D-028). Next AUTONOMOUS milestone: DT-56 (Listening Protocol and Immutable Response Schema; deps DT-46/47/54 complete; automatic_internal). DT-55 (rights-clean acquisition) is ready but human-gated (spend + counsel).",
   "ready_queue": ["DT-54 (selected next)", "DT-69 (unblocked, deferred)", "DT-70 (unblocked, deferred; completion still product_scope-gated)"],
   "terminal_frontier": "reconciled_2026-07-23_next_dt54",
   "retry_counters": {},
@@ -57,7 +57,6 @@
     "distribution_decision: D-027 hosted_only (DT-51 complete)"
   ],
   "open_human_gates": [
-    "Q-014: DT-54 launch-critical strata selection + expert taxonomy review (owner + audio lead); recommendation ready in TARGET_STRATA_TAXONOMY.md",
     "HG-REAL-AUDIO-RIGHTS: real participant-corpus consent/retention/deletion + counsel language (DT-55/DT-62); NOT triggered while synthetic+owner+CC-BY only",
     "spend/recruitment for listening studies (DT-58/DT-59/DT-66/DT-67)"
   ],
