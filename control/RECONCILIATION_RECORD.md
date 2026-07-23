@@ -2,6 +2,11 @@
 
 **Reconciled:** 2026-07-21 · **Verified commit:** `75cc057` · **Executor:** claude-code (autonomous)
 
+> **2026-07-23 addendum (§6–§8):** a second reconciliation run verified the repo
+> against an external analysis that suspected cross-project contamination and
+> roadmap drift. Findings below. Verified baseline this run: HEAD `61fc94f`,
+> **536 tests collected/pass**, `main` CI-green (run `29887064268`).
+
 This record replaces the packaged greenfield templates with verified repository
 facts, per the program rule *"repository evidence overrides the initial templates."*
 
@@ -57,3 +62,75 @@ A fresh agent reading this file + `canonical-state.json` + the milestone registr
 can identify the exact frontier and next automatic action:
 **do the DT-49/DT-53/DT-51 autonomous preparation, then present one consolidated
 human-decision packet.** No routine approval is required to begin.
+
+---
+
+## 6. Cross-project contamination ruling (2026-07-23)
+
+An external analysis worried that code from a separate music **publishing /
+distribution** platform had been merged into DrakoTune, and that the roadmap had
+drifted away from audio into governance busywork. **Both concerns are disproven
+by direct repository evidence.**
+
+### 6.1 No music-distribution / publishing code exists here
+
+Whole-repo term counts (`.py`/`.md`/`.yaml`/`.json`, `.git` excluded):
+
+| Term | Hits | Note |
+|---|---|---|
+| `isrc` | 0 | — |
+| `royalt*` | 0 | — |
+| `a&r` / `record label` / `distributor` | 0 | — |
+| `music distribution` / `streaming service` | 0 | — |
+| `aggregator` | 1 | "Papers with Code, Kaggle" **dataset** aggregators for research discovery (`docs/research/PUBLIC_VOCAL_AUDIO_DATASET_RESEARCH.md`) |
+| `spotify` | 1 (in `src/`) | `src/dsp/pipeline.py` — **Spotify *Pedalboard***, the GPL-3.0 DSP library |
+| `publishing` | 2 | both **out-of-scope** declarations (`PRODUCT_SPEC.md`, `DT_69_76.md`) |
+
+Conclusion: no ISRC/royalty/streaming/catalog/A&R/aggregator/publishing code
+leaked in. Every superficial match resolves to the *Pedalboard* DSP library, LUFS
+delivery targets, dataset-research tooling, or an explicit out-of-scope note.
+
+### 6.2 The governance modules are OFF the runtime audio path
+
+`grep` for imports of `rights` / `product_discovery` / `provenance` /
+`data_governance` / `tooling` / `license_policy` across the runtime path
+(`src/webapp/`, `src/orchestration.py`, `src/dsp/`, `src/dsp_engine/`,
+`src/decision/`, `src/diagnostics/`, `src/evaluation/`) returns **0 matches**.
+Those modules are imported only by `tests/` and `scripts/`. They cannot gate,
+block, or alter actual audio processing. The runtime chain is:
+`webapp/jobs.py → preprocess → preflight → diagnostics → orchestration(decision)
+→ dsp_engine(render) → evaluation → report`.
+
+### 6.3 The roadmap is already audio-first; the frontier is a real human gate
+
+DT-54–DT-92 are audio work (listening protocols, rights-clean corpus, champion
+DSP calibration/improvement DT-77–DT-80, packaging last). No audible improvement
+had shipped **not** because the agent avoided sound, but because the next steps
+are gated by one consolidated human decision (product scope, rights/consent
+posture, distribution license) — see `CONSOLIDATED_HUMAN_DECISION.md`. The agent
+completed every *autonomous* half and correctly stopped at that boundary.
+
+## 7. Terminology glossary (the words that misled the external analysis)
+
+These repo terms have **software/product** meanings, never music-industry ones:
+
+| Term in this repo | Means | Does NOT mean |
+|---|---|---|
+| **distribution** | shipping the software application binary; GPL-copyleft packaging branch (DT-51/71/88) | distributing music to streaming services |
+| **rights** | consent + retention over *evaluation audio assets* used in datasets (DT-49/55/62) | music publishing / performance rights |
+| **discovery** | product/user research (customer-development interviews) (DT-53) | music or content discovery |
+| **license** | OSS dependency license (GPL/LGPL/permissive) of code deps (DT-50/51) | music licensing |
+| **catalog** | dataset catalog / metric registry card | music catalog |
+| **aggregator** | dataset aggregator (Papers with Code, Kaggle) | music aggregator/distributor |
+
+## 8. What the 2026-07-23 run changed
+
+Encoded the three human-gate decisions (D-A product promise as *target promise* +
+*currently-supportable claim*; D-B authorized-non-private evaluation posture; D-C
+hosted-only distribution), executed the previously-dormant scorecard/evidence
+audit (before + after), ran one bounded objective-only DSP experiment, and added
+lightweight anti-drift checks. Details in `scorecard.yaml`, `evidence-index.json`,
+`deficiency-register.yaml`, `AURELIAN/00_CONTROL/DECISION_LOG.md`, and the
+experiment artifacts under `reports/evaluations/`. Also removed a stale tracked
+cross-agent injection file (`.claude/rules/cross-agent-protocol.md`) and the
+gitignored `.autoclaw/` leftover from an unrelated 2026-05-20 experiment.
