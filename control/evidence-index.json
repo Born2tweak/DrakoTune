@@ -29,6 +29,29 @@
       "claim_effect": "Strong readiness and perceptual-quality claims remain prohibited",
       "freshness": "2026-07-23",
       "status": "verified"
+    },
+    {
+      "requirement_id": "REQ-DSP-EXPERIMENT",
+      "milestone_id": "DT-77-seed",
+      "commit_sha": "f25e49e",
+      "production_paths": ["src/orchestration.py", "src/dsp_engine/executor.py", "src/dsp_engine/deesser.py"],
+      "code_locations": ["scripts/experiments/exp_2026_07_23_sibilance_deesser.py"],
+      "test_locations": ["reports/evaluations/reconcile-2026-07-23/"],
+      "test_command": "python scripts/experiments/exp_2026_07_23_sibilance_deesser.py",
+      "test_result": "sibilance -26.1% but do-no-harm FAILED (SI-SDR 22/148, ceiling 12); REJECTED",
+      "ci_run": null,
+      "environment_fingerprint": "AURELIAN/08_TOOLING/env_fingerprint.json",
+      "artifact_hashes": [
+        "results.json sha256=804f99f25e1b350338325afd828dee06f75568c63d943b37c97166ed15e78fe7",
+        "SUMMARY.md sha256=bd278e686ccebfccd8fb1d155f99038e79f9289bb78966d29237ad655d7b5712"
+      ],
+      "limitations": [
+        "Objective metrics only; NO perceptual claim (guardrail 1)",
+        "Rejected treatment; champion behaviour unchanged; nothing promoted"
+      ],
+      "claim_effect": "None promoted; logged as negative result N-014 + DT-77 improvement brief",
+      "freshness": "2026-07-23",
+      "status": "verified"
     }
   ]
 }

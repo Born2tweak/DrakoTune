@@ -15,10 +15,12 @@ deficiencies:
     disposition: open_active
     disposition_note: >
       Partially addressed: webapp/jobs.py exercises the canonical chain and DT-46/47/48
-      (provenance, metric registry, verdict) are merged + tested. Still open: production
-      callers from EVERY applicable entry point + legacy-bypass adversarial tests. The
-      2026-07-23 DSP experiment adds one production-path integration data point; it does
-      not close this. B-final may narrow it.
+      (provenance, metric registry, verdict) are merged + tested. B-final (2026-07-23):
+      the DSP experiment N-014 exercised analyze_and_plan -> execute_plan end-to-end on
+      160 synthetic + 3 real clips with a tracked baseline (reports/evaluations/
+      reconcile-2026-07-23/) — real integration evidence, but STILL open: production
+      callers from every applicable entry point (CLI/batch/desktop) + legacy-bypass
+      adversarial tests remain. Narrowed, not closed.
     affected_categories: [production_integration, repository_honesty, correctness]
     required_evidence:
       - Production callers from every applicable entry point

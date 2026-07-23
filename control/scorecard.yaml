@@ -20,6 +20,24 @@ audit:
     human-gated; perceptual/usability/generalization categories are correctly
     gated on rights-clean corpus + listening studies + user studies. This is the
     honest state, not a failure of the run.
+  post_experiment_delta:
+    note: >
+      B-final (after the 2026-07-23 DSP experiment N-014). Pre-run scores above are
+      PRESERVED; only evidence deltas recorded here. No score changed — the
+      experiment was rejected, so it neither raised product_advancement nor closed
+      production_integration.
+    audio_safety: >
+      Reinforced (score unchanged 8): the experiment reconfirmed the champion's
+      -0.2 dBFS ceiling holds AND surfaced that processing applied AFTER the ceiling
+      can breach it — a design guard, now documented (N-014).
+    production_integration: >
+      Additional evidence (score unchanged 6, DEF-001 still open_active): the real
+      production path (analyze_and_plan -> execute_plan) was exercised end-to-end on
+      160 synthetic + 3 real clips with a tracked baseline; does not satisfy
+      every-entry-point + legacy-bypass requirements.
+    product_advancement: >
+      Score unchanged 2: one honest negative result (N-014), no promotion; perceptual
+      improvement remains gated (DEF-003).
 
 categories:
   execution_discipline:
