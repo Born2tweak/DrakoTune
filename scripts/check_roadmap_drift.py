@@ -12,14 +12,15 @@ Check 2 (mission-traceability): every milestone names a contract (`detail:`), an
 every milestone marked `complete` that carried a human gate records how the gate
 was resolved (`human_gate_status`), never a dangling `human_gate_remaining`.
 
-Exit 0 = pass, 1 = drift/violation. Usage: python scripts/check_roadmap_drift.py
+Stdlib-only (no PyYAML): milestone entries are flow-style one-line dicts, parsed
+with a targeted reader so this check adds no dependency to CI. Exit 0 = pass,
+1 = drift/violation. Usage: python scripts/check_roadmap_drift.py
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
-
-import yaml
 
 REPO = Path(__file__).resolve().parent.parent
 REGISTRY = REPO / "AURELIAN" / "05_ROADMAP" / "MILESTONE_REGISTRY.yaml"
@@ -39,12 +40,40 @@ ADMIN_KEYWORDS = (
     "audit", "packaging",
 )
 
+# Matches a flow-style milestone entry line: `- {id: DT-54, title: ..., status: ...}`.
+_MILESTONE_LINE = re.compile(r"-\s*\{id:\s*(?P<id>[A-Za-z]+-\d+)\s*,(?P<rest>.*)\}\s*$")
+
+
+def _field(rest: str, key: str) -> str | None:
+    """Extract a bareword/short value for `key` from a flow-dict body.
+
+    Titles and statuses are comma/brace-free barewords here; quoted values (e.g.
+    human_gate_remaining) are only tested for presence, not parsed.
+    """
+    m = re.search(rf"\b{re.escape(key)}:\s*(?P<v>[^,}}]+)", rest)
+    return m.group("v").strip() if m else None
+
+
+def parse_milestones(text: str) -> list[dict]:
+    milestones: list[dict] = []
+    for line in text.splitlines():
+        m = _MILESTONE_LINE.search(line)
+        if not m:
+            continue
+        rest = m.group("rest")
+        milestones.append({
+            "id": m.group("id"),
+            "title": _field(rest, "title") or "",
+            "status": _field(rest, "status") or "",
+            "has_detail": bool(re.search(r"\bdetail:", rest)),
+            "has_dangling_gate": bool(re.search(r"\bhuman_gate_remaining:", rest)),
+        })
+    return milestones
+
 
 def _is_core(title: str) -> bool:
     t = title.lower()
-    if any(k in t for k in CORE_KEYWORDS):
-        return True
-    return False
+    return any(k in t for k in CORE_KEYWORDS)
 
 
 def _is_admin(title: str) -> bool:
@@ -53,12 +82,11 @@ def _is_admin(title: str) -> bool:
 
 
 def check(registry_path: Path = REGISTRY) -> list[str]:
-    data = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
-    milestones = data["milestones"]
+    milestones = parse_milestones(registry_path.read_text(encoding="utf-8"))
     violations: list[str] = []
 
     # Check 1: core-work floor.
-    ready = [m for m in milestones if m.get("status") == "ready"]
+    ready = [m for m in milestones if m["status"] == "ready"]
     if ready:
         core_ready = [m for m in ready if _is_core(m["title"])]
         if not core_ready:
@@ -70,9 +98,9 @@ def check(registry_path: Path = REGISTRY) -> list[str]:
 
     # Check 2: mission-traceability.
     for m in milestones:
-        if "detail" not in m:
+        if not m["has_detail"]:
             violations.append(f"{m['id']}: missing `detail:` contract pointer (traceability)")
-        if m.get("status") == "complete" and "human_gate_remaining" in m:
+        if m["status"] == "complete" and m["has_dangling_gate"]:
             violations.append(
                 f"{m['id']}: marked complete but still has a dangling `human_gate_remaining`; "
                 "record `human_gate_status` instead"
