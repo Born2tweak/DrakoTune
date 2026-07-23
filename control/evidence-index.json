@@ -1,25 +1,57 @@
 {
-  "schema_version": "1.0",
-  "repository_verified": false,
+  "schema_version": "1.1",
+  "repository_verified": true,
+  "verified_at": "2026-07-23",
+  "baseline_commit": "61fc94f",
+  "final_reconciliation_commit": "742c90c",
   "rule": "No requirement is complete until exact repository evidence replaces null fields.",
   "records": [
     {
       "requirement_id": "REQ-RECONCILIATION",
       "milestone_id": "AR-01",
-      "commit_sha": null,
-      "production_paths": [],
-      "code_locations": [],
-      "test_locations": [],
-      "test_command": null,
-      "test_result": null,
-      "ci_run": null,
-      "environment_fingerprint": null,
+      "commit_sha": "61fc94f",
+      "production_paths": ["src/webapp/jobs.py"],
+      "code_locations": [
+        "control/RECONCILIATION_RECORD.md (§6-§8)",
+        "control/scorecard.yaml",
+        "control/deficiency-register.yaml"
+      ],
+      "test_locations": ["tests/"],
+      "test_command": "python -m pytest -q",
+      "test_result": "536 collected/pass",
+      "ci_run": "29963193991",
+      "environment_fingerprint": "AURELIAN/08_TOOLING/env_fingerprint.json",
       "artifact_hashes": [],
-      "limitations": ["Repository has not yet been inspected by this package"],
-      "claim_effect": "All strong readiness and perceptual-quality claims remain prohibited",
-      "freshness": null,
-      "status": "missing"
+      "limitations": [
+        "Baseline audit only; scorecard has no category at 10 (system NOT RELEASABLE, by design pre-release)",
+        "Perceptual/usability/generalization gated on DEF-003/DEF-006 (rights-clean corpus + human studies)"
+      ],
+      "claim_effect": "Strong readiness and perceptual-quality claims remain prohibited",
+      "freshness": "2026-07-23",
+      "status": "verified"
+    },
+    {
+      "requirement_id": "REQ-DSP-EXPERIMENT",
+      "milestone_id": "DT-77-seed",
+      "commit_sha": "f25e49e",
+      "production_paths": ["src/orchestration.py", "src/dsp_engine/executor.py", "src/dsp_engine/deesser.py"],
+      "code_locations": ["scripts/experiments/exp_2026_07_23_sibilance_deesser.py"],
+      "test_locations": ["reports/evaluations/reconcile-2026-07-23/"],
+      "test_command": "python scripts/experiments/exp_2026_07_23_sibilance_deesser.py",
+      "test_result": "sibilance -26.1% but do-no-harm FAILED (SI-SDR 22/148, ceiling 12); REJECTED",
+      "ci_run": null,
+      "environment_fingerprint": "AURELIAN/08_TOOLING/env_fingerprint.json",
+      "artifact_hashes": [
+        "results.json sha256=804f99f25e1b350338325afd828dee06f75568c63d943b37c97166ed15e78fe7",
+        "SUMMARY.md sha256=bd278e686ccebfccd8fb1d155f99038e79f9289bb78966d29237ad655d7b5712"
+      ],
+      "limitations": [
+        "Objective metrics only; NO perceptual claim (guardrail 1)",
+        "Rejected treatment; champion behaviour unchanged; nothing promoted"
+      ],
+      "claim_effect": "None promoted; logged as negative result N-014 + DT-77 improvement brief",
+      "freshness": "2026-07-23",
+      "status": "verified"
     }
   ]
 }
-

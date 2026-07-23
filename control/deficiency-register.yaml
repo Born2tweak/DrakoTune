@@ -1,12 +1,26 @@
-schema_version: "1.0"
-reconciliation_status: not_started
+schema_version: "1.1"
+reconciliation_status: baseline_reconciled   # 2026-07-23; B-final may move DEF-001
 rule: Repository inspection must confirm, refine, add, close, or reject each initial deficiency.
+disposition_vocabulary:
+  closed: evidence proves resolution
+  open_active: currently actionable and unresolved (no external gate)
+  parked_behind_gate: blocked by a named human or external dependency
+  accepted_risk: explicitly approved with rationale and review date
 
 deficiencies:
   - id: DEF-001
     title: Production integration of DT-45 through DT-48 is unproven
     severity: critical
     status: requires_repository_reconciliation
+    disposition: open_active
+    disposition_note: >
+      Partially addressed: webapp/jobs.py exercises the canonical chain and DT-46/47/48
+      (provenance, metric registry, verdict) are merged + tested. B-final (2026-07-23):
+      the DSP experiment N-014 exercised analyze_and_plan -> execute_plan end-to-end on
+      160 synthetic + 3 real clips with a tracked baseline (reports/evaluations/
+      reconcile-2026-07-23/) — real integration evidence, but STILL open: production
+      callers from every applicable entry point (CLI/batch/desktop) + legacy-bypass
+      adversarial tests remain. Narrowed, not closed.
     affected_categories: [production_integration, repository_honesty, correctness]
     required_evidence:
       - Production callers from every applicable entry point
@@ -18,6 +32,11 @@ deficiencies:
     title: DT-50 dependency locking may include undeclared workstation state
     severity: critical
     status: requires_repository_reconciliation
+    disposition: closed
+    disposition_note: >
+      Closed by DT-50: two-clean-env CI parity proves byte-identical SBOM +
+      requirements.lock across independent clean environments; FFmpeg GPL fingerprint
+      + direct-dependency versions captured in env_fingerprint.json.
     affected_categories: [reproducibility, maintainability, security]
     required_evidence:
       - Declared dependency source mapping
@@ -29,6 +48,12 @@ deficiencies:
     title: Real-audio perceptual validation is insufficient for strong quality claims
     severity: critical
     status: open_until_validated
+    disposition: parked_behind_gate
+    disposition_note: >
+      Gate = rights-clean representative corpus acquisition (spend) + participant
+      recruitment (human contact) + preregistered blinded listening. None can be done
+      autonomously. Blocks perceptual_quality, generalization, product_advancement, claims.
+    gate: HG-REAL-AUDIO-RIGHTS + human study recruitment (DT-55/62/56/57/66/67)
     affected_categories: [perceptual_quality, generalization, product_advancement, claims]
     required_evidence:
       - Rights-cleared representative corpus
@@ -40,6 +65,11 @@ deficiencies:
     title: Metric thresholds and roles are incompletely calibrated
     severity: high
     status: requires_repository_reconciliation
+    disposition: open_active
+    disposition_note: >
+      DT-47 delivered 36 metric cards with roles/applicability/abstention; 33 thresholds
+      are honestly unset. The calibration WORK is autonomous, but final threshold locking
+      (DT-64) needs held-out real data whose acquisition is gated (see DEF-003).
     affected_categories: [evaluation_validity, correctness, claims]
     required_evidence:
       - Complete metric inventory
@@ -50,6 +80,11 @@ deficiencies:
     title: Autonomous continuation and recovery are not proven unattended
     severity: high
     status: open_until_rehearsal
+    disposition: open_active
+    disposition_note: >
+      CI-failure repair demonstrated (PR #12). Crash recovery + gap-to-milestone
+      generation + full unattended seeded rehearsal not yet performed. This is
+      autonomous engineering work (not human-gated), currently downstream.
     affected_categories: [autonomy, execution_discipline, reliability]
     required_evidence:
       - Crash recovery
@@ -62,6 +97,12 @@ deficiencies:
     title: Non-engineer usability, accessibility, and failure recovery are not fully validated
     severity: high
     status: requires_repository_reconciliation
+    disposition: parked_behind_gate
+    disposition_note: >
+      Original-preservation + failure-recovery tests are autonomous and largely present
+      (P-01/P-02/P-06), but the usability + accessibility validation needs real
+      non-engineer participants (DT-76 closed usability pilot) — a human/recruitment gate.
+    gate: DT-76 closed desktop usability pilot (participant recruitment)
     affected_categories: [product_usability, accessibility, reliability]
     required_evidence:
       - Full workflow usability results
@@ -73,10 +114,14 @@ deficiencies:
     title: Release monitoring, quarantine, and rollback are not proven end to end
     severity: high
     status: requires_repository_reconciliation
+    disposition: open_active
+    disposition_note: >
+      Autonomous engineering work, not human-gated: seeded regression detection +
+      automatic quarantine/rollback + incident/audit records. Downstream of the
+      offline challenger sandbox (DT-82) and research watcher (DT-83); not yet built.
     affected_categories: [reliability, operations, claims]
     required_evidence:
       - Seeded regression detection
       - Automatic quarantine and rollback
       - Incident and audit records
     remediation_milestones: [AR-16]
-
