@@ -3,7 +3,7 @@
   "repository_verified": true,
   "verified_at": "2026-07-23",
   "baseline_commit": "61fc94f",
-  "final_reconciliation_commit": null,
+  "final_reconciliation_commit": "742c90c",
   "rule": "No requirement is complete until exact repository evidence replaces null fields.",
   "records": [
     {

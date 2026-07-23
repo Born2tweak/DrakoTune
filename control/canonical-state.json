@@ -3,8 +3,8 @@
   "program": "drakotune-full-autonomous-remediation",
   "repository": "Born2tweak/DrakoTune",
   "default_branch": "main",
-  "verified_commit": "75cc057155261934ae63105f238e4cea401b6c63",
-  "state_verified_at": "2026-07-21T23:25:00Z",
+  "verified_commit": "742c90c",
+  "state_verified_at": "2026-07-23T00:00:00Z",
   "reconciliation": {
     "greenfield_assumption_rejected": true,
     "note": "The packaged templates assumed a fresh install (active_milestone AR-00, all RECONCILE_FROM_REPOSITORY). The real repository is far advanced: an AURELIAN/ governance plane already exists and DT-45..DT-48, DT-50, DT-52 are merged and CI-green. This control plane is installed as a durable restart/recovery layer that DEFERS to AURELIAN authority where they overlap.",
