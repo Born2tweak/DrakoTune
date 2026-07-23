@@ -15,7 +15,7 @@
 | Q-011 | Public pilot | Should the hosted pilot remain, become invite-only research infrastructure, or be retired after desktop proof? | Product owner | DT-76 |
 | Q-012 | Research cadence | What human review cadence and notification channel should the research watcher use? | Product owner | DT-83 |
 | Q-013 | Evaluation reference | Which tasks legitimately admit a clean/reference signal, and which require blinded preference or defect judgments? | Research lead | DT-47 |
-| Q-014 | Genre strata | Which rap/pop subgenres, vocal presentations, languages, and recording conditions are launch-critical? | Product owner + audio lead | DT-54 |
+| Q-014 | Genre strata | Which rap/pop subgenres, vocal presentations, languages, and recording conditions are launch-critical? **OPEN — 2026-07-23 recommendation ready** (`AURELIAN/03_CANONICAL/TARGET_STRATA_TAXONOMY.md` coverage matrix): launch-critical = rap/melodic_rap/pop · spoken_rapped/melodic · english · home_untreated/plosive_prone/sibilant_prone. Awaiting owner+audio-lead sign-off + expert review. | Product owner + audio lead | DT-54 |
 | Q-015 | Reproducibility | Will the project adopt locked Python environments and reproducible FFmpeg binaries per platform? | Engineering owner | DT-50 |
 
 Questions that alter scope, legal posture, spending, claim language, or distribution are never auto-resolved.
