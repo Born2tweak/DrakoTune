@@ -2,8 +2,8 @@
 
 **State date:** 2026-07-21  
 **Audited commit:** `a3c51637a0c2ed18994a6950a45a72ccb753a93d`  
-**Planning epoch:** H0 execution / DT-45–DT-48, DT-50, DT-52 complete — first human-gate boundary reached  
-**Delivery posture:** planning package accepted (PR #1 merged); DT-45–DT-48, DT-50, DT-52 complete; only human-gated milestones remain ready: DT-49 (rights), DT-51 (distribution), DT-53 (product scope), DT-53 discovery ready (scope decision human-gated)  
+**Planning epoch:** H0 complete; 2026-07-23 reconciliation resolved the consolidated human decision (D-A/D-B/D-C) — frontier now DT-54 (H1)  
+**Delivery posture:** DT-45–DT-53 complete (DT-49/DT-51/DT-53 human gates satisfied 2026-07-23 via D-025/026/027); DT-54 ready + selected next; DT-69/DT-70 unblocked/deferred. Remaining gates are real-corpus rights + listening-study spend/recruitment (DEF-003). System scorecard: NOT RELEASABLE (no category at 10; pre-release, honest). See `control/RECONCILIATION_RECORD.md` §6–§8.  
 **Planning package:** Aurelian v1.2
 
 ## Verified baseline
