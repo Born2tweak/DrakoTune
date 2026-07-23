@@ -1,0 +1,182 @@
+{
+  "taxonomy_version": "1.0.0",
+  "dimensions": {
+    "genre": {
+      "labels": [
+        "rap",
+        "melodic_rap",
+        "sung_rap",
+        "pop",
+        "rap_pop_hybrid",
+        "unknown",
+        "not_applicable"
+      ],
+      "multilabel": false
+    },
+    "vocal_presentation": {
+      "labels": [
+        "spoken_rapped",
+        "sung_sustained",
+        "melodic",
+        "belted",
+        "falsetto",
+        "whisper",
+        "layered_stacked",
+        "ad_lib",
+        "harmony",
+        "unknown",
+        "not_applicable"
+      ],
+      "multilabel": true
+    },
+    "language": {
+      "labels": [
+        "english",
+        "spanish",
+        "multilingual_code_switch",
+        "other",
+        "unknown",
+        "not_applicable"
+      ],
+      "multilabel": false
+    },
+    "recording_condition": {
+      "labels": [
+        "studio_treated",
+        "home_untreated",
+        "mobile_device",
+        "plosive_prone",
+        "sibilant_prone",
+        "room_reflective",
+        "low_snr",
+        "clipped_input",
+        "unknown",
+        "not_applicable"
+      ],
+      "multilabel": true
+    }
+  },
+  "recommended_coverage": [
+    {
+      "dimension": "genre",
+      "value": "rap",
+      "priority": "launch_critical",
+      "min_coverage": 12,
+      "leakage_group": "performer_session",
+      "rationale": "Core D-A target."
+    },
+    {
+      "dimension": "genre",
+      "value": "melodic_rap",
+      "priority": "launch_critical",
+      "min_coverage": 12,
+      "leakage_group": "performer_session",
+      "rationale": "Dominant contemporary style; sung+rapped."
+    },
+    {
+      "dimension": "genre",
+      "value": "pop",
+      "priority": "launch_critical",
+      "min_coverage": 12,
+      "leakage_group": "performer_session",
+      "rationale": "Core D-A target."
+    },
+    {
+      "dimension": "genre",
+      "value": "sung_rap",
+      "priority": "secondary",
+      "min_coverage": 6,
+      "leakage_group": "performer_session",
+      "rationale": "Overlaps melodic_rap; secondary at launch."
+    },
+    {
+      "dimension": "vocal_presentation",
+      "value": "spoken_rapped",
+      "priority": "launch_critical",
+      "min_coverage": 12,
+      "leakage_group": "performer_session",
+      "rationale": "Primary rap delivery."
+    },
+    {
+      "dimension": "vocal_presentation",
+      "value": "melodic",
+      "priority": "launch_critical",
+      "min_coverage": 12,
+      "leakage_group": "performer_session",
+      "rationale": "Primary pop/melodic-rap delivery."
+    },
+    {
+      "dimension": "vocal_presentation",
+      "value": "ad_lib",
+      "priority": "secondary",
+      "min_coverage": 6,
+      "leakage_group": "performer_session",
+      "rationale": "Common but layered; harder to evaluate in isolation."
+    },
+    {
+      "dimension": "vocal_presentation",
+      "value": "layered_stacked",
+      "priority": "out_of_scope",
+      "min_coverage": 0,
+      "leakage_group": "performer_session",
+      "rationale": "Not a single dry lead vocal (D-A out of scope)."
+    },
+    {
+      "dimension": "language",
+      "value": "english",
+      "priority": "launch_critical",
+      "min_coverage": 18,
+      "leakage_group": "performer_session",
+      "rationale": "English-first launch."
+    },
+    {
+      "dimension": "language",
+      "value": "spanish",
+      "priority": "secondary",
+      "min_coverage": 6,
+      "leakage_group": "performer_session",
+      "rationale": "Large rap/pop share; secondary at launch."
+    },
+    {
+      "dimension": "language",
+      "value": "multilingual_code_switch",
+      "priority": "secondary",
+      "min_coverage": 6,
+      "leakage_group": "performer_session",
+      "rationale": "Explicit label so it is never mislabeled as one language."
+    },
+    {
+      "dimension": "recording_condition",
+      "value": "home_untreated",
+      "priority": "launch_critical",
+      "min_coverage": 12,
+      "leakage_group": "performer_session",
+      "rationale": "The core non-engineer user's condition."
+    },
+    {
+      "dimension": "recording_condition",
+      "value": "studio_treated",
+      "priority": "secondary",
+      "min_coverage": 6,
+      "leakage_group": "performer_session",
+      "rationale": "Cleaner baseline; less defect-relevant."
+    },
+    {
+      "dimension": "recording_condition",
+      "value": "plosive_prone",
+      "priority": "launch_critical",
+      "min_coverage": 8,
+      "leakage_group": "performer_session",
+      "rationale": "Defect-relevant; common in home capture."
+    },
+    {
+      "dimension": "recording_condition",
+      "value": "sibilant_prone",
+      "priority": "launch_critical",
+      "min_coverage": 8,
+      "leakage_group": "performer_session",
+      "rationale": "Defect-relevant (see N-014 de-ess finding)."
+    }
+  ],
+  "note": "Autonomous framework snapshot (DT-54). recommended_coverage is a NON-BINDING proposal for the Q-014 human decision."
+}
