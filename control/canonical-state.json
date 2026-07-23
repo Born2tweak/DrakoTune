@@ -21,12 +21,12 @@
   },
   "verified_baseline": {
     "python": "3.14.0 (Windows)",
-    "pytest": "478 passed, 4 warnings",
-    "audio_regression": "6/6 goldens bit-identical (recorded; DT-50/DT-52 evidence)",
+    "pytest": "536 collected/pass (baseline 61fc94f; was 478 at 75cc057)",
+    "audio_regression": "decision-fingerprint goldens pass (DT-50/DT-52 evidence)",
     "pip_check": "clean"
   },
-  "active_milestone": "CONSOLIDATED-HUMAN-DECISION",
-  "active_branch": "agent/dt-51-distribution-inventory",
+  "active_milestone": "DT-54",
+  "active_branch": "agent/reconciliation-run",
   "open_pull_request": null,
   "completed_this_run": [
     "AR-00/01/02 reconciliation (merged PR #8)",
@@ -47,20 +47,22 @@
     "expires_at": "2026-07-22T01:25:00Z"
   },
   "last_completed_action": "DT-51 autonomous distribution obligation inventory implemented + verified (22 tests). Milestone remains human-gated for the branch decision.",
-  "next_automatic_action": "Land DT-51 PR on green CI. All safely-executable frontier work is then complete; the remaining frontier is one consolidated human decision (see control/CONSOLIDATED_HUMAN_DECISION.md). No further autonomous milestone is unblockable without it.",
-  "ready_queue": [],
-  "terminal_frontier": "consolidated_human_decision",
+  "next_automatic_action": "Begin DT-54 (Target-Genre and Recording Strata Taxonomy) — deps satisfied by DT-53 completion; selected as next by the 2026-07-23 reconciliation run. Reconciliation scope ends at selecting/initiating DT-54; it does NOT auto-run DT-54..DT-92.",
+  "ready_queue": ["DT-54 (selected next)", "DT-69 (unblocked, deferred)", "DT-70 (unblocked, deferred; completion still product_scope-gated)"],
+  "terminal_frontier": "reconciled_2026-07-23_next_dt54",
   "retry_counters": {},
+  "resolved_human_gates_2026-07-23": [
+    "product_scope: D-025 (DT-53 complete)",
+    "rights_posture: D-026 authorized-non-private (DT-49 complete; real-corpus acquisition still gated)",
+    "distribution_decision: D-027 hosted_only (DT-51 complete)"
+  ],
   "open_human_gates": [
-    "HG-REAL-AUDIO-RIGHTS (DT-49 consent/legal/deletion; DT-55/DT-62 acquisition)",
-    "product_scope (DT-53 final scope decision)",
-    "distribution_decision (DT-51 branch choice; owner + counsel)"
+    "HG-REAL-AUDIO-RIGHTS: real participant-corpus consent/retention/deletion + counsel language (DT-55/DT-62); NOT triggered while synthetic+owner+CC-BY only",
+    "spend/recruitment for listening studies (DT-58/DT-59/DT-66/DT-67)"
   ],
   "release_blockers": [
-    "DT-49 consent/legal posture undecided (human)",
-    "DT-51 distribution branch undecided (human)",
-    "DT-53 product scope undecided (human)",
-    "No rights-cleared real-audio perceptual evidence (H1/H2 study family; human-gated acquisition)"
+    "No rights-cleared real-audio perceptual evidence (DEF-003; H1/H2 study family; human-gated acquisition + recruitment)",
+    "Scorecard: no category at 10 (system NOT RELEASABLE); perceptual/usability/generalization gated"
   ],
   "evidence_freshness": "current_as_of_verified_commit",
   "terminal_state": false

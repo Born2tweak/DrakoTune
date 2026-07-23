@@ -1,0 +1,48 @@
+# Rights provenance for authorized-non-private evaluation audio (D-026).
+# A filename or repo path is NOT rights evidence; each file carries a full record.
+# Verified 2026-07-23 against data/licenses/ATTRIBUTIONS.md + AURELIAN/00_CONTROL/SOURCE_REGISTRY.md.
+schema_version: "1.0"
+posture: authorized_non_private   # per D-026: synthetic + owner + license-verified public OK now
+permitted_use:
+  internal_evaluation: allowed
+  automated_ci: allowed
+  synthetic_degradation_derivatives: allowed
+  public_example_redistribution: allowed_with_attribution   # CC BY 4.0 credit required
+  private_participant_audio: prohibited_until_counsel        # none present here
+
+files:
+  - path: fixtures/audio_real/vocadito_1.wav
+    source_dataset: vocadito
+    source_url: https://doi.org/10.5281/zenodo.5557945
+    license: CC BY 4.0
+    attribution: >
+      Rachel M. Bittner et al., "vocadito: A dataset of solo vocals with f0, note,
+      and lyric annotations," ISMIR-LBD 2021.
+    acquisition_date: 2026-07-11
+    sha256: 701ef8e73891b2408c8095b4afd3f5d8a0fa9e201b89085789642cf1ae764c01
+    derivation: short clean clip via scripts/build_corpus.py --ci-fixtures
+    commercially_usable: true
+
+  - path: fixtures/audio_real/vocalset_female1_straight.wav
+    source_dataset: VocalSet
+    source_url: https://doi.org/10.5281/zenodo.1193957
+    license: CC BY 4.0
+    attribution: >
+      Julia Wilkins, Prem Seetharaman, Alison Wahl, Bryan Pardo, "VocalSet: A
+      Singing Voice Dataset," ISMIR 2018.
+    acquisition_date: 2026-07-11
+    sha256: 43ac20d7132dc9dc0ae6b93a65dce141c881b40a6cd6e2d556af61daabdacaf9
+    derivation: short clean clip via scripts/build_corpus.py --ci-fixtures
+    commercially_usable: true
+
+  - path: fixtures/audio_real/vocalset_female1_vibrato.wav
+    source_dataset: VocalSet
+    source_url: https://doi.org/10.5281/zenodo.1193957
+    license: CC BY 4.0
+    attribution: >
+      Julia Wilkins, Prem Seetharaman, Alison Wahl, Bryan Pardo, "VocalSet: A
+      Singing Voice Dataset," ISMIR 2018.
+    acquisition_date: 2026-07-11
+    sha256: c4e0e3909bdc47b82aaefecd05b7ae053d395264dee404fce0975727f2f980da
+    derivation: short clean clip via scripts/build_corpus.py --ci-fixtures
+    commercially_usable: true
