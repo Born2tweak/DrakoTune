@@ -49,3 +49,6 @@ artifacts/
 # Environment
 .env
 .env.local
+
+# Private paired-corpus per-run reports (titles/metrics) stay local
+reports/evaluations/paired-corpus/2*/
