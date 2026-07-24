@@ -68,7 +68,10 @@ def classify(name: str) -> str:
     return "blocked_pending_H1D"
 
 
-def build_manifest(folder: Path) -> dict:
+def build_manifest(folder: Path, approve_ref: str | None = None) -> dict:
+    """approve_ref: a decision-log id (e.g. "D-029") recording the H1-D ruling.
+    When given, non-rejected files become `approved_local_internal_eval` with that
+    consent_ref. Rejected classes (leaked / AI-isolated) NEVER flip, regardless."""
     files = sorted(p for p in folder.iterdir() if p.is_file())
     records, seen_hash = [], {}
     for p in files:
@@ -78,13 +81,17 @@ def build_manifest(folder: Path) -> dict:
             rights = "duplicate"
         else:
             seen_hash[digest] = p.name
+        consent = None
+        if approve_ref and rights == "blocked_pending_H1D":
+            rights = "approved_local_internal_eval"
+            consent = approve_ref
         records.append({
             "filename": p.name, "bytes": p.stat().st_size, "sha256": digest,
             **parse_name(p.name),
             "rights_class": rights,
             "duplicate_of": seen_hash.get(digest) if rights == "duplicate" else None,
-            # Fail-closed ingestion mirror: consent_ref stays null until H1-D.
-            "consent_ref": None,
+            # Fail-closed ingestion mirror: consent_ref stays null unless approved.
+            "consent_ref": consent,
         })
     # Candidate pair grouping by pair_key_hint (verification is DT-55B's job).
     by_key: dict[str, list[str]] = {}
@@ -109,6 +116,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("folder")
     ap.add_argument("--out", default=str(DEFAULT_OUT))
+    ap.add_argument("--approve", default=None, metavar="DECISION_ID",
+                    help="record the H1-D ruling (e.g. D-029): non-rejected files "
+                         "become approved_local_internal_eval with this consent_ref")
     args = ap.parse_args()
     folder = Path(args.folder)
     if not folder.is_dir():
@@ -119,7 +129,7 @@ def main() -> int:
         print("refusing: manifest must live under a gitignored path (data/restricted/)")
         return 1
     out.parent.mkdir(parents=True, exist_ok=True)
-    manifest = build_manifest(folder)
+    manifest = build_manifest(folder, approve_ref=args.approve)
     out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     counts: dict[str, int] = {}
     for r in manifest["files"]:

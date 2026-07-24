@@ -64,7 +64,14 @@ No contact, enrollment, or spend performed (Field 22).
 
 ---
 
-## Decision H1-D — Private paired-corpus rights ruling  *(added 2026-07-24; gates DT-55A…H real-corpus execution)*
+## Decision H1-D — Private paired-corpus rights ruling — **RESOLVED 2026-07-24 (D-029)**
+
+> Owner override: approved for **local, internal, evaluation-only** processing
+> (counsel not consulted; owner accepts the risk). Leaked + AI-isolated files stay
+> rejected permanently; no redistribution/training/claims; artifacts gitignored;
+> deletion path documented. Original packet text retained below for the record.
+
+*(original packet text, added 2026-07-24; gates DT-55A…H real-corpus execution)*
 
 The owner supplied a local folder of ~31 commercial acapella MP3s (Juice WRLD,
 Lil Uzi Vert, Lil Tecca, Kid LAROI, Travis Scott; YouTube-sourced, one **leaked**,

@@ -61,6 +61,18 @@ def test_filename_parsing_hints():
     assert p["youtube_id"] == "l0AnQrTNEAo"
 
 
+def test_approval_never_flips_rejected_classes(tmp_path):
+    """--approve (H1-D/D-029) upgrades blocked files but leaked/AI stay rejected."""
+    m = build_manifest(_fixture_folder(tmp_path), approve_ref="D-029")
+    by_name = {r["filename"]: r for r in m["files"]}
+    ok = by_name["01 - Artist - Song One (RAW ACAPELLA) NO AUTOTUNE [abc123XYZ_].mp3"]
+    assert ok["rights_class"] == "approved_local_internal_eval"
+    assert ok["consent_ref"] == "D-029"
+    assert by_name["03 - Other - Tune (LEAKED ACAPELLA) [ghi789RST_].mp3"]["rights_class"] == "rejected_leaked"
+    assert by_name["04 - Other - Tune ( AI Isolated Vocals) Acapella [jkl012OPQ-].mp3"]["rights_class"] == "rejected_ai_isolated_wet"
+    assert by_name["03 - Other - Tune (LEAKED ACAPELLA) [ghi789RST_].mp3"]["consent_ref"] is None
+
+
 def test_ingestion_validator_refuses_manifest_records(tmp_path):
     """The fail-closed bridge: consent_ref is null until H1-D, so ingestion fails."""
     m = build_manifest(_fixture_folder(tmp_path))
