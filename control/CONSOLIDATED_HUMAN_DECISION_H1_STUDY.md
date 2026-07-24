@@ -64,6 +64,28 @@ No contact, enrollment, or spend performed (Field 22).
 
 ---
 
+## Decision H1-D — Private paired-corpus rights ruling  *(added 2026-07-24; gates DT-55A…H real-corpus execution)*
+
+The owner supplied a local folder of ~31 commercial acapella MP3s (Juice WRLD,
+Lil Uzi Vert, Lil Tecca, Kid LAROI, Travis Scott; YouTube-sourced, one **leaked**,
+one AI-isolated) forming ~10 raw/wet candidate pairs — exactly the paired
+calibration data the quality gap needs. Under D-026 and the fail-closed ingestion
+rule, **DrakoTune may not process this audio** until you (with counsel where you
+deem it needed) rule on its use.
+
+- **Autonomously done regardless:** local gitignored manifest + rights
+  classification (leaked → rejected permanently; AI-isolated wet → rejected;
+  duplicate flagged); the entire pairing/alignment/delta/oracle machinery built +
+  validated on rights-clean surrogates (`PAIRED_CORPUS_ORCHESTRATION_PLAN.md`).
+- **Your choices:** (1) approve/deny **local, internal, evaluation-only**
+  processing of the non-rejected files (no redistribution, no public example, no
+  training, no claim; documented deletion path), or (2) decline and route the
+  same need through the rights-clean **commissioned dry/wet** scenario already
+  costed in H1-B. Option 2 is the clean path; option 1 is a legal-risk judgment
+  that is yours, not mine.
+- Regardless of the ruling: leaked file stays rejected; nothing from this corpus
+  ever leaves the machine or enters git/claims/training.
+
 ## Dependency audit result (DT-57 must precede confirmatory collection)
 
 Verified: the graph already enforces freeze-before-confirmatory
