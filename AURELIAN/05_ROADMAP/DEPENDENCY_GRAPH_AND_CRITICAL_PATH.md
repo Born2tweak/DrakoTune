@@ -36,6 +36,19 @@ After DT-45, DT-46, DT-47, DT-50, and DT-53 can proceed in parallel when ownersh
 ## Serial integrity constraints
 
 - Analysis method is frozen before pilot; pilot precedes power/threshold lock; lock precedes confirmatory collection.
+
+> **Dependency audit (2026-07-24, DT-57/55/58 groundwork).** The order is verified
+> correct and needs no change: DT-57 (analysis method) → DT-58 → DT-59 (pilot) →
+> DT-60 (power + threshold LOCK) → DT-66/DT-67 (confirmatory; both depend on DT-60).
+> Freeze precedes confirmatory collection. **Explicit guard on the DT-59→DT-60
+> boundary:** the pilot is non-confirmatory and its data may inform ONLY the
+> confirmatory sample size `n` (via variance). Endpoints, direction, estimand, and
+> exclusions are fixed in the DT-57 preregistration content-hash lock
+> (`src/analysis/prereg.py`); thresholds (δ, α) are set at DT-60 BEFORE any
+> confirmatory data. Pilot results must never redefine endpoints/thresholds
+> (post-hoc guard, `test_post_hoc_endpoint_change_breaks_the_lock`). Corpus
+> collection (DT-62) is likewise gated behind the DT-55 rights plan, and tuning
+> (DT-64) never accesses confirmatory groups (grouped-split leakage control, DT-63).
 - Acquisition/rights precede grouped splits; splits precede calibration/studies; tuning never accesses confirmatory groups.
 - Distribution decision precedes framework/build; performance budget precedes long-file optimization; reliable workflow precedes usability pilot.
 - Evidence/failure taxonomy precedes quality preregistration; implementation precedes frozen comparison; comparison precedes RC freeze.

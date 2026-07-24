@@ -1,0 +1,25 @@
+{
+  "dry_run": {
+    "n_screened": 3,
+    "n_qualified": 3,
+    "n_responses": 36,
+    "analysis_convergence": "converged",
+    "point_estimate": 0.712121212121212,
+    "ci": [
+      0.6363636363636364,
+      0.7777777777777778
+    ],
+    "side_balanced": true,
+    "no_degenerate_side_bias": true,
+    "workflow_ok": true,
+    "note": "2-3 engineer pilot is exploratory: wide CI expected; non-confirmatory (Field 21)."
+  },
+  "illustrative_budget_placeholder_rates": {
+    "n_participants": 3,
+    "task_hours": 2.0,
+    "hourly_rate": 45.0,
+    "participant_cost": 270.0,
+    "total_with_fees_contingency": 378.0,
+    "requires_human_authorization": true
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "total_gap": 88,
+  "coverage_gaps": [
+    {
+      "dimension": "genre",
+      "value": "rap",
+      "target": 12,
+      "have": 0,
+      "gap": 12,
+      "satisfied": false
+    },
+    {
+      "dimension": "genre",
+      "value": "melodic_rap",
+      "target": 12,
+      "have": 0,
+      "gap": 12,
+      "satisfied": false
+    },
+    {
+      "dimension": "genre",
+      "value": "pop",
+      "target": 12,
+      "have": 0,
+      "gap": 12,
+      "satisfied": false
+    },
+    {
+      "dimension": "vocal_presentation",
+      "value": "spoken_rapped",
+      "target": 12,
+      "have": 0,
+      "gap": 12,
+      "satisfied": false
+    },
+    {
+      "dimension": "vocal_presentation",
+      "value": "melodic",
+      "target": 12,
+      "have": 0,
+      "gap": 12,
+      "satisfied": false
+    },
+    {
+      "dimension": "language",
+      "value": "english",
+      "target": 18,
+      "have": 40,
+      "gap": 0,
+      "satisfied": true
+    },
+    {
+      "dimension": "recording_condition",
+      "value": "home_untreated",
+      "target": 12,
+      "have": 0,
+      "gap": 12,
+      "satisfied": false
+    },
+    {
+      "dimension": "recording_condition",
+      "value": "plosive_prone",
+      "target": 8,
+      "have": 0,
+      "gap": 8,
+      "satisfied": false
+    },
+    {
+      "dimension": "recording_condition",
+      "value": "sibilant_prone",
+      "target": 8,
+      "have": 0,
+      "gap": 8,
+      "satisfied": false
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "public_and_synthetic_only",
+      "base_cost": 0.0,
+      "total_cost_with_contingency": 0.0,
+      "total_minutes": 100.0,
+      "total_storage_mb": 1000.0,
+      "requires_human_authorization": false
+    },
+    {
+      "name": "commissioned_dry_wet",
+      "base_cost": 3000.0,
+      "total_cost_with_contingency": 3450.0,
+      "total_minutes": 180.0,
+      "total_storage_mb": 600.0,
+      "requires_human_authorization": true
+    },
+    {
+      "name": "professional_reference_treatments",
+      "base_cost": 2400.0,
+      "total_cost_with_contingency": 2760.0,
+      "total_minutes": 400.0,
+      "total_storage_mb": 100.0,
+      "requires_human_authorization": true
+    }
+  ]
+}

@@ -47,7 +47,7 @@
     "expires_at": "2026-07-22T01:25:00Z"
   },
   "last_completed_action": "DT-51 autonomous distribution obligation inventory implemented + verified (22 tests). Milestone remains human-gated for the branch decision.",
-  "next_automatic_action": "DT-54 + DT-56 complete (2026-07-23). DT-57 (Statistical Preregistration) ready but human-gated (method_before_people). Remaining autonomous frontier is thin and mostly downstream of human study gates (DT-55/57/58 spend+preregistration); DT-61 (listening platform hardening) is the next automatic_internal candidate once its deps clear. Real perceptual progress stays blocked on DEF-003 (rights-clean corpus + recruitment).",
+  "next_automatic_action": "Autonomous halves of DT-54/56/57/55/58 all complete + merged (2026-07-24). Frontier = one consolidated packet control/CONSOLIDATED_HUMAN_DECISION_H1_STUDY.md with 3 human-only decisions: H1-A statistical thresholds+method review (DT-57), H1-B corpus budget+consent (DT-55), H1-C pilot budget+consent+go/no-go (DT-58). No further milestone advances without one of these. Dependency audit: graph already enforces freeze-before-confirmatory (no reorder).",
   "ready_queue": ["DT-54 (selected next)", "DT-69 (unblocked, deferred)", "DT-70 (unblocked, deferred; completion still product_scope-gated)"],
   "terminal_frontier": "reconciled_2026-07-23_next_dt54",
   "retry_counters": {},
@@ -57,8 +57,10 @@
     "distribution_decision: D-027 hosted_only (DT-51 complete)"
   ],
   "open_human_gates": [
-    "HG-REAL-AUDIO-RIGHTS: real participant-corpus consent/retention/deletion + counsel language (DT-55/DT-62); NOT triggered while synthetic+owner+CC-BY only",
-    "spend/recruitment for listening studies (DT-58/DT-59/DT-66/DT-67)"
+    "H1-A (DT-57): set delta_sup, delta_ni, per-endpoint alpha, target power, catch-trial rate + independent statistical method review; then freeze() locks the prereg. Final n follows pilot variance (DT-60).",
+    "H1-B (DT-55): corpus budget ceiling + source mix; counsel consent/retention/withdrawal terms + license grants; outreach/commissioning; owner-audio publication. 88-clip launch-strata gap.",
+    "H1-C (DT-58): pilot base rate + ceiling + contingency; recruitment channel + outreach; consent/contract + payment (counsel); go/no-go (D-016/D-017).",
+    "HG-REAL-AUDIO-RIGHTS: real participant-corpus consent/retention/deletion (DT-62); NOT triggered while synthetic+owner+CC-BY only"
   ],
   "release_blockers": [
     "No rights-cleared real-audio perceptual evidence (DEF-003; H1/H2 study family; human-gated acquisition + recruitment)",
