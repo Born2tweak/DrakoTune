@@ -54,6 +54,16 @@ Historical performance evidence indicates linear memory near 180 MB per audio mi
 
 Dependencies have lower bounds but no lockfile; FFmpeg build options are external. Conclusion: software version plus build/license fingerprint must be evidence metadata.
 
+## Supersession note — N-002..N-006 structurally defended by DT-56 (2026-07-23)
+
+The five listening-analysis exploits above are now rejected or surfaced by the
+immutable listening schema (`src/listening/`, `tests/test_listening_protocol.py`):
+independent-listener counting (N-002), explicit original-preference (N-003) and
+tie (N-004) categories, non-pooled panel breakdown (N-005), and blinded
+assignment + side/order diagnostics (N-006). The exploits remain recorded here as
+the design rationale; the legacy M24 analyzer that produced them is superseded and
+its data stays quarantined/exploratory.
+
 ## N-014 — Blanket in-range de-essing is net-harmful; the champion's abstention is correct
 
 2026-07-23 reconciliation experiment (`scripts/experiments/exp_2026_07_23_sibilance_deesser.py`, contract + `results.json` under `reports/evaluations/reconcile-2026-07-23/`). Applying the DeEsser at its most aggressive **in-range** setting (`frame_threshold=0.10`, `max_reduction_db=10`) to every champion output reduced the sibilance defect band by 26.1% on the 12 sibilance pairs (passed the predeclared ≥20% bar) but **failed do-no-harm**: SI-SDR regressed on 22/148 non-sibilant clips (median −8.6 dB, worst −42 dB; concentrated in low_level ×12, harshness ×4, codec ×4), and because the treatment ran *after* the executor's −0.2 dBFS ceiling it pushed peaks above unity on hard-clipped inputs (vocadito_16: 0.977 → 1.117) and increased clipping on that clip. Conclusion: the champion's decision-gated abstention from de-essing is **vindicated** — a blanket de-ess trades a small sibilance gain for large fidelity loss and a safety-ceiling breach. Any real sibilance improvement must be (1) gated on reliable per-clip sibilance detection (never applied to low_level/codec/harshness), (2) executed **inside** the output-safety envelope (re-apply the ceiling), and (3) preceded by a separately-validated lowering of the de-ess frame floor, since synthetic sibilance p95 (~0.088) sits below the current 0.10 floor. Verdict: **rejected**; logged as the DT-77 improvement brief seed.

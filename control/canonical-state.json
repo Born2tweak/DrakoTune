@@ -47,7 +47,7 @@
     "expires_at": "2026-07-22T01:25:00Z"
   },
   "last_completed_action": "DT-51 autonomous distribution obligation inventory implemented + verified (22 tests). Milestone remains human-gated for the branch decision.",
-  "next_automatic_action": "DT-54 complete (Q-014 accepted, D-028). Next AUTONOMOUS milestone: DT-56 (Listening Protocol and Immutable Response Schema; deps DT-46/47/54 complete; automatic_internal). DT-55 (rights-clean acquisition) is ready but human-gated (spend + counsel).",
+  "next_automatic_action": "DT-54 + DT-56 complete (2026-07-23). DT-57 (Statistical Preregistration) ready but human-gated (method_before_people). Remaining autonomous frontier is thin and mostly downstream of human study gates (DT-55/57/58 spend+preregistration); DT-61 (listening platform hardening) is the next automatic_internal candidate once its deps clear. Real perceptual progress stays blocked on DEF-003 (rights-clean corpus + recruitment).",
   "ready_queue": ["DT-54 (selected next)", "DT-69 (unblocked, deferred)", "DT-70 (unblocked, deferred; completion still product_scope-gated)"],
   "terminal_frontier": "reconciled_2026-07-23_next_dt54",
   "retry_counters": {},
