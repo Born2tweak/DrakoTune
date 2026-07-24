@@ -1,0 +1,58 @@
+{
+  "plan_id": "sap-candidate",
+  "version": "1.0.0",
+  "population": "dry single lead rap/pop vocal; DT-54 launch strata (D-028)",
+  "estimand": "listener-mean processed-preference among decisive responses (listener unit)",
+  "hypotheses": [
+    {
+      "endpoint_id": "repair_efficacy",
+      "description": "processed preferred over original (DT-67)",
+      "null_hypothesis": "processed-preference <= 0.5 + d_sup",
+      "alternative": "processed-preference > 0.5 + d_sup",
+      "direction": "superiority",
+      "kind": "perceptual",
+      "min_effect_threshold": "__PENDING_HUMAN_SIGNOFF__",
+      "alpha": "__PENDING_HUMAN_SIGNOFF__",
+      "is_primary": true
+    },
+    {
+      "endpoint_id": "do_no_harm_clean",
+      "description": "clean-input do-no-harm (DT-66)",
+      "null_hypothesis": "processed-preference < 0.5 - d_ni (harm)",
+      "alternative": "processed-preference >= 0.5 - d_ni",
+      "direction": "non_inferiority",
+      "kind": "perceptual",
+      "min_effect_threshold": "__PENDING_HUMAN_SIGNOFF__",
+      "alpha": "__PENDING_HUMAN_SIGNOFF__",
+      "is_primary": true
+    }
+  ],
+  "exclusions": [
+    {
+      "rule_id": "catch",
+      "applies_to": "listener",
+      "condition": "catch-trial failure rate > PENDING",
+      "action": "exclude"
+    }
+  ],
+  "multiplicity_method": "holm across primary endpoints",
+  "missing_data_policy": "report dropout; sensitivity complete-case + worst-case",
+  "stopping_rule": "fixed-N, no interim analyses",
+  "invalid_response_policy": "forged/duplicate/ambiguous -> quarantine (DT-56)",
+  "tie_policy": "ties reported as a category, never dropped",
+  "sensitivity_analyses": [
+    "complete-case vs worst-case dropout",
+    "ICC/kappa robustness",
+    "tie-rate robustness",
+    "leave-one-panel-out"
+  ],
+  "schema_version": "1.0.0",
+  "randomization": "blinded A/B side + play order balanced (DT-56 Assignment)",
+  "_unset_human_choices": [
+    "repair_efficacy.min_effect_threshold",
+    "repair_efficacy.alpha",
+    "do_no_harm_clean.min_effect_threshold",
+    "do_no_harm_clean.alpha"
+  ],
+  "_freezable": false
+}
