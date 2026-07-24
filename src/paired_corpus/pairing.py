@@ -50,9 +50,12 @@ def classify_pair(raw: np.ndarray, wet: np.ndarray, sr: int) -> PairEvidence:
         n_raw > 0 and n_wet > 0
         and PHRASE_AGREE <= (n_wet / n_raw) <= 1.0 / PHRASE_AGREE
     )
-    if corr >= CORR_EXACT and dur_ratio <= DUR_TOL and phrase_ok:
+    # Envelope correlation is the primary evidence. Phrase-count agreement is a
+    # soft corroborator only: reverb tails merge wet phrases on real material, so
+    # a strong correlation (>= 0.75) overrides phrase-count disagreement.
+    if corr >= CORR_EXACT and dur_ratio <= DUR_TOL and (phrase_ok or corr >= 0.75):
         verdict = "verified_exact_pair"
-    elif corr >= CORR_PARTIAL and phrase_ok:
+    elif corr >= CORR_PARTIAL:
         verdict = "partially_matchable"
     else:
         verdict = "incorrect_pair"

@@ -115,16 +115,24 @@ def _slice(x: np.ndarray, sr: int, start_s: float, end_s: float) -> np.ndarray:
     return x[a:b] if b > a else np.zeros(1, dtype=x.dtype)
 
 
-def align_pair(raw: np.ndarray, wet: np.ndarray, sr: int) -> AlignmentMap:
-    """Global offset + per-phrase local refinement with aligned/edited/unmatched verdicts."""
+def align_pair(raw: np.ndarray, wet: np.ndarray, sr: int,
+               local_search_s: float = 0.5) -> AlignmentMap:
+    """Global offset + per-phrase refinement with CUMULATIVE drift tracking.
+
+    Real-world rips of the same performance can differ by ~0.1% speed, walking the
+    offset by hundreds of ms over a song. Each phrase therefore searches a window
+    around the offset found for the PREVIOUS aligned phrase, so slow linear drift
+    is followed instead of lost.
+    """
     offset, gcorr = global_offset_s(raw, wet, sr)
+    current_offset = offset
     matches: list[PhraseMatch] = []
     for start_s, end_s in segment_phrases(raw, sr):
         dur = end_s - start_s
-        target = start_s + offset
+        target = start_s + current_offset
         best_corr, best_shift = -1.0, 0.0
         raw_env = _norm(envelope(_slice(raw, sr, start_s, end_s), sr))
-        for shift in np.arange(-LOCAL_SEARCH_S, LOCAL_SEARCH_S + 1e-9, 1.0 / ENV_HZ):
+        for shift in np.arange(-local_search_s, local_search_s + 1e-9, 1.0 / ENV_HZ):
             wet_seg = _slice(wet, sr, target + shift, target + shift + dur)
             wet_env = _norm(envelope(wet_seg, sr))
             n = min(len(raw_env), len(wet_env))
@@ -134,6 +142,8 @@ def align_pair(raw: np.ndarray, wet: np.ndarray, sr: int) -> AlignmentMap:
             if c > best_corr:
                 best_corr, best_shift = c, float(shift)
         wet_start = target + best_shift
+        if best_corr >= LOCAL_CORR_MIN:
+            current_offset += best_shift          # follow the drift
         wet_seg = _slice(wet, sr, wet_start, wet_start + dur)
         wet_dur = len(wet_seg) / sr
         if best_corr < LOCAL_CORR_MIN:
