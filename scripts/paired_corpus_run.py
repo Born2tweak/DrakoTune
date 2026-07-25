@@ -103,23 +103,30 @@ def _oracle_markdown(rows: list[dict], agg) -> str:
         "perceptual claim. Sources are lossy — distances are directional.", "",
         "`inconclusive_alignment` pairs are EXCLUDED from every aggregate below.", "",
         "## Per-pair evidence", "",
+        "`range binding` = the distance was STILL falling at the top of the",
+        "registry's safe range, i.e. the optimum lies outside what the planner is",
+        "allowed to apply (a parameter-range limit, not a missing processor).", "",
         "| pair | champ acts | phrases | champ→wet | oracle→wet | improvement | "
-        "active processors | conf | classification |",
-        "|---|--:|--:|--:|--:|--:|---|--:|---|",
+        "best candidate | searched | range binding | active processors | conf | classification |",
+        "|---|--:|--:|--:|--:|--:|---|--:|---|---|--:|---|",
     ]
     for r in rows:
         if "error" in r:
-            lines.append(f"| {r['pair_id']} | | | | | | error: {r['error'][:40]} | | — |")
+            lines.append(f"| {r['pair_id']} | | | | | | error: {r['error'][:40]} | | | | | — |")
             continue
         if "classification" not in r:
-            lines.append(f"| {r['pair_id']} | | | | | | | | {r.get('verdict','—')} |")
+            lines.append(f"| {r['pair_id']} | | | | | | | | | | | {r.get('verdict','—')} |")
             continue
+        rb = {True: "**yes**", False: "no", None: "—"}[r.get("range_binding")]
+        if r.get("range_binding") is not None:
+            rb += f" ({r['edge_slope']:+.3f})"
         procs = ", ".join(r["active_processors"]) or "—"
         cd, od = r["champion_distance"], r["oracle_distance"]
         fmt = (lambda v: "inf" if v == float("inf") or v is None else f"{v:.3f}")
         lines.append(
             f"| {r['pair_id']} | {r['champion_actions']} | {r['n_measured_phrases']} "
-            f"| {fmt(cd)} | {fmt(od)} | {r['improvement_pct']:+.1f}% | {procs} "
+            f"| {fmt(cd)} | {fmt(od)} | {r['improvement_pct']:+.1f}% "
+            f"| {r['best_candidate'] or '—'} | {r['n_candidates_searched']} | {rb} | {procs} "
             f"| {r['confidence']:.2f} | **{r['classification']}** |")
     lines += [
         "", "## Aggregate (valid pairs only)", "",
@@ -130,7 +137,9 @@ def _oracle_markdown(rows: list[dict], agg) -> str:
         f"(bootstrap 95% CI {agg.ci95_mean_improvement_pct[0]:+.2f}% .. "
         f"{agg.ci95_mean_improvement_pct[1]:+.2f}%)",
         f"- champion abstention rate: **{agg.abstention_rate:.0%}**; "
-        f"engagement rate: **{agg.engagement_rate:.0%}**", "",
+        f"engagement rate: **{agg.engagement_rate:.0%}**",
+        f"- range-binding pairs: **{agg.n_range_binding}** "
+        f"({agg.range_binding_rate:.0%} of pairs where a sweep measured a slope)", "",
         "### Classification counts", "",
     ]
     lines += [f"- `{k}`: {v}" for k, v in agg.classification_counts.items()]
@@ -140,7 +149,8 @@ def _oracle_markdown(rows: list[dict], agg) -> str:
     return "\n".join(lines) + "\n"
 
 
-def run_oracle(pairs: list[dict], src_folder: Path, out_dir: Path) -> None:
+def run_oracle(pairs: list[dict], src_folder: Path, out_dir: Path,
+               sweep: tuple[float, ...] | None = None) -> None:
     """DT-55E forced-engagement probe on verified pairs (local-only, diagnostic)."""
     from src.paired_corpus.oracle import _composite, aggregate, probe_pair
 
@@ -159,7 +169,7 @@ def run_oracle(pairs: list[dict], src_folder: Path, out_dir: Path) -> None:
                 continue
             amap = align_pair(raw, wet, SR)
             champ, acts = champion_render(raw_wav)
-            probe = probe_pair(pid, raw, wet, amap, champ, acts)
+            probe = probe_pair(pid, raw, wet, amap, champ, acts, sweep=sweep)
             probes.append(probe)
             rows.append({
                 "pair_id": pid, "verdict": ev.verdict, "champion_actions": acts,
@@ -170,6 +180,9 @@ def run_oracle(pairs: list[dict], src_folder: Path, out_dir: Path) -> None:
                 "oracle_distance": probe.oracle_distance,
                 "improvement_pct": probe.improvement_pct,
                 "best_candidate": probe.best_candidate,
+                "n_candidates_searched": probe.n_candidates_searched,
+                "range_binding": probe.range_binding,
+                "edge_slope": probe.edge_slope,
                 "active_processors": list(probe.active_processors),
                 "confidence": probe.confidence,
                 "valid": probe.valid,
@@ -200,6 +213,8 @@ def run_oracle(pairs: list[dict], src_folder: Path, out_dir: Path) -> None:
             "ci95_mean_improvement_pct": list(agg.ci95_mean_improvement_pct),
             "abstention_rate": agg.abstention_rate,
             "engagement_rate": agg.engagement_rate,
+            "n_range_binding": agg.n_range_binding,
+            "range_binding_rate": agg.range_binding_rate,
             "classification_counts": agg.classification_counts,
             "processor_activation_counts": agg.processor_activation_counts,
         },
@@ -217,16 +232,22 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--oracle", action="store_true", help="run the DT-55E forced-engagement probe")
+    ap.add_argument("--sweep", action="store_true",
+                    help="search the existing safe parameter space (strength grid) "
+                         "instead of a single fixed point")
     args = ap.parse_args()
     if args.oracle:
+        from src.paired_corpus.oracle import STRENGTH_SWEEP
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
         allowed = authorized_files(manifest)
         pairs = build_pairs(manifest, allowed)
         if args.limit:
             pairs = pairs[: args.limit]
-        out_dir = REPORTS / time.strftime("%Y%m%d-%H%M%S-oracle")
+        suffix = "-oracle-sweep" if args.sweep else "-oracle"
+        out_dir = REPORTS / (time.strftime("%Y%m%d-%H%M%S") + suffix)
         out_dir.mkdir(parents=True, exist_ok=True)
-        run_oracle(pairs, Path(manifest["source_folder"]), out_dir)
+        run_oracle(pairs, Path(manifest["source_folder"]), out_dir,
+                   sweep=STRENGTH_SWEEP if args.sweep else None)
         print(f"wrote {out_dir}")
         return 0
 

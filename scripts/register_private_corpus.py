@@ -29,7 +29,17 @@ AI_ISOLATED_PAT = re.compile(r"ai\s*isolated|isolated\s*vocals", re.IGNORECASE)
 
 RAW_PAT = re.compile(r"\braw\b|\bno\s*autotune\b", re.IGNORECASE)
 WET_PAT = re.compile(r"studio|official|acapella\)|\bacapella\b|vocals\s*only|diy", re.IGNORECASE)
+# Bracket annotations other than the video id occur (e.g. "[STUDIO] [JKOKSaaAxeg]"),
+# so match ALL bracket groups and prefer an exact 11-character YouTube id.
 YT_ID_PAT = re.compile(r"\[([A-Za-z0-9_-]{6,})\]")
+
+
+def extract_youtube_id(stem: str) -> str | None:
+    groups = YT_ID_PAT.findall(stem)
+    if not groups:
+        return None
+    exact = [g for g in groups if len(g) == 11]
+    return exact[-1] if exact else groups[-1]
 
 
 def sha256_of(path: Path) -> str:
@@ -44,7 +54,7 @@ def parse_name(name: str) -> dict:
     """Best-effort artist/title/role from the filename. Filenames are HINTS only:
     pairing must be re-verified by DT-55B signal evidence, never trusted."""
     stem = re.sub(r"^\d+\s*-\s*", "", Path(name).stem)
-    yt = YT_ID_PAT.search(stem)
+    yt_id = extract_youtube_id(stem)
     stem_clean = YT_ID_PAT.sub("", stem).strip()
     artist, title = (stem_clean.split(" - ", 1) + [""])[:2] if " - " in stem_clean else ("", stem_clean)
     role = "raw" if RAW_PAT.search(name) else ("wet_candidate" if WET_PAT.search(name) else "unknown")
@@ -56,7 +66,7 @@ def parse_name(name: str) -> dict:
     return {
         "artist_hint": artist.strip(), "title_hint": title.strip(),
         "pair_key_hint": base, "role_hint": role,
-        "youtube_id": yt.group(1) if yt else None,
+        "youtube_id": yt_id,
     }
 
 

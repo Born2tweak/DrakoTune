@@ -22,16 +22,20 @@ from src.paired_corpus.oracle import (
     CANDIDATES,
     CLASSIFICATIONS,
     DATA_LIMITATION,
+    DEFAULT_STRENGTH,
     ENGAGEMENT_GAP,
     INCONCLUSIVE_ALIGNMENT,
     MISSING_PROCESSOR,
+    CandidateResult,
     OracleProbe,
     _classify,
     _confidence,
     aggregate,
     build_plan,
+    candidate_name,
     candidate_processors,
     probe_pair,
+    range_binding,
 )
 from src.paired_corpus.surrogates import SR, degrade_to_raw, make_performance
 
@@ -163,8 +167,76 @@ def test_probe_reports_every_candidate():
     champ, acts = _champion_passthrough(raw)
     probe = probe_pair("s", raw, wet, amap, champ, acts)
     names = {r.name for r in probe.results}
-    assert names == {"champion", *CANDIDATES.keys()}
+    assert names == {"champion", *(candidate_name(c, DEFAULT_STRENGTH) for c in CANDIDATES)}
     assert probe.n_measured_phrases > 0
+    assert probe.n_candidates_searched == len(CANDIDATES)
+
+
+def test_sweep_searches_the_existing_parameter_space():
+    """A missing_processor verdict is only defensible after searching strengths."""
+    raw, wet, sr, _ = make_surrogate_pair(seed=171)
+    amap = align_pair(raw, wet, sr)
+    champ, acts = _champion_passthrough(raw)
+    sweep = (0.2, 1.0)
+    probe = probe_pair("s", raw, wet, amap, champ, acts, sweep=sweep)
+    assert probe.n_candidates_searched == len(CANDIDATES) * len(sweep)
+    assert probe.best_candidate.split("@")[1] in ("0.2", "1.0")
+    # searching more of the space can never be worse than the single default point
+    point = probe_pair("s", raw, wet, amap, champ, acts)
+    assert probe.oracle_distance <= point.oracle_distance + 1e-9
+
+
+def test_range_binding_detects_an_optimum_outside_the_safe_range():
+    """Still improving at max strength => the registry's cap is what limits us."""
+    sweep = (0.2, 0.6, 1.0)
+
+    def res(name, dist):
+        return CandidateResult(name, 0.5, 0.0, True,
+                               {"lowmid_250_500": dist}, 20, ("PeakFilter",))
+
+    falling = [res(candidate_name("forced_lowmid", s), d)
+               for s, d in zip(sweep, (0.5, 0.3, 0.2))]
+    assert range_binding(falling, "forced_lowmid", sweep)[0] is True
+
+    flattened = [res(candidate_name("forced_lowmid", s), d)
+                 for s, d in zip(sweep, (0.5, 0.3, 0.3))]
+    binding, slope = range_binding(flattened, "forced_lowmid", sweep)
+    assert binding is False and slope == 0.0
+
+    rising = [res(candidate_name("forced_lowmid", s), d)
+              for s, d in zip(sweep, (0.2, 0.4, 0.6))]
+    assert range_binding(rising, "forced_lowmid", sweep)[0] is False
+
+
+def test_range_binding_is_unknowable_without_a_sweep():
+    assert range_binding([], "forced_lowmid", ()) == (None, 0.0)
+    assert range_binding([], "forced_lowmid", (0.7,)) == (None, 0.0)
+
+
+def test_probe_without_sweep_reports_range_binding_unknown():
+    raw, wet, sr, _ = make_surrogate_pair(seed=181)
+    amap = align_pair(raw, wet, sr)
+    champ, acts = _champion_passthrough(raw)
+    assert probe_pair("s", raw, wet, amap, champ, acts).range_binding is None
+
+
+def test_aggregate_range_binding_counts_only_swept_pairs():
+    a = _probe("P-01", ENGAGEMENT_GAP, 40.0)
+    b = _probe("P-02", MISSING_PROCESSOR, 0.0)
+    a = OracleProbe(**{**a.__dict__, "range_binding": True})
+    b = OracleProbe(**{**b.__dict__, "range_binding": False})
+    unswept = _probe("P-03", DATA_LIMITATION, 5.0)          # range_binding None
+    agg = aggregate([a, b, unswept])
+    assert agg.n_range_binding == 1
+    assert agg.range_binding_rate == pytest.approx(0.5)     # 1 of 2 measurable
+
+
+def test_sweep_strength_changes_treatment_magnitude():
+    gentle = build_plan("forced_lowmid", 0.2)
+    hard = build_plan("forced_lowmid", 1.0)
+    g = next(a for a in gentle.actions if a.objective_id == "obj.muddiness")
+    h = next(a for a in hard.actions if a.objective_id == "obj.muddiness")
+    assert abs(h.parameters["gain_db"]) > abs(g.parameters["gain_db"])
 
 
 # --------------------------------------------------------------------------

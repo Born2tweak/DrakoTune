@@ -83,3 +83,13 @@ def test_ingestion_validator_refuses_manifest_records(tmp_path):
         "permitted_use": [], "consent_ref": rec["consent_ref"],
     })
     assert any("consent_ref" in i for i in issues)
+
+
+def test_youtube_id_survives_a_preceding_bracket_annotation():
+    """Regression: '[STUDIO] [<id>]' previously yielded 'STUDIO' as the video id."""
+    p = parse_name("21 - Artist - Candles (Official Acapella) [STUDIO] [JKOKSaaAxeg].mp3")
+    assert p["youtube_id"] == "JKOKSaaAxeg"
+
+
+def test_youtube_id_is_none_when_absent():
+    assert parse_name("01 - Artist - Some Title (RAW).mp3")["youtube_id"] is None

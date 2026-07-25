@@ -54,11 +54,32 @@ CANDIDATES: dict[str, tuple[str, ...]] = {
     "forced_lowmid_denoise": ("rumble", "muddiness", "noise_floor"),
     "forced_full": ("rumble", "muddiness", "noise_floor", "harshness"),
 }
+
+# Strength sweep. A single fixed strength only probes one POINT in the existing
+# safe parameter space; "the registry cannot reach the target" is only sayable
+# after sweeping it. Grid is predeclared, not tuned against results.
+STRENGTH_SWEEP: tuple[float, ...] = (0.2, 0.4, 0.6, 0.8, 1.0)
+DEFAULT_STRENGTH = 0.7
+
+
+def candidate_grid(sweep: tuple[float, ...] | None = None) -> tuple[tuple[str, float], ...]:
+    """(chain, strength) pairs to render. None -> the single-point default."""
+    strengths = sweep if sweep else (DEFAULT_STRENGTH,)
+    return tuple((c, s) for c in CANDIDATES for s in strengths)
+
+
+def candidate_name(chain: str, strength: float) -> str:
+    return f"{chain}@{strength:.1f}"
+
+
+def _chain_of(name: str) -> str:
+    return name.split("@")[0]
 AXES = ("lowmid_250_500", "harsh_2500_5000", "sib_5500_12000", "crest_db",
         "tilt_db_per_oct")
 
 
-def build_plan(name: str, strength: float = 0.7) -> ProcessingPlan:
+def build_plan(name: str, strength: float = DEFAULT_STRENGTH) -> ProcessingPlan:
+    name = _chain_of(name)
     specs = [(_ISSUE_SPECS[issue], issue) for issue in CANDIDATES[name]]
     specs.sort(key=lambda t: t[0].order)
     actions = tuple(
@@ -80,7 +101,7 @@ def candidate_processors(name: str) -> tuple[str, ...]:
     """Processor names activated by a candidate chain (evidence, not a claim)."""
     if name == "champion":
         return ()
-    return tuple(a.processor for a in build_plan(name).actions)
+    return tuple(a.processor for a in build_plan(_chain_of(name)).actions)
 
 
 def _render(raw: np.ndarray, plan: ProcessingPlan) -> np.ndarray:
@@ -139,6 +160,9 @@ class OracleProbe:
     active_processors: tuple[str, ...] = ()
     confidence: float = 0.0
     reason: str = ""
+    n_candidates_searched: int = 0
+    range_binding: bool | None = None   # None = no sweep, so unknowable
+    edge_slope: float = 0.0
 
     @property
     def valid(self) -> bool:
@@ -153,6 +177,29 @@ def _composite(d: dict) -> float:
     scale = {"lowmid_250_500": 10, "harsh_2500_5000": 10, "sib_5500_12000": 10,
              "crest_db": 1, "tilt_db_per_oct": 1}
     return round(sum(d.get(a, 0) * s for a, s in scale.items()), 4)
+
+
+def range_binding(results: list[CandidateResult], chain: str,
+                  sweep: tuple[float, ...]) -> tuple[bool | None, float]:
+    """Is the distance STILL falling at the top of the registry's safe range?
+
+    (binding, slope_at_edge). A negative slope at the maximum strength means the
+    optimum lies OUTSIDE the range the registry permits — the treatment is the
+    right direction but the allowed amount is capped. That is a parameter-range
+    limit, which is a different (and far cheaper) problem than a missing processor.
+    Returns (None, 0.0) when there is no sweep to measure a slope from.
+    """
+    if not sweep or len(sweep) < 2:
+        return None, 0.0
+    by_name = {r.name: _composite(r.axis_distance) for r in results}
+    top, prev = sorted(sweep)[-1], sorted(sweep)[-2]
+    d_top = by_name.get(candidate_name(chain, top))
+    d_prev = by_name.get(candidate_name(chain, prev))
+    if d_top is None or d_prev is None or not (
+            np.isfinite(d_top) and np.isfinite(d_prev)):
+        return None, 0.0
+    slope = round(d_top - d_prev, 5)
+    return slope < 0, slope
 
 
 def _confidence(improvement: float, n_phrases: int, classification: str) -> float:
@@ -192,8 +239,8 @@ def _classify(champ_d: float, best_d: float, n_phrases: int) -> tuple[str, str]:
                 f"forced engagement closed {improvement:.1%} of the composite distance")
     if improvement <= NULL_IMPROVEMENT:
         return (MISSING_PROCESSOR,
-                f"full forced chain moved only {improvement:.1%}; existing registry "
-                "cannot reach the wet target")
+                f"best searched candidate moved only {improvement:.1%}; the existing "
+                "registry cannot get closer to the wet target")
     return (DATA_LIMITATION,
             f"movement of {improvement:.1%} is below the attribution threshold for "
             "this lossy single-artist corpus")
@@ -201,11 +248,17 @@ def _classify(champ_d: float, best_d: float, n_phrases: int) -> tuple[str, str]:
 
 def probe_pair(pair_id: str, raw: np.ndarray, wet: np.ndarray,
                amap: AlignmentMap, champion: np.ndarray, champion_actions: int,
-               ) -> OracleProbe:
+               sweep: tuple[float, ...] | None = None) -> OracleProbe:
+    """Probe one pair. `sweep` searches the existing safe parameter space.
+
+    Without a sweep this measures a single point; a `missing_processor` verdict
+    is only defensible when the sweep found nothing better.
+    """
     results: list[CandidateResult] = []
     # Champion is the baseline candidate (often passthrough).
     for name, audio in [("champion", champion)] + [
-        (n, _render(raw, build_plan(n))) for n in CANDIDATES
+        (candidate_name(c, s), _render(raw, build_plan(c, s)))
+        for c, s in candidate_grid(sweep)
     ]:
         peak = float(np.max(np.abs(audio)) + 1e-12)
         clip = float(np.mean(np.abs(audio) >= 0.999))
@@ -223,11 +276,15 @@ def probe_pair(pair_id: str, raw: np.ndarray, wet: np.ndarray,
         return OracleProbe(
             pair_id, champion_actions, tuple(results), INCONCLUSIVE_ALIGNMENT,
             n_measured, reason="no safe forced candidate to compare against",
+            n_candidates_searched=len(results) - 1,
         )
     champ_d = _composite(champ.axis_distance)
     best = min(forced, key=lambda r: _composite(r.axis_distance))
     best_d = _composite(best.axis_distance)
     classification, reason = _classify(champ_d, best_d, n_measured)
+    binding, slope = range_binding(results, _chain_of(best.name), sweep or ())
+    if classification == INCONCLUSIVE_ALIGNMENT:
+        binding, slope = None, 0.0
     improvement = (
         (champ_d - best_d) / champ_d
         if np.isfinite(champ_d) and np.isfinite(best_d) and champ_d > 0
@@ -243,7 +300,8 @@ def probe_pair(pair_id: str, raw: np.ndarray, wet: np.ndarray,
         best_candidate=best.name if classification != INCONCLUSIVE_ALIGNMENT else "",
         active_processors=best.processors if classification != INCONCLUSIVE_ALIGNMENT else (),
         confidence=_confidence(improvement, n_measured, classification),
-        reason=reason,
+        reason=reason, n_candidates_searched=len(forced),
+        range_binding=binding, edge_slope=slope,
     )
 
 
@@ -261,6 +319,8 @@ class OracleAggregate:
     ci95_mean_improvement_pct: tuple[float, float]
     abstention_rate: float
     engagement_rate: float
+    n_range_binding: int = 0
+    range_binding_rate: float = 0.0
     classification_counts: dict = field(default_factory=dict)
     processor_activation_counts: dict = field(default_factory=dict)
 
@@ -289,6 +349,10 @@ def aggregate(probes: list[OracleProbe]) -> OracleAggregate:
         for proc in p.active_processors:
             procs[proc] = procs.get(proc, 0) + 1
     abstain = sum(1 for p in valid if p.champion_actions == 0)
+    # Range-binding is only defined where a sweep measured a slope.
+    measurable = [p for p in valid if p.range_binding is not None]
+    n_binding = sum(1 for p in measurable if p.range_binding)
+    n_measurable = len(measurable)
     return OracleAggregate(
         n_total=len(probes), n_valid=len(valid), n_excluded=len(probes) - len(valid),
         median_improvement_pct=round(float(np.median(improvements)), 3) if improvements else 0.0,
@@ -296,6 +360,8 @@ def aggregate(probes: list[OracleProbe]) -> OracleAggregate:
         ci95_mean_improvement_pct=_bootstrap_ci(improvements),
         abstention_rate=round(abstain / len(valid), 4) if valid else 0.0,
         engagement_rate=round(1 - abstain / len(valid), 4) if valid else 0.0,
+        n_range_binding=n_binding,
+        range_binding_rate=round(n_binding / n_measurable, 4) if n_measurable else 0.0,
         classification_counts=counts,
         processor_activation_counts=dict(sorted(procs.items(), key=lambda kv: -kv[1])),
     )
