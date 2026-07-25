@@ -94,10 +94,141 @@ def champion_render(raw_wav: Path) -> np.ndarray:
     return out.astype(np.float32), len(bundle.plan.actions)
 
 
+def _oracle_markdown(rows: list[dict], agg) -> str:
+    lines = [
+        "# DT-55E oracle probe — evidence report", "",
+        "Authorization D-029 (local/internal/eval-only). **Diagnostic only**: the",
+        "probe forces the planner's OWN treatments to engage and measures distance",
+        "to the aligned wet target. No threshold tuned, nothing promoted, no",
+        "perceptual claim. Sources are lossy — distances are directional.", "",
+        "`inconclusive_alignment` pairs are EXCLUDED from every aggregate below.", "",
+        "## Per-pair evidence", "",
+        "| pair | champ acts | phrases | champ→wet | oracle→wet | improvement | "
+        "active processors | conf | classification |",
+        "|---|--:|--:|--:|--:|--:|---|--:|---|",
+    ]
+    for r in rows:
+        if "error" in r:
+            lines.append(f"| {r['pair_id']} | | | | | | error: {r['error'][:40]} | | — |")
+            continue
+        if "classification" not in r:
+            lines.append(f"| {r['pair_id']} | | | | | | | | {r.get('verdict','—')} |")
+            continue
+        procs = ", ".join(r["active_processors"]) or "—"
+        cd, od = r["champion_distance"], r["oracle_distance"]
+        fmt = (lambda v: "inf" if v == float("inf") or v is None else f"{v:.3f}")
+        lines.append(
+            f"| {r['pair_id']} | {r['champion_actions']} | {r['n_measured_phrases']} "
+            f"| {fmt(cd)} | {fmt(od)} | {r['improvement_pct']:+.1f}% | {procs} "
+            f"| {r['confidence']:.2f} | **{r['classification']}** |")
+    lines += [
+        "", "## Aggregate (valid pairs only)", "",
+        f"- pairs total: **{agg.n_total}**; valid: **{agg.n_valid}**; "
+        f"excluded as inconclusive: **{agg.n_excluded}**",
+        f"- median improvement: **{agg.median_improvement_pct:+.2f}%**",
+        f"- mean improvement: **{agg.mean_improvement_pct:+.2f}%** "
+        f"(bootstrap 95% CI {agg.ci95_mean_improvement_pct[0]:+.2f}% .. "
+        f"{agg.ci95_mean_improvement_pct[1]:+.2f}%)",
+        f"- champion abstention rate: **{agg.abstention_rate:.0%}**; "
+        f"engagement rate: **{agg.engagement_rate:.0%}**", "",
+        "### Classification counts", "",
+    ]
+    lines += [f"- `{k}`: {v}" for k, v in agg.classification_counts.items()]
+    lines += ["", "### Processor activation frequency (best candidate per valid pair)", ""]
+    lines += ([f"- `{k}`: {v}" for k, v in agg.processor_activation_counts.items()]
+              or ["- (none)"])
+    return "\n".join(lines) + "\n"
+
+
+def run_oracle(pairs: list[dict], src_folder: Path, out_dir: Path) -> None:
+    """DT-55E forced-engagement probe on verified pairs (local-only, diagnostic)."""
+    from src.paired_corpus.oracle import _composite, aggregate, probe_pair
+
+    rows: list[dict] = []
+    probes = []
+    for i, pair in enumerate(pairs):
+        pid = f"P-{i+1:02d}"
+        try:
+            raw_wav = decode(src_folder / pair["raw"]["filename"], pair["raw"]["sha256"])
+            wet_wav = decode(src_folder / pair["wet"]["filename"], pair["wet"]["sha256"])
+            raw, wet = load(raw_wav), load(wet_wav)
+            ev = classify_pair(raw, wet, SR)
+            if ev.verdict in ("incorrect_pair", "unusable"):
+                rows.append({"pair_id": pid, "verdict": ev.verdict})
+                print(f"[{i+1}/{len(pairs)}] {pid}: {ev.verdict} (not probed)", flush=True)
+                continue
+            amap = align_pair(raw, wet, SR)
+            champ, acts = champion_render(raw_wav)
+            probe = probe_pair(pid, raw, wet, amap, champ, acts)
+            probes.append(probe)
+            rows.append({
+                "pair_id": pid, "verdict": ev.verdict, "champion_actions": acts,
+                "classification": probe.classification,
+                "reason": probe.reason,
+                "n_measured_phrases": probe.n_measured_phrases,
+                "champion_distance": probe.champion_distance,
+                "oracle_distance": probe.oracle_distance,
+                "improvement_pct": probe.improvement_pct,
+                "best_candidate": probe.best_candidate,
+                "active_processors": list(probe.active_processors),
+                "confidence": probe.confidence,
+                "valid": probe.valid,
+                "candidates": [{
+                    "name": r.name, "safe": r.safe, "peak": r.peak,
+                    "n_measured_phrases": r.n_measured_phrases,
+                    "composite_distance": _composite(r.axis_distance),
+                    "axis_distance": r.axis_distance,
+                } for r in probe.results],
+            })
+            print(f"[{i+1}/{len(pairs)}] {pid}: champ_acts {acts}, "
+                  f"{probe.n_measured_phrases} phrases, {probe.improvement_pct:+.1f}% "
+                  f"-> {probe.classification}", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            rows.append({"pair_id": pid, "error": str(exc)})
+            print(f"[{i+1}/{len(pairs)}] {pid}: ERROR {exc}", flush=True)
+
+    agg = aggregate(probes)
+    payload = {
+        "authorization": "D-029 (local/internal/eval-only)",
+        "limitation": "Diagnostic only; forced-engagement probe using existing "
+                      "processors; NO threshold tuned, NO promotion, NO claim; lossy sources.",
+        "aggregation_rule": "inconclusive_alignment pairs are excluded from all aggregates",
+        "aggregate": {
+            "n_total": agg.n_total, "n_valid": agg.n_valid, "n_excluded": agg.n_excluded,
+            "median_improvement_pct": agg.median_improvement_pct,
+            "mean_improvement_pct": agg.mean_improvement_pct,
+            "ci95_mean_improvement_pct": list(agg.ci95_mean_improvement_pct),
+            "abstention_rate": agg.abstention_rate,
+            "engagement_rate": agg.engagement_rate,
+            "classification_counts": agg.classification_counts,
+            "processor_activation_counts": agg.processor_activation_counts,
+        },
+        "results": rows,
+    }
+    (out_dir / "oracle_report_anonymized.json").write_text(
+        json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    (out_dir / "oracle_report.md").write_text(_oracle_markdown(rows, agg), encoding="utf-8")
+    print("classification counts:", json.dumps(agg.classification_counts))
+    print(f"valid {agg.n_valid}/{agg.n_total}, median improvement "
+          f"{agg.median_improvement_pct:+.2f}%, abstention {agg.abstention_rate:.0%}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--oracle", action="store_true", help="run the DT-55E forced-engagement probe")
     args = ap.parse_args()
+    if args.oracle:
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        allowed = authorized_files(manifest)
+        pairs = build_pairs(manifest, allowed)
+        if args.limit:
+            pairs = pairs[: args.limit]
+        out_dir = REPORTS / time.strftime("%Y%m%d-%H%M%S-oracle")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        run_oracle(pairs, Path(manifest["source_folder"]), out_dir)
+        print(f"wrote {out_dir}")
+        return 0
 
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     src_folder = Path(manifest["source_folder"])
