@@ -286,14 +286,16 @@ def _search_markdown(rows: list[dict], template_names: list[str], summary: dict)
 
 
 def run_search(pairs: list[dict], src_folder: Path, out_dir: Path,
-               passes: int, points: int, max_evals: int, max_phrases: int) -> None:
+               passes: int, points: int, max_evals: int, max_phrases: int,
+               only: tuple[str, ...] = ()) -> None:
     """DT-55E Track C: coordinate descent over registry-safe ranges, per template."""
     from src.paired_corpus.oracle import _bootstrap_ci
     from src.paired_corpus.search import (
-        TEMPLATES, ablate, build_target, composite_distance,
+        TEMPLATES, TEMPLATES_BY_NAME, ablate, build_target, composite_distance,
     )
 
-    template_names = [c.name for c in TEMPLATES]
+    templates = tuple(TEMPLATES_BY_NAME[n] for n in only) if only else TEMPLATES
+    template_names = [c.name for c in templates]
     rows: list[dict] = []
     # Long searches must survive interruption: each pair's row is flushed as soon
     # as it completes, so a killed run still yields the pairs it finished.
@@ -320,8 +322,8 @@ def run_search(pairs: list[dict], src_folder: Path, out_dir: Path,
                 continue
             champ, champ_actions = champion_render(raw_wav)
             champ_d = composite_distance(champ, target)
-            results = ablate(raw, target, passes=passes, points=points,
-                             max_evaluations=max_evals)
+            results = ablate(raw, target, templates=templates, passes=passes,
+                             points=points, max_evaluations=max_evals)
             per_template = {
                 r.chain_name: {
                     "start_distance": r.start_distance, "best_distance": r.best_distance,
@@ -491,6 +493,8 @@ def main() -> int:
     ap.add_argument("--points", type=int, default=5)
     ap.add_argument("--max-evals", type=int, default=250)
     ap.add_argument("--max-phrases", type=int, default=30)
+    ap.add_argument("--templates", default="",
+                    help="comma-separated template subset, e.g. t1_hp_lowmid,t5_full")
     ap.add_argument("--ordering", action="store_true",
                     help="measure whether processor ORDER matters (predeclared orders)")
     args = ap.parse_args()
@@ -513,8 +517,9 @@ def main() -> int:
             pairs = pairs[: args.limit]
         out_dir = REPORTS / (time.strftime("%Y%m%d-%H%M%S") + "-search")
         out_dir.mkdir(parents=True, exist_ok=True)
+        only = tuple(t for t in args.templates.split(",") if t)
         run_search(pairs, Path(manifest["source_folder"]), out_dir,
-                   args.passes, args.points, args.max_evals, args.max_phrases)
+                   args.passes, args.points, args.max_evals, args.max_phrases, only)
         print(f"wrote {out_dir}")
         return 0
     if args.oracle:

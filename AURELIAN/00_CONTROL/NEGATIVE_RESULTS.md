@@ -86,6 +86,38 @@ Two secondary results, both from monotone (therefore non-noise) distance-vs-stre
 
 Conclusion: the bottleneck is **mixed**, roughly evenly split, and DT-77 priority follows measured per-pair impact rather than the aggregate. Engagement recalibration (A-1) is **necessary but not sufficient** and must be paired with the range question (A-2). New DSP capability (Track B) is now *measurably* necessary for ~4/7 pairs but is **not yet identified**, and the `missing_processor` verdict is provisional: it means "no *searched* configuration got closer", and the NoiseGate spec is strength-invariant so denoising was tested at exactly one threshold. Method gaps (Track C) gate any final Track B verdict. Directional only; no perceptual claim; does not satisfy DEF-003.
 
+> **Superseded in part by N-017 (2026-07-26).** The `missing_processor` verdicts below do NOT hold: they were produced by searching the *planner's* strength mapping rather than the *registry's* declared safe ranges. Under the registry-safe search every one of those pairs closes 20.9–57.8% of the gap, so no missing-capability claim survives and **Track B (new DSP research) is withdrawn**. What still stands from this entry: the 86% abstention measurement, the four-category taxonomy, the range-binding observation (now understood as a *planner spec* cap, not a registry limit), and the F-6 direction observation (also a planner-spec property — the registry can boost).
+
 **Process lesson:** the same probe, run at one fixed parameter point, produced a different taxonomy (1 engagement / 4 missing / 2 data-limited) than the swept probe. A single-point oracle cannot distinguish "the registry lacks the capability" from "the registry was not asked hard enough". Never classify a capability as missing from one operating point.
 
 **Tooling defect fixed alongside:** the first classifier attributed pairs with **zero** measurable aligned phrases (infinite distance) to a tuning gap — absence of evidence acting as evidence. Now gated to `inconclusive_alignment` and excluded from every aggregate (`src/paired_corpus/oracle.py`, `tests/test_oracle_probe.py`, 29 tests covering every classification path and both boundaries).
+
+## N-017 — The `missing_processor` verdicts were an artifact of the search space, not evidence of missing capability
+
+2026-07-26 DT-55E Track C (`src/paired_corpus/search.py`; run `20260725-102806-search`). N-016 concluded that 4 of 7 valid pairs were `missing_processor` — "the existing registry cannot get closer at any allowed setting" — and that new DSP capability was therefore *measurably necessary*. **That conclusion was wrong, and the cause was the search space.**
+
+Both earlier probes searched the **planner's strength mapping**, not the **processor registry**. The planner's muddiness treatment caps at a −4.0 dB PeakFilter at strength 1.0; `PROCESSORS["PeakFilter"]` declares a safe range of **−12..+12 dB**. The registry also permits *boosting*, so N-016's F-6 claim that "the registry offers only subtractive treatments" described the planner's specs, not the processors available to it.
+
+Running the search DT-55E actually specifies — deterministic coordinate descent inside `PROCESSORS.safe_ranges`, `clamp_params` enforced, −0.2 dBFS ceiling, zero clipping, and an SI-SDR ≥ 5 dB preservation floor against the raw — every one of those four pairs moved:
+
+| pair | N-016 strength sweep | registry-safe search | smallest sufficient chain |
+|---|--:|--:|---|
+| P-01 | +43.5% | **+62.1%** | t5_full |
+| P-02 | +0.3% (missing_processor) | **+20.9%** | t5_full |
+| P-05 | −5.6% (missing_processor) | **+57.8%** | t5_full |
+| P-06 | +8.4% | **+56.3%** | t5_full |
+| P-07 | −8.8% (missing_processor) | **+33.7%** | t5_full |
+| P-09 | +0.7% (missing_processor) | **+45.2%** | t3_tonal_air |
+
+Median distance closed vs the champion **+50.7%**, mean **+46.0%**, bootstrap 95% CI **+33.5% .. +56.9%** — the CI **excludes zero**, where N-016's aggregate CI spanned it.
+
+Conclusions:
+1. **No `missing_processor` verdict survives.** The existing registry closes a large fraction of the measured champion→wet gap on every searchable pair. **Track B (new DSP research) is not justified by current evidence** and is withdrawn from the near-term queue.
+2. **The bottleneck is the planner, not the DSP.** Two planner-level properties account for the whole measured gap: which processors it engages (N-015: 86% abstention) and how much its issue specs permit (this entry). Both are Track A.
+3. 5 of 6 pairs needed the full chain (tonal EQ + air + gate + compressor); 1 needed only tonal + air. Dynamics processing is implicated, consistent with `docs/research/underground_vocal_engineering_reference.md` on dynamic consistency.
+
+**Process lesson (second instance of the same error).** N-016 already recorded "never classify a capability as missing from one operating point". The deeper rule: **a negative capability claim is only as strong as the space searched, and the space must be the one the component actually declares.** Both prior probes measured a *proxy* for the registry (the planner's mapping) and reported the proxy's limits as the registry's.
+
+Standing limits unchanged: diagnostic only; distance is not perceptual quality; lossy single-artist corpus; does not satisfy DEF-003; promotion of any audible DSP change remains a human-only gate.
+
+**Evidence provenance caveat:** the detailed per-template artifacts of run `20260725-102806-search` were lost when the process was stopped (it wrote its JSON only at completion, and the machine's sleep cycles had stretched it past 12 h wall on one pair). The per-pair numbers above are from that run's captured stdout. The runner now checkpoints each pair to `partial_results.jsonl`; a re-run regenerates the full reproducible artifact.

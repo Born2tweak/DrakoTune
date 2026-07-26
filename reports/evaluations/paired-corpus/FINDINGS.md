@@ -47,6 +47,12 @@ parameter tuning** or **(c) missing modules**.
 
 ## DT-55E oracle probe (2026-07-25) — F-4, F-5, F-6
 
+> **Read F-7 first.** F-4/F-5/F-6 searched the *planner's* strength mapping, not
+> the registry's declared safe ranges. Their `missing_processor` verdicts do NOT
+> survive F-7; their range-binding and direction observations turn out to describe
+> the planner's specs rather than the processors. The 86% abstention measurement
+> and the taxonomy stand.
+
 The probe forces the planner's **own** treatments to engage and sweeps them across
 the registry's safe strength range (5 strengths × 3 chains = 15 candidates/pair),
 measuring composite distance to the aligned wet target. **Diagnostic only**: no
@@ -97,8 +103,42 @@ raw", but n = 7 cannot establish it. Recorded as a hypothesis, not a finding.
 
 - **3 / 7 pairs are recoverable with existing DSP** (engagement + a wider allowed
   range): +43.5%, +10.9%, +8.4%.
-- **4 / 7 pairs are unrecoverable with existing DSP** (≤ +0.7%, two negative) —
-  new capability is *measurably necessary* for them, not speculated.
+- **4 / 7 pairs appeared unrecoverable** (≤ +0.7%, two negative). **Retracted by
+  F-7:** all four close 20.9–57.8% once the registry's own ranges are searched.
+
+## DT-55E Track C registry-safe search (2026-07-26) — F-7
+
+F-4/F-5/F-6 were all measured inside the **planner's** strength mapping. F-7 is
+the same question asked of the **processor registry's** own declared safe ranges,
+via deterministic coordinate descent (`src/paired_corpus/search.py`), with the
+−0.2 dBFS ceiling, zero-clipping and an SI-SDR ≥ 5 dB preservation floor enforced
+as part of the objective.
+
+### F-7 — no `missing_processor` verdict survives a search of the real space
+
+| pair | strength sweep (F-4) | registry-safe search | smallest sufficient chain |
+|---|--:|--:|---|
+| P-01 | +43.5% | **+62.1%** | t5_full |
+| P-02 | +0.3% | **+20.9%** | t5_full |
+| P-05 | −5.6% | **+57.8%** | t5_full |
+| P-06 | +8.4% | **+56.3%** | t5_full |
+| P-07 | −8.8% | **+33.7%** | t5_full |
+| P-09 | +0.7% | **+45.2%** | t3_tonal_air |
+
+Median **+50.7%**, mean **+46.0%**, bootstrap 95% CI **+33.5% .. +56.9%** (excludes
+zero, unlike F-4's). The planner's muddiness treatment caps at −4.0 dB where
+`PeakFilter` permits −12..+12 dB — and permits boosting, which retires F-6's
+"the registry only subtracts" reading as a planner-spec property, not a processor
+property. F-5's range-binding is likewise a **spec** cap, not a registry limit.
+
+**Consequence:** the measured champion→wet gap is attributable to the planner —
+what it engages (F-1) and what its specs permit (F-7) — not to absent DSP.
+5 of 6 pairs needed the full chain including gate and compressor; 1 needed only
+tonal EQ + air.
+
+**What F-7 does not show:** that the planner can *find* these settings from the
+raw audio alone. The oracle is given the wet target; the planner is not. That is
+the burden of proof for any A-1/A-2 experiment, on held-out artists.
 
 ## What this does NOT show
 
