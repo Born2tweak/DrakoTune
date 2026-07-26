@@ -5,8 +5,11 @@ The load-bearing claims this file must defend:
   2. it is deterministic, so a rerun is the same evidence;
   3. it can RECOVER a known in-capability transformation (otherwise a
      `missing_processor` verdict drawn from it means nothing);
-  4. it refuses to buy spectral closeness with destruction (SI-SDR floor);
-  5. the capability ablation actually separates templates.
+  4. it refuses to buy spectral closeness with destruction — including the exact
+     chain that won under the superseded objective (N-018);
+  5. the capability ladder is monotone, so "smallest sufficient template" means
+     something;
+  6. admissible bounds are never wider than the registry's safe ranges.
 """
 from __future__ import annotations
 
@@ -16,6 +19,8 @@ import pytest
 from src.dsp_engine.processors import PROCESSORS
 from src.paired_corpus import align_pair, make_surrogate_pair
 from src.paired_corpus.search import (
+    LEGACY_TEMPLATES,
+    LEGACY_TEMPLATES_BY_NAME,
     SI_SDR_FLOOR_DB,
     SR,
     TEMPLATES,
@@ -140,15 +145,16 @@ def test_descent_never_returns_worse_than_its_starting_point():
         assert r.best_distance <= r.start_distance + 1e-9
 
 
-def test_at_bound_reports_parameters_resting_on_a_registry_edge():
+def test_at_bound_reports_parameters_resting_on_a_search_edge():
+    """`at_bound` tracks the EFFECTIVE (admissible) edge, which is what limits the
+    search — not the registry edge, which admissible bounds may sit well inside."""
     raw, wet, amap = _pair(seed=117)
     target = build_target(wet, amap)
     r = coordinate_descent(raw, TEMPLATES[0], target, passes=2, points=4)
     for name in r.at_bound:
         proc, key = name.split(".")
         slot = next(s for s in r.best_chain.slots if s.processor == proc)
-        lo, hi = PROCESSORS[proc].safe_ranges[key]
-        assert slot.params[key] in (lo, hi)
+        assert slot.params[key] in slot.range_for(key)
 
 
 # ---------------------------------------------------------------------------
@@ -187,13 +193,33 @@ def test_ablation_returns_one_result_per_template():
     assert [r.chain_name for r in results] == [c.name for c in TEMPLATES[:3]]
 
 
-def test_richer_template_is_never_worse_than_its_prefix_at_equal_budget():
-    """t2 contains t1's slots, so with the extra slot neutral it must at least tie."""
+def test_ladder_is_monotone_so_capability_attribution_is_meaningful():
+    """A richer template must never finish worse than its own prefix.
+
+    Greedy coordinate descent is path-dependent, so without the warm start along
+    the ladder a richer template can score WORSE than the prefix it contains --
+    which would make "the smallest template that suffices" meaningless.
+    """
     raw, wet, amap = _pair(seed=137)
     target = build_target(wet, amap)
-    r1, r2 = ablate(raw, target, templates=(TEMPLATES[0], TEMPLATES[1]),
-                    passes=2, points=4)
-    assert r2.best_distance <= r1.best_distance * 1.05    # tolerance: greedy descent
+    results = ablate(raw, target, templates=TEMPLATES[:3], passes=2, points=4)
+    for prev, nxt in zip(results, results[1:]):
+        assert nxt.best_distance <= prev.best_distance + 1e-9, (
+            f"{nxt.chain_name} ({nxt.best_distance}) is worse than its prefix "
+            f"{prev.chain_name} ({prev.best_distance})")
+
+
+def test_warm_start_carries_the_prefix_solution_forward():
+    from src.paired_corpus.search import _warm_start
+    solved = Chain("t1_hp_lowmid", (
+        Slot("HighpassFilter", {"cutoff_frequency_hz": 111.0}, ("cutoff_frequency_hz",)),
+        Slot("PeakFilter", {"cutoff_frequency_hz": 275.0, "gain_db": -3.5, "q": 1.1}, ()),
+    ))
+    warmed = _warm_start(TEMPLATES[1], solved)
+    assert warmed.slots[0].params["cutoff_frequency_hz"] == 111.0
+    assert warmed.slots[1].params["gain_db"] == -3.5
+    assert warmed.slots[2].params["gain_db"] == 0.0        # new slot starts neutral
+    assert warmed.slots[0].search == TEMPLATES[1].slots[0].search
 
 
 def test_reorder_permutes_slots_and_keeps_them_valid():
@@ -267,3 +293,88 @@ def test_ordering_variants_reject_wrong_slot_count():
     with pytest.raises(ValueError):
         from src.paired_corpus.search import ordering_variants
         ordering_variants(TEMPLATES_BY_NAME["t1_hp_lowmid"])
+
+
+# ---------------------------------------------------------------------------
+# N-018 regression: the objective must refuse destructive solutions
+# ---------------------------------------------------------------------------
+
+def _n018_winner() -> Chain:
+    """The chain that actually won P-01 under the registry-only space (N-018).
+
+    Highpass at 330 Hz on a rap vocal, an unused low-mid bell, an aggressive gate
+    and a 20:1 compressor. Safe to render, destructive as audio — and it beat the
+    old objective by 62%.
+    """
+    return Chain("n018_winner", (
+        Slot("HighpassFilter", {"cutoff_frequency_hz": 330.0}, ()),
+        Slot("PeakFilter", {"cutoff_frequency_hz": 300.0, "gain_db": 0.0, "q": 0.8}, ()),
+        Slot("NoiseGate", {"threshold_db": -15.75, "attack_ms": 1.0,
+                           "release_ms": 40.625}, ()),
+        Slot("Compressor", {"threshold_db": -10.5, "ratio": 20.0, "attack_ms": 15.0,
+                            "release_ms": 75.0}, ()),
+    ))
+
+
+def test_the_chain_that_won_under_the_old_objective_is_now_rejected():
+    raw, wet, amap = _pair(seed=101)
+    target = build_target(wet, amap)
+    ev = evaluate(raw, _n018_winner(), target, full_si_sdr=True)
+    assert ev.safe is False, "the N-018 destructive winner is still admissible"
+    assert ev.rejected_for, "rejection must state a reason, not just a boolean"
+    assert ev.penalized > ev.distance
+
+
+def test_over_compression_is_rejected_even_when_it_matches_the_target():
+    raw, wet, amap = _pair(seed=103)
+    target = build_target(wet, amap)
+    crusher = Chain("crusher", (
+        Slot("Compressor", {"threshold_db": -40.0, "ratio": 20.0, "attack_ms": 0.1,
+                            "release_ms": 10.0}, ()),))
+    ev = evaluate(raw, crusher, target, full_si_sdr=True)
+    assert ev.safe is False
+    assert {"crest_floor", "crest_loss", "si_sdr"} & set(ev.rejected_for)
+
+
+def test_body_removing_highpass_is_outside_the_admissible_space():
+    """A 330 Hz highpass is registry-safe but not a plausible vocal treatment."""
+    hp = TEMPLATES_BY_NAME["t1_hp_lowmid"].slots[0]
+    lo, hi = hp.range_for("cutoff_frequency_hz")
+    assert hi <= 120.0, "admissible highpass must stay below the chest register"
+    assert (lo, hi) != PROCESSORS["HighpassFilter"].safe_ranges["cutoff_frequency_hz"]
+
+
+def test_admissible_compressor_ratio_matches_the_documented_professional_range():
+    comp = TEMPLATES_BY_NAME["t5_full"].slots[-1]
+    lo, hi = comp.range_for("ratio")
+    assert hi <= 4.0, "reference puts underground vocal compression at 3:1-4:1"
+    assert lo >= 1.0
+
+
+def test_admissible_bounds_are_never_wider_than_the_registry():
+    for chain in TEMPLATES:
+        for slot in chain.slots:
+            for key in slot.search:
+                lo, hi = slot.range_for(key)
+                rlo, rhi = PROCESSORS[slot.processor].safe_ranges[key]
+                assert rlo <= lo <= hi <= rhi, f"{slot.processor}.{key} escapes the registry"
+
+
+def test_legacy_space_is_retained_but_wider():
+    """Kept only to reproduce superseded runs; must not silently become default."""
+    legacy_hp = LEGACY_TEMPLATES_BY_NAME["t1_hp_lowmid"].slots[0]
+    assert legacy_hp.range_for("cutoff_frequency_hz") == \
+        PROCESSORS["HighpassFilter"].safe_ranges["cutoff_frequency_hz"]
+    assert TEMPLATES is not LEGACY_TEMPLATES
+
+
+def test_search_within_admissible_space_returns_an_admissible_chain():
+    raw, wet, amap = _pair(seed=107)
+    target = build_target(wet, amap)
+    r = coordinate_descent(raw, TEMPLATES[4], target, passes=2, points=4)
+    final = evaluate(raw, r.best_chain, target, full_si_sdr=True)
+    assert final.safe, f"search returned an inadmissible chain: {final.rejected_for}"
+    for slot in r.best_chain.slots:
+        for key in slot.search:
+            lo, hi = slot.range_for(key)
+            assert lo - 1e-6 <= slot.params[key] <= hi + 1e-6

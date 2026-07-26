@@ -121,3 +121,30 @@ Conclusions:
 Standing limits unchanged: diagnostic only; distance is not perceptual quality; lossy single-artist corpus; does not satisfy DEF-003; promotion of any audible DSP change remains a human-only gate.
 
 **Evidence provenance caveat:** the detailed per-template artifacts of run `20260725-102806-search` were lost when the process was stopped (it wrote its JSON only at completion, and the machine's sleep cycles had stretched it past 12 h wall on one pair). The per-pair numbers above are from that run's captured stdout. The runner now checkpoints each pair to `partial_results.jsonl`; a re-run regenerates the full reproducible artifact.
+
+## N-018 — The oracle's composite distance is gameable; N-017's gap-closure numbers do not represent recoverable quality
+
+2026-07-26, run `20260726-061954-search` (per-template detail; the earlier run reported only summary lines). N-017 reported that the registry-safe search closes 20.9–57.8% of the champion→wet distance and concluded that the bottleneck is the planner rather than the DSP. **The per-template parameters show the objective is being gamed, and that conclusion does not follow.**
+
+The winning chain on the best-aligned pair (P-01, +62.1%):
+
+| slot | chosen | why it is not a quality solution |
+|---|---|---|
+| `HighpassFilter` | **330 Hz** (t1–t4), 240 Hz (t5) | removes the entire chest/body region of a rap vocal; inside the registry's 20–500 Hz safe range but destructive by any professional standard |
+| low-mid `PeakFilter` | **0.0 dB — unused** | the search never used the treatment the whole low-mid hypothesis is about; it got its low-mid reduction from the brutal highpass instead |
+| mid `PeakFilter` | +6.0 dB @ 8.5 kHz, Q 2.4 | a narrow high-frequency boost, not the 2.5–5 kHz resonance control the defect model predicts |
+| `NoiseGate` | **−15.75 dB** | far above any sane vocal gate; would chop word tails and breaths |
+| `Compressor` | **ratio 20.0 — at the maximum bound**, threshold −10.5 | crushes crest; `docs/research/underground_vocal_engineering_reference.md` puts the professional range at 3:1–4:1 |
+| SI-SDR | **5.4–6.6 dB** | barely above the 5 dB floor — the preservation floor was the *binding* constraint, i.e. it is set far too low to prevent destruction |
+
+The ablation makes the mechanism explicit: t1 = t2 = t3 = **1.747** (adding a mid bell and an air shelf bought *nothing*), t4 = 1.713 (gate), t5 = **1.074**. Essentially all of the headline improvement came from a maximum-ratio compressor plus an aggressive highpass — the two cheapest ways to move `crest_db` and `tilt_db_per_oct`, which are 2 of the composite's 5 axes.
+
+**What is retracted:** N-017's inference that ~46% of the champion→wet *quality* gap is recoverable with existing processors, and that the planner's specs are what withhold it. A steep highpass and a 20:1 compressor are not what the planner's specs are missing.
+
+**What still stands:** the narrow, literal statement that the registry can *reduce the composite distance* substantially — which is now understood to say more about the metric than about the registry. N-016's `missing_processor` verdicts remain retired: they were measured on the same flawed metric in a narrower space, so they carry no information either way.
+
+**Root cause.** The objective is a 5-axis composite (3 band-energy ratios ×10, `crest_db`, `tilt_db_per_oct`) with a 5 dB SI-SDR floor. Two of five axes are directly purchasable by destruction, the band ratios are purchasable by filtering away whole regions, and the preservation floor is permissive enough to allow it. **No conclusion about capability, calibration, or quality can be drawn from an objective that a destructive chain wins.**
+
+**Consequence for the roadmap:** DT-77 Track C-4 (a target with perceptual grounding) is not "the highest-value remaining method work" — it is a **precondition** for every other number in this thread. Nothing downstream of the oracle should be believed until the objective refuses destructive solutions.
+
+**Process lesson (third instance in this thread).** Each time the search space widened, the previous conclusion turned out to be an artifact of the measurement rather than a fact about the system: a fixed point (N-016), then the planner's mapping (N-017), now the objective itself (N-018). The recurring error is treating *whatever the harness optimises* as a proxy for quality without first proving the harness cannot be won by an obviously bad answer. **A new objective must be adversarially tested — by constructing a deliberately destructive candidate and requiring it to lose — before any result measured with it is reported.**

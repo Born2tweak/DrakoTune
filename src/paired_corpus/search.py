@@ -12,12 +12,25 @@ penalties, across chain templates of increasing capability. Comparing what each
 template achieves is a capability ablation — it identifies *which* capability
 closes a gap, instead of only reporting that the narrow chain did not.
 
+**N-018 correction.** Searching the registry's ranges alone is not enough. Given
+only "is this safe to render?", the search won by highpassing a rap vocal at
+330 Hz and compressing at 20:1 — inside every safe range, destructive as audio,
+and it beat the objective by 62%. The default space is therefore *admissible*:
+registry-safe AND within plausible-vocal-treatment bounds taken from the
+repository's approved references, with an over-compression guard and a
+preservation floor raised from 5 dB to 12 dB. `LEGACY_TEMPLATES` retains the
+registry-only space solely to reproduce the superseded runs.
+
+Any future objective change must be adversarially tested the same way: construct
+a deliberately destructive candidate and require it to lose
+(`tests/test_oracle_search.py::test_the_chain_that_won_under_the_old_objective_is_now_rejected`).
+
 Diagnostic only. Nothing here authors a plan, tunes a threshold, or promotes
 anything; it measures what the existing registry can and cannot reach.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 
@@ -32,7 +45,19 @@ SR = 44100
 CEILING = 0.977
 # Preservation floor: a candidate that matches the wet spectrum by destroying the
 # performance is not a solution. Measured against the RAW input.
-SI_SDR_FLOOR_DB = 5.0
+#
+# N-018: at 5 dB this floor was the BINDING constraint — winning chains sat at
+# 5.4-6.6 dB, i.e. the search spent every dB of destruction it was allowed. 12 dB
+# is the declared floor for admissible searches; the 5 dB value is retained only
+# to reproduce the superseded runs.
+SI_SDR_FLOOR_DB = 12.0
+SI_SDR_FLOOR_LEGACY_DB = 5.0
+# Over-compression guard. `underground_vocal_engineering_reference.md` puts the
+# over-compressed range at 6-10 dB crest and the sweet spot at 10-14 dB, so a
+# candidate may not crush crest below 8 dB, nor remove more than 6 dB of the
+# raw's crest.
+CREST_FLOOR_DB = 8.0
+MAX_CREST_LOSS_DB = 6.0
 PENALTY = 1e6
 
 AXES = ("lowmid_250_500", "harsh_2500_5000", "sib_5500_12000", "crest_db",
@@ -47,10 +72,29 @@ AXIS_SCALE = {"lowmid_250_500": 10.0, "harsh_2500_5000": 10.0,
 
 @dataclass(frozen=True)
 class Slot:
-    """One processor position in a chain, with the params the search may move."""
+    """One processor position in a chain, with the params the search may move.
+
+    `bounds` narrows a parameter below the registry's safe range. The registry's
+    range answers "is this safe to render?"; it does NOT answer "is this a
+    plausible vocal treatment?". N-018: given only the registry's ranges the
+    search won by highpassing a rap vocal at 330 Hz and compressing at 20:1 —
+    safe to render, destructive as audio, and it beat the objective. Admissible
+    bounds come from the repository's own approved references
+    (`docs/research/underground_vocal_engineering_reference.md`,
+    `docs/research/vocal_chain_research.md`), never from fitting this corpus.
+    """
     processor: str
     params: dict[str, float]
     search: tuple[str, ...]
+    bounds: dict[str, tuple[float, float]] = field(default_factory=dict)
+
+    def range_for(self, key: str) -> tuple[float, float]:
+        """Effective search range: the narrower of admissible and registry-safe."""
+        lo, hi = PROCESSORS[self.processor].safe_ranges[key]
+        if key in self.bounds:
+            blo, bhi = self.bounds[key]
+            lo, hi = max(lo, blo), min(hi, bhi)
+        return lo, hi
 
 
 @dataclass(frozen=True)
@@ -63,48 +107,92 @@ class Chain:
         return sum(len(s.search) for s in self.slots)
 
 
-def _hp() -> Slot:
-    return Slot("HighpassFilter", {"cutoff_frequency_hz": 90.0}, ("cutoff_frequency_hz",))
+# Admissible bounds, each traceable to a repository research reference. These are
+# PRIORS, declared up front, never fitted to the paired corpus.
+#   HP 60-120 Hz            - reference: 20-80 Hz is rumble to remove; a vocal
+#                             highpass belongs below the chest register.
+#   low-mid 200-800 Hz      - reference: 250-500 Hz "mud zone", 400-700 Hz boxiness.
+#   low-mid gain +/-6 dB    - reference: mud cut -2..-4 dB is the professional norm;
+#                             +/-6 leaves headroom on both sides without absurdity.
+#   presence 2-6 kHz        - reference: 2-4 kHz presence, 3.5-6 kHz harshness.
+#   air shelf 8-14 kHz,     - reference: shelf at 10 kHz, "+1.5-2.5 dB max";
+#     +/-3 dB                 +/-3 dB is one step of headroom beyond the stated max.
+#   gate -60..-35 dB        - a vocal gate sits well below the performance floor.
+#   compressor 1.5-4.0:1,   - reference: "Compression 3:1-4:1, 15ms attack";
+#     threshold -30..-12      attack sweet spot 10-20 ms.
+ADMISSIBLE: dict[str, dict[str, tuple[float, float]]] = {
+    "hp": {"cutoff_frequency_hz": (60.0, 120.0)},
+    "lowmid": {"cutoff_frequency_hz": (200.0, 800.0), "gain_db": (-6.0, 6.0),
+               "q": (0.5, 2.0)},
+    "mid": {"cutoff_frequency_hz": (2000.0, 6000.0), "gain_db": (-6.0, 6.0),
+            "q": (1.0, 4.0)},
+    "air": {"cutoff_frequency_hz": (8000.0, 14000.0), "gain_db": (-3.0, 3.0)},
+    "gate": {"threshold_db": (-60.0, -35.0), "release_ms": (100.0, 400.0)},
+    "comp": {"threshold_db": (-30.0, -12.0), "ratio": (1.5, 4.0)},
+}
 
 
-def _lowmid() -> Slot:
-    # Bidirectional by construction: the registry allows -12..+12 dB, so the
-    # search can ADD low-mid body as readily as cut it (F-6 asked for this).
+def _hp(admissible: bool = True) -> Slot:
+    return Slot("HighpassFilter", {"cutoff_frequency_hz": 90.0}, ("cutoff_frequency_hz",),
+                ADMISSIBLE["hp"] if admissible else {})
+
+
+def _lowmid(admissible: bool = True) -> Slot:
+    # Bidirectional by construction: PeakFilter cuts and boosts, so the search can
+    # ADD low-mid body as readily as remove it.
     return Slot("PeakFilter", {"cutoff_frequency_hz": 300.0, "gain_db": 0.0, "q": 0.8},
-                ("cutoff_frequency_hz", "gain_db", "q"))
+                ("cutoff_frequency_hz", "gain_db", "q"),
+                ADMISSIBLE["lowmid"] if admissible else {})
 
 
-def _mid() -> Slot:
+def _mid(admissible: bool = True) -> Slot:
     return Slot("PeakFilter", {"cutoff_frequency_hz": 3500.0, "gain_db": 0.0, "q": 1.4},
-                ("cutoff_frequency_hz", "gain_db", "q"))
+                ("cutoff_frequency_hz", "gain_db", "q"),
+                ADMISSIBLE["mid"] if admissible else {})
 
 
-def _air() -> Slot:
+def _air(admissible: bool = True) -> Slot:
     return Slot("HighShelfFilter", {"cutoff_frequency_hz": 8000.0, "gain_db": 0.0, "q": 0.7},
-                ("cutoff_frequency_hz", "gain_db"))
+                ("cutoff_frequency_hz", "gain_db"),
+                ADMISSIBLE["air"] if admissible else {})
 
 
-def _gate() -> Slot:
+def _gate(admissible: bool = True) -> Slot:
     # C-1: the planner's NoiseGate spec is strength-invariant (fixed -42 dB), so
     # denoising had only ever been tested at one threshold. Here it is searched.
     return Slot("NoiseGate", {"threshold_db": -42.0, "attack_ms": 1.0, "release_ms": 250.0},
-                ("threshold_db", "release_ms"))
+                ("threshold_db", "release_ms"),
+                ADMISSIBLE["gate"] if admissible else {})
 
 
-def _comp() -> Slot:
+def _comp(admissible: bool = True) -> Slot:
     return Slot("Compressor",
                 {"threshold_db": -18.0, "ratio": 2.5, "attack_ms": 15.0, "release_ms": 75.0},
-                ("threshold_db", "ratio"))
+                ("threshold_db", "ratio"),
+                ADMISSIBLE["comp"] if admissible else {})
 
 
-TEMPLATES: tuple[Chain, ...] = (
-    Chain("t1_hp_lowmid", (_hp(), _lowmid())),
-    Chain("t2_tonal", (_hp(), _lowmid(), _mid())),
-    Chain("t3_tonal_air", (_hp(), _lowmid(), _mid(), _air())),
-    Chain("t4_tonal_air_gate", (_hp(), _lowmid(), _mid(), _air(), _gate())),
-    Chain("t5_full", (_hp(), _lowmid(), _mid(), _air(), _gate(), _comp())),
-)
+def _ladder(admissible: bool) -> tuple[Chain, ...]:
+    return (
+        Chain("t1_hp_lowmid", (_hp(admissible), _lowmid(admissible))),
+        Chain("t2_tonal", (_hp(admissible), _lowmid(admissible), _mid(admissible))),
+        Chain("t3_tonal_air", (_hp(admissible), _lowmid(admissible), _mid(admissible),
+                               _air(admissible))),
+        Chain("t4_tonal_air_gate", (_hp(admissible), _lowmid(admissible), _mid(admissible),
+                                    _air(admissible), _gate(admissible))),
+        Chain("t5_full", (_hp(admissible), _lowmid(admissible), _mid(admissible),
+                          _air(admissible), _gate(admissible), _comp(admissible))),
+    )
+
+
+# Default search space: admissible bounds + the N-018 preservation guards.
+TEMPLATES: tuple[Chain, ...] = _ladder(admissible=True)
 TEMPLATES_BY_NAME = {c.name: c for c in TEMPLATES}
+# Registry-bounded only. Retained solely to reproduce the superseded N-017 runs;
+# N-018 showed this space is won by destructive chains. Do not report results
+# from it as capability or quality evidence.
+LEGACY_TEMPLATES: tuple[Chain, ...] = _ladder(admissible=False)
+LEGACY_TEMPLATES_BY_NAME = {c.name: c for c in LEGACY_TEMPLATES}
 
 
 def chain_to_plan(chain: Chain) -> ProcessingPlan:
@@ -213,6 +301,17 @@ class Evaluation:
     clipping_ratio: float
     si_sdr_db: float
     safe: bool
+    crest_db: float = 0.0
+    crest_loss_db: float = 0.0
+    rejected_for: tuple[str, ...] = ()
+
+
+def _crest_db(x: np.ndarray) -> float:
+    if x.size == 0:
+        return 0.0
+    rms = float(np.sqrt(np.mean(np.square(x.astype(np.float64))) + 1e-20))
+    peak = float(np.max(np.abs(x)) + 1e-20)
+    return 20.0 * float(np.log10(peak / rms))
 
 
 # SI-SDR over a whole take costs about as much as the render itself. During the
@@ -233,19 +332,36 @@ def _preservation_db(raw: np.ndarray, audio: np.ndarray, full: bool) -> float:
 
 
 def evaluate(raw: np.ndarray, chain: Chain, target: WetTarget,
-             full_si_sdr: bool = False) -> Evaluation:
-    """Render a chain and score it. Unsafe candidates are penalized, not hidden."""
+             full_si_sdr: bool = False,
+             si_sdr_floor_db: float = SI_SDR_FLOOR_DB) -> Evaluation:
+    """Render a chain and score it. Inadmissible candidates are penalized, and the
+    reason is reported rather than silently folded into a number."""
     out, _ = execute_plan(raw, SR, chain_to_plan(chain))
     audio = (out[:, 0] if out.ndim == 2 else out).astype(np.float32)
     peak = float(np.max(np.abs(audio)) + 1e-12)
     clip = float(np.mean(np.abs(audio) >= 0.999))
     sdr = _preservation_db(raw, audio, full_si_sdr)
+    crest = _crest_db(audio)
+    crest_loss = _crest_db(raw) - crest
     distance = composite_distance(audio, target)
-    safe = peak <= CEILING + 1e-3 and clip == 0.0 and sdr >= SI_SDR_FLOOR_DB
+
+    rejected: list[str] = []
+    if peak > CEILING + 1e-3:
+        rejected.append("ceiling")
+    if clip > 0.0:
+        rejected.append("clipping")
+    if sdr < si_sdr_floor_db:
+        rejected.append("si_sdr")
+    if crest < CREST_FLOOR_DB:
+        rejected.append("crest_floor")
+    if crest_loss > MAX_CREST_LOSS_DB:
+        rejected.append("crest_loss")
+    safe = not rejected
     penalized = distance if safe else (
         distance + PENALTY if np.isfinite(distance) else float("inf"))
     return Evaluation(distance, penalized, round(peak, 4), round(clip, 6),
-                      round(sdr, 3), safe)
+                      round(sdr, 3), safe, round(crest, 3), round(crest_loss, 3),
+                      tuple(rejected))
 
 
 # ---------------------------------------------------------------------------
@@ -296,8 +412,8 @@ def coordinate_descent(raw: np.ndarray, chain: Chain, target: WetTarget,
         for slot_i, key in coords:
             if evals >= max_evaluations:
                 break
-            lo, hi = PROCESSORS[best.slots[slot_i].processor].safe_ranges[key]
-            current = best.slots[slot_i].params[key]
+            lo, hi = best.slots[slot_i].range_for(key)
+            current = min(max(best.slots[slot_i].params[key], lo), hi)
             for value in _axis_values(lo, hi, current, span, points):
                 if value == current or evals >= max_evaluations:
                     continue
@@ -318,7 +434,7 @@ def coordinate_descent(raw: np.ndarray, chain: Chain, target: WetTarget,
     final = evaluate(raw, best, target, full_si_sdr=True)
     at_bound = []
     for slot_i, key in coords:
-        lo, hi = PROCESSORS[best.slots[slot_i].processor].safe_ranges[key]
+        lo, hi = best.slots[slot_i].range_for(key)
         value = best.slots[slot_i].params[key]
         if abs(value - lo) < 1e-6 or abs(value - hi) < 1e-6:
             at_bound.append(f"{best.slots[slot_i].processor}.{key}")
@@ -330,9 +446,38 @@ def coordinate_descent(raw: np.ndarray, chain: Chain, target: WetTarget,
     )
 
 
+def _warm_start(chain: Chain, previous: Chain | None) -> Chain:
+    """Seed a template with the previous (prefix) template's solution.
+
+    Each template in the ladder extends the one before it, so without this a
+    richer template can finish WORSE than its own prefix: greedy coordinate
+    descent is path-dependent, and adding a coordinate changes the path. That
+    would make "the smallest template that suffices" meaningless. Warm-starting
+    makes the ladder monotone by construction — the richer template begins from
+    the poorer one's answer with the extra slot neutral, so it can only improve.
+    """
+    if previous is None:
+        return chain
+    slots = list(chain.slots)
+    for i, prev_slot in enumerate(previous.slots):
+        if i < len(slots) and slots[i].processor == prev_slot.processor:
+            slots[i] = replace(slots[i], params=dict(prev_slot.params))
+    return Chain(chain.name, tuple(slots))
+
+
 def ablate(raw: np.ndarray, target: WetTarget,
            templates: tuple[Chain, ...] = TEMPLATES,
            **kw) -> tuple[SearchResult, ...]:
-    """Search every capability template. The distance each one REACHES is the
-    evidence for which capability a pair actually needs."""
-    return tuple(coordinate_descent(raw, c, target, **kw) for c in templates)
+    """Search every capability template, warm-started along the ladder.
+
+    The distance each template REACHES is the evidence for which capability a
+    pair actually needs — which only holds if the ladder is monotone, hence the
+    warm start.
+    """
+    results: list[SearchResult] = []
+    previous: Chain | None = None
+    for chain in templates:
+        result = coordinate_descent(raw, _warm_start(chain, previous), target, **kw)
+        results.append(result)
+        previous = result.best_chain
+    return tuple(results)
