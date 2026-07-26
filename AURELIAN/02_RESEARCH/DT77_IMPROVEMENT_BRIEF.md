@@ -26,6 +26,15 @@ satisfy DEF-003. It ranks *where to look*; it establishes no perceptual claim.
 > floor, over-compression guard, adversarial regression tests), and the corpus is
 > being re-measured. **Treat every percentage in this section as superseded
 > pending that re-run.** Priorities below are ordered by what survives N-018.
+>
+> **The re-run has landed (F-9, run `20260726-131308-search`, corrected *and*
+> repaired guard — see N-019).** Median distance closed **+32.8%**, mean +32.2%,
+> bootstrap 95% CI **+20.6% .. +44.1%** (excludes zero), 6 of 7 pairs ≥10%. Every
+> winner sits at 12.2–13.4 dB SI-SDR, i.e. hard against a floor that N-019 showed
+> also rejects honest treatments — **read +32.8% as a lower bound, not an
+> estimate.** Required capability: 4 pairs full chain, 2 tonal+air, 1 tonal. The
+> two pairs whose old winners had violated the preservation floor lost the
+> compressor entirely once it was enforced.
 
 ## The finding that reorganised this brief (N-017)
 
@@ -163,15 +172,23 @@ implemented and a residual gap survives a full registry-safe search.
    bounds + preservation guards + adversarial tests); the open part is a target
    with genuine *perceptual* grounding rather than spectral-distance-plus-guards.
    Everything below is contingent on this.
-1. **Re-measure the corpus** under the corrected objective and re-derive A-1/A-2's
-   effect sizes. Until then their magnitudes are unknown, not merely uncertain.
+1. ~~**Re-measure the corpus** under the corrected objective~~ — **done (F-9).**
+   Median **+32.8%**, CI +20.6%..+44.1%, 6/7 pairs ≥10%, every winner admissible on
+   the full signal. Every number is a **lower bound**: the preservation floor is
+   binding on all 7 winners and N-019 showed it also rejects honest treatments.
 2. **A-1 + A-2 together** — engagement and spec range are coupled; each alone
-   saturates against the other. The *direction* survives N-018 (the champion does
-   abstain, and the specs are narrower than the registry); the *size* does not.
+   saturates against the other. Both direction *and* a floor on size now survive:
+   the champion abstained on 6 of 7 pairs while an admissible chain inside the
+   registry closed a median 32.8% of the distance it left on the table.
 3. **A-3** bidirectional tonal objectives — the registry can boost and no planner
-   objective asks it to. Cheap and independent of the metric question.
-4. **A-4** dynamics — note N-018 makes this suspect: the compressor was also the
-   metric's favourite exploit, so "dynamics matter" may be an artifact.
+   objective asks it to. Cheap and independent of the metric question. F-9
+   strengthens this: winning chains *boost* the low-mid on 2 pairs (+3.0, +4.5 dB)
+   and cut it on 2 others, so direction is genuinely pair-dependent.
+4. **A-4** dynamics — **partly confirmed as an artifact.** The two pairs whose old
+   winners had violated the preservation floor stopped needing the compressor at
+   all once it was enforced (required capability t5_full → t3_tonal_air). 4 of 7
+   pairs still require it. Treat dynamics as implicated on some pairs, not on the
+   corpus.
 5. **A-5** sibilance floor (N-014 constraints).
 6. **C-3, C-5** corpus recovery and ordering.
 7. ~~Track B~~ — withdrawn; no evidence, and now less than none.

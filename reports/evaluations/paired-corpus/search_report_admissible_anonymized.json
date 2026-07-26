@@ -1,0 +1,1537 @@
+{
+  "authorization": "D-029 (local/internal/eval-only)",
+  "method": {
+    "space": "admissible",
+    "space_note": "registry `safe_ranges` INTERSECTED with plausible-vocal bounds cited from docs/research/ (never fitted to the corpus)",
+    "si_sdr_floor_db": 12.0,
+    "crest_floor_db": 8.0,
+    "max_crest_loss_db": 6.0,
+    "ceiling_dbfs": -0.2,
+    "clipping_allowed": false,
+    "templates": [
+      "t1_hp_lowmid",
+      "t2_tonal",
+      "t3_tonal_air",
+      "t4_tonal_air_gate",
+      "t5_full"
+    ],
+    "objective": "mean scaled |wet \u2212 candidate| over aligned phrases on lowmid_250_500, harsh_2500_5000, sib_5500_12000, crest_db, tilt_db_per_oct \u2014 a spectral/dynamics distance to a lossy wet reference, NOT perceptual quality (Q-016 open)"
+  },
+  "budget": {
+    "passes": 3,
+    "points": 5,
+    "max_evaluations": 250,
+    "max_phrases": 30
+  },
+  "provenance": {
+    "report_rebuilt_from_partial_results": false,
+    "contract_source": "working tree at report-generation time"
+  },
+  "limitation": "Diagnostic only; NO threshold tuned, NO promotion, NO claim; lossy sources; distance is not perceptual quality.",
+  "summary": {
+    "n_pairs": 7,
+    "median_closed_pct": 32.8,
+    "mean_closed_pct": 32.159,
+    "ci95": [
+      20.645,
+      44.08
+    ],
+    "n_closed_10pct": 6,
+    "required_capability_counts": {
+      "t2_tonal": 1,
+      "t3_tonal_air": 2,
+      "t5_full": 4
+    },
+    "at_bound_counts": {
+      "HighShelfFilter.cutoff_frequency_hz": 7,
+      "PeakFilter.q": 6,
+      "PeakFilter.cutoff_frequency_hz": 4,
+      "NoiseGate.release_ms": 4,
+      "HighShelfFilter.gain_db": 3,
+      "NoiseGate.threshold_db": 3,
+      "HighpassFilter.cutoff_frequency_hz": 3,
+      "Compressor.ratio": 2,
+      "Compressor.threshold_db": 1
+    }
+  },
+  "results": [
+    {
+      "pair_id": "P-01",
+      "verdict": "verified_exact_pair",
+      "n_phrases": 30,
+      "champion_actions": 0,
+      "champion_distance": 2.83394,
+      "templates": {
+        "t1_hp_lowmid": {
+          "start_distance": 2.63443,
+          "best_distance": 2.5348,
+          "evaluations": 61,
+          "converged": false,
+          "si_sdr_db": 12.764,
+          "peak": 0.9429,
+          "at_bound": [],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 116.25
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            }
+          ]
+        },
+        "t2_tonal": {
+          "start_distance": 2.5348,
+          "best_distance": 2.5348,
+          "evaluations": 30,
+          "converged": true,
+          "si_sdr_db": 12.764,
+          "peak": 0.9429,
+          "at_bound": [],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 116.25
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            }
+          ]
+        },
+        "t3_tonal_air": {
+          "start_distance": 2.5348,
+          "best_distance": 2.5348,
+          "evaluations": 37,
+          "converged": true,
+          "si_sdr_db": 12.764,
+          "peak": 0.9429,
+          "at_bound": [
+            "HighShelfFilter.cutoff_frequency_hz"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 116.25
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 0.0,
+              "q": 0.7
+            }
+          ]
+        },
+        "t4_tonal_air_gate": {
+          "start_distance": 2.5348,
+          "best_distance": 2.53471,
+          "evaluations": 103,
+          "converged": true,
+          "si_sdr_db": 12.764,
+          "peak": 0.9429,
+          "at_bound": [
+            "HighShelfFilter.cutoff_frequency_hz",
+            "NoiseGate.release_ms"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 116.25
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 0.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -48.25,
+              "attack_ms": 1.0,
+              "release_ms": 100.0
+            }
+          ]
+        },
+        "t5_full": {
+          "start_distance": 3.00367,
+          "best_distance": 1.90442,
+          "evaluations": 187,
+          "converged": false,
+          "si_sdr_db": 12.778,
+          "peak": 0.9182,
+          "at_bound": [
+            "PeakFilter.cutoff_frequency_hz",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "NoiseGate.release_ms",
+            "Compressor.threshold_db",
+            "Compressor.ratio"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 101.25
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 6000.0,
+              "gain_db": 2.25,
+              "q": 1.2125
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 0.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -39.6875,
+              "attack_ms": 1.0,
+              "release_ms": 100.0
+            },
+            {
+              "processor": "Compressor",
+              "threshold_db": -12.0,
+              "ratio": 1.5,
+              "attack_ms": 15.0,
+              "release_ms": 75.0
+            }
+          ]
+        }
+      },
+      "best_template": "t5_full",
+      "best_distance": 1.90442,
+      "closed_pct": 32.8,
+      "required_capability": "t5_full"
+    },
+    {
+      "pair_id": "P-02",
+      "verdict": "partially_matchable",
+      "n_phrases": 23,
+      "champion_actions": 0,
+      "champion_distance": 6.40249,
+      "templates": {
+        "t1_hp_lowmid": {
+          "start_distance": 6.45945,
+          "best_distance": 6.45475,
+          "evaluations": 61,
+          "converged": true,
+          "si_sdr_db": 12.38,
+          "peak": 0.9441,
+          "at_bound": [],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 112.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            }
+          ]
+        },
+        "t2_tonal": {
+          "start_distance": 6.45475,
+          "best_distance": 6.45475,
+          "evaluations": 30,
+          "converged": true,
+          "si_sdr_db": 12.38,
+          "peak": 0.9441,
+          "at_bound": [],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 112.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            }
+          ]
+        },
+        "t3_tonal_air": {
+          "start_distance": 6.45475,
+          "best_distance": 6.45475,
+          "evaluations": 37,
+          "converged": true,
+          "si_sdr_db": 12.38,
+          "peak": 0.9441,
+          "at_bound": [
+            "HighShelfFilter.cutoff_frequency_hz"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 112.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 0.0,
+              "q": 0.7
+            }
+          ]
+        },
+        "t4_tonal_air_gate": {
+          "start_distance": 6.45288,
+          "best_distance": 5.67384,
+          "evaluations": 162,
+          "converged": false,
+          "si_sdr_db": 17.497,
+          "peak": 0.677,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "HighShelfFilter.gain_db",
+            "NoiseGate.threshold_db",
+            "NoiseGate.release_ms"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 800.0,
+              "gain_db": -3.0,
+              "q": 0.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": -0.75,
+              "q": 1.775
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 3.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -35.0,
+              "attack_ms": 1.0,
+              "release_ms": 100.0
+            }
+          ]
+        },
+        "t5_full": {
+          "start_distance": 5.97101,
+          "best_distance": 5.01407,
+          "evaluations": 176,
+          "converged": false,
+          "si_sdr_db": 13.448,
+          "peak": 0.4752,
+          "at_bound": [
+            "PeakFilter.q",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "HighShelfFilter.gain_db",
+            "NoiseGate.threshold_db",
+            "NoiseGate.release_ms"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 82.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 612.5,
+              "gain_db": -4.5,
+              "q": 0.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3000.0,
+              "gain_db": -4.5,
+              "q": 4.0
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 3.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -35.0,
+              "attack_ms": 1.0,
+              "release_ms": 100.0
+            },
+            {
+              "processor": "Compressor",
+              "threshold_db": -15.75,
+              "ratio": 2.0312,
+              "attack_ms": 15.0,
+              "release_ms": 75.0
+            }
+          ]
+        }
+      },
+      "best_template": "t5_full",
+      "best_distance": 5.01407,
+      "closed_pct": 21.686,
+      "required_capability": "t5_full"
+    },
+    {
+      "pair_id": "P-03",
+      "verdict": "incorrect_pair"
+    },
+    {
+      "pair_id": "P-04",
+      "verdict": "inconclusive_alignment",
+      "n_phrases": 0
+    },
+    {
+      "pair_id": "P-05",
+      "verdict": "verified_exact_pair",
+      "n_phrases": 30,
+      "champion_actions": 1,
+      "champion_distance": 4.65135,
+      "templates": {
+        "t1_hp_lowmid": {
+          "start_distance": 4.96073,
+          "best_distance": 4.86433,
+          "evaluations": 37,
+          "converged": true,
+          "si_sdr_db": 19.499,
+          "peak": 0.9772,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            }
+          ]
+        },
+        "t2_tonal": {
+          "start_distance": 4.86433,
+          "best_distance": 3.23711,
+          "evaluations": 93,
+          "converged": false,
+          "si_sdr_db": 15.133,
+          "peak": 0.9772,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "PeakFilter.cutoff_frequency_hz",
+            "PeakFilter.gain_db",
+            "PeakFilter.q"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 262.5,
+              "gain_db": 2.25,
+              "q": 2.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 6000.0,
+              "gain_db": 6.0,
+              "q": 1.0
+            }
+          ]
+        },
+        "t3_tonal_air": {
+          "start_distance": 3.23711,
+          "best_distance": 3.10457,
+          "evaluations": 63,
+          "converged": true,
+          "si_sdr_db": 13.733,
+          "peak": 0.9772,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "PeakFilter.cutoff_frequency_hz",
+            "PeakFilter.gain_db",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "HighShelfFilter.gain_db"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 262.5,
+              "gain_db": 2.25,
+              "q": 2.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 6000.0,
+              "gain_db": 6.0,
+              "q": 1.0
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 3.0,
+              "q": 0.7
+            }
+          ]
+        },
+        "t4_tonal_air_gate": {
+          "start_distance": 3.10457,
+          "best_distance": 3.10457,
+          "evaluations": 40,
+          "converged": true,
+          "si_sdr_db": 13.733,
+          "peak": 0.9772,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "PeakFilter.cutoff_frequency_hz",
+            "PeakFilter.gain_db",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "HighShelfFilter.gain_db"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 262.5,
+              "gain_db": 2.25,
+              "q": 2.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 6000.0,
+              "gain_db": 6.0,
+              "q": 1.0
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 3.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -42.0,
+              "attack_ms": 1.0,
+              "release_ms": 250.0
+            }
+          ]
+        },
+        "t5_full": {
+          "start_distance": 1.89318,
+          "best_distance": 1.83136,
+          "evaluations": 158,
+          "converged": false,
+          "si_sdr_db": 12.545,
+          "peak": 0.8426,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "PeakFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "HighShelfFilter.gain_db"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 200.0,
+              "gain_db": 4.5,
+              "q": 2.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 6000.0,
+              "gain_db": 4.5,
+              "q": 1.0
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 3.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -42.0,
+              "attack_ms": 1.0,
+              "release_ms": 250.0
+            },
+            {
+              "processor": "Compressor",
+              "threshold_db": -13.5,
+              "ratio": 2.3438,
+              "attack_ms": 15.0,
+              "release_ms": 75.0
+            }
+          ]
+        }
+      },
+      "best_template": "t5_full",
+      "best_distance": 1.83136,
+      "closed_pct": 60.627,
+      "required_capability": "t5_full"
+    },
+    {
+      "pair_id": "P-06",
+      "verdict": "partially_matchable",
+      "n_phrases": 30,
+      "champion_actions": 0,
+      "champion_distance": 5.9944,
+      "templates": {
+        "t1_hp_lowmid": {
+          "start_distance": 6.1573,
+          "best_distance": 5.21905,
+          "evaluations": 58,
+          "converged": false,
+          "si_sdr_db": 12.788,
+          "peak": 0.7794,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.q"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 375.0,
+              "gain_db": -3.0,
+              "q": 0.5
+            }
+          ]
+        },
+        "t2_tonal": {
+          "start_distance": 5.21905,
+          "best_distance": 4.54521,
+          "evaluations": 99,
+          "converged": true,
+          "si_sdr_db": 13.092,
+          "peak": 0.6636,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.q"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 600.0,
+              "gain_db": -4.5,
+              "q": 0.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            }
+          ]
+        },
+        "t3_tonal_air": {
+          "start_distance": 4.54521,
+          "best_distance": 4.54521,
+          "evaluations": 36,
+          "converged": true,
+          "si_sdr_db": 13.092,
+          "peak": 0.6636,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 600.0,
+              "gain_db": -4.5,
+              "q": 0.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 0.0,
+              "q": 0.7
+            }
+          ]
+        },
+        "t4_tonal_air_gate": {
+          "start_distance": 4.54533,
+          "best_distance": 4.54521,
+          "evaluations": 97,
+          "converged": true,
+          "si_sdr_db": 13.092,
+          "peak": 0.6636,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "NoiseGate.threshold_db"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 600.0,
+              "gain_db": -4.5,
+              "q": 0.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 0.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -60.0,
+              "attack_ms": 1.0,
+              "release_ms": 250.0
+            }
+          ]
+        },
+        "t5_full": {
+          "start_distance": 3.44162,
+          "best_distance": 3.41347,
+          "evaluations": 111,
+          "converged": true,
+          "si_sdr_db": 13.051,
+          "peak": 0.447,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "NoiseGate.threshold_db",
+            "Compressor.ratio"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 750.0,
+              "gain_db": -4.5,
+              "q": 0.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 0.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -60.0,
+              "attack_ms": 1.0,
+              "release_ms": 250.0
+            },
+            {
+              "processor": "Compressor",
+              "threshold_db": -18.0,
+              "ratio": 4.0,
+              "attack_ms": 15.0,
+              "release_ms": 75.0
+            }
+          ]
+        }
+      },
+      "best_template": "t5_full",
+      "best_distance": 3.41347,
+      "closed_pct": 43.056,
+      "required_capability": "t5_full"
+    },
+    {
+      "pair_id": "P-07",
+      "verdict": "partially_matchable",
+      "n_phrases": 15,
+      "champion_actions": 0,
+      "champion_distance": 2.70842,
+      "templates": {
+        "t1_hp_lowmid": {
+          "start_distance": 3.01683,
+          "best_distance": 1.97524,
+          "evaluations": 54,
+          "converged": false,
+          "si_sdr_db": 12.878,
+          "peak": 0.6819,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 725.0,
+              "gain_db": 3.0,
+              "q": 0.9688
+            }
+          ]
+        },
+        "t2_tonal": {
+          "start_distance": 1.97524,
+          "best_distance": 1.74589,
+          "evaluations": 106,
+          "converged": false,
+          "si_sdr_db": 12.212,
+          "peak": 0.6269,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 650.0,
+              "gain_db": 3.0,
+              "q": 1.3438
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": -3.0,
+              "q": 1.2125
+            }
+          ]
+        },
+        "t3_tonal_air": {
+          "start_distance": 1.74589,
+          "best_distance": 1.74589,
+          "evaluations": 37,
+          "converged": true,
+          "si_sdr_db": 12.212,
+          "peak": 0.6269,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "HighShelfFilter.cutoff_frequency_hz"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 650.0,
+              "gain_db": 3.0,
+              "q": 1.3438
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": -3.0,
+              "q": 1.2125
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 0.0,
+              "q": 0.7
+            }
+          ]
+        },
+        "t4_tonal_air_gate": {
+          "start_distance": 1.74596,
+          "best_distance": 1.7444,
+          "evaluations": 98,
+          "converged": true,
+          "si_sdr_db": 12.206,
+          "peak": 0.6269,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "NoiseGate.release_ms"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 650.0,
+              "gain_db": 3.0,
+              "q": 1.3438
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": -3.0,
+              "q": 1.2125
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 0.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -35.75,
+              "attack_ms": 1.0,
+              "release_ms": 100.0
+            }
+          ]
+        },
+        "t5_full": {
+          "start_distance": 1.78556,
+          "best_distance": 2.00739,
+          "evaluations": 173,
+          "converged": false,
+          "si_sdr_db": 16.546,
+          "peak": 0.5437,
+          "at_bound": [
+            "PeakFilter.cutoff_frequency_hz",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "NoiseGate.release_ms",
+            "Compressor.ratio"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 112.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 200.0,
+              "gain_db": 3.0,
+              "q": 0.875
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 5000.0,
+              "gain_db": -3.0,
+              "q": 1.9625
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 0.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -35.75,
+              "attack_ms": 1.0,
+              "release_ms": 400.0
+            },
+            {
+              "processor": "Compressor",
+              "threshold_db": -18.0,
+              "ratio": 4.0,
+              "attack_ms": 15.0,
+              "release_ms": 75.0
+            }
+          ]
+        }
+      },
+      "best_template": "t4_tonal_air_gate",
+      "best_distance": 1.7444,
+      "closed_pct": 35.593,
+      "required_capability": "t2_tonal"
+    },
+    {
+      "pair_id": "P-08",
+      "verdict": "inconclusive_alignment",
+      "n_phrases": 0
+    },
+    {
+      "pair_id": "P-09",
+      "verdict": "partially_matchable",
+      "n_phrases": 28,
+      "champion_actions": 0,
+      "champion_distance": 4.29816,
+      "templates": {
+        "t1_hp_lowmid": {
+          "start_distance": 4.2971,
+          "best_distance": 4.29267,
+          "evaluations": 38,
+          "converged": true,
+          "si_sdr_db": 14.19,
+          "peak": 0.9772,
+          "at_bound": [],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 105.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            }
+          ]
+        },
+        "t2_tonal": {
+          "start_distance": 4.29267,
+          "best_distance": 4.29267,
+          "evaluations": 30,
+          "converged": true,
+          "si_sdr_db": 14.19,
+          "peak": 0.9772,
+          "at_bound": [],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 105.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            }
+          ]
+        },
+        "t3_tonal_air": {
+          "start_distance": 4.29267,
+          "best_distance": 3.26131,
+          "evaluations": 129,
+          "converged": false,
+          "si_sdr_db": 12.804,
+          "peak": 0.9772,
+          "at_bound": [
+            "PeakFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "HighShelfFilter.gain_db"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 90.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 6000.0,
+              "gain_db": 3.0,
+              "q": 1.0
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 3.0,
+              "q": 0.7
+            }
+          ]
+        },
+        "t4_tonal_air_gate": {
+          "start_distance": 3.26124,
+          "best_distance": 3.26079,
+          "evaluations": 88,
+          "converged": true,
+          "si_sdr_db": 12.803,
+          "peak": 0.9772,
+          "at_bound": [
+            "PeakFilter.cutoff_frequency_hz",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "HighShelfFilter.gain_db",
+            "NoiseGate.threshold_db",
+            "NoiseGate.release_ms"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 90.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 6000.0,
+              "gain_db": 3.0,
+              "q": 1.0
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 3.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -35.0,
+              "attack_ms": 1.0,
+              "release_ms": 100.0
+            }
+          ]
+        },
+        "t5_full": {
+          "start_distance": 3.60757,
+          "best_distance": 2.56722,
+          "evaluations": 154,
+          "converged": false,
+          "si_sdr_db": 7.31,
+          "peak": 0.5425,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.gain_db",
+            "PeakFilter.q",
+            "PeakFilter.cutoff_frequency_hz",
+            "PeakFilter.gain_db",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "HighShelfFilter.gain_db",
+            "NoiseGate.threshold_db",
+            "NoiseGate.release_ms",
+            "Compressor.ratio"
+          ],
+          "final_admissible": false,
+          "final_rejected_for": [
+            "si_sdr"
+          ],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 60.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 725.0,
+              "gain_db": -6.0,
+              "q": 0.5
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 6000.0,
+              "gain_db": 6.0,
+              "q": 2.6875
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 3.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -35.0,
+              "attack_ms": 1.0,
+              "release_ms": 400.0
+            },
+            {
+              "processor": "Compressor",
+              "threshold_db": -18.0,
+              "ratio": 4.0,
+              "attack_ms": 15.0,
+              "release_ms": 75.0
+            }
+          ]
+        }
+      },
+      "best_template": "t4_tonal_air_gate",
+      "best_distance": 3.26079,
+      "closed_pct": 24.135,
+      "required_capability": "t3_tonal_air"
+    },
+    {
+      "pair_id": "P-10",
+      "verdict": "partially_matchable",
+      "n_phrases": 16,
+      "champion_actions": 0,
+      "champion_distance": 7.19721,
+      "templates": {
+        "t1_hp_lowmid": {
+          "start_distance": 6.94744,
+          "best_distance": 6.8973,
+          "evaluations": 38,
+          "converged": true,
+          "si_sdr_db": 13.128,
+          "peak": 0.9772,
+          "at_bound": [],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 105.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            }
+          ]
+        },
+        "t2_tonal": {
+          "start_distance": 6.8973,
+          "best_distance": 6.8973,
+          "evaluations": 30,
+          "converged": true,
+          "si_sdr_db": 13.128,
+          "peak": 0.9772,
+          "at_bound": [],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 105.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            }
+          ]
+        },
+        "t3_tonal_air": {
+          "start_distance": 6.8973,
+          "best_distance": 6.68061,
+          "evaluations": 133,
+          "converged": true,
+          "si_sdr_db": 12.691,
+          "peak": 0.9772,
+          "at_bound": [
+            "HighShelfFilter.cutoff_frequency_hz"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 105.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 2.25,
+              "q": 0.7
+            }
+          ]
+        },
+        "t4_tonal_air_gate": {
+          "start_distance": 6.67792,
+          "best_distance": 6.67792,
+          "evaluations": 46,
+          "converged": true,
+          "si_sdr_db": 12.691,
+          "peak": 0.9772,
+          "at_bound": [
+            "HighShelfFilter.cutoff_frequency_hz"
+          ],
+          "final_admissible": true,
+          "final_rejected_for": [],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 105.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 300.0,
+              "gain_db": 0.0,
+              "q": 0.8
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 3500.0,
+              "gain_db": 0.0,
+              "q": 1.4
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 2.25,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -42.0,
+              "attack_ms": 1.0,
+              "release_ms": 250.0
+            }
+          ]
+        },
+        "t5_full": {
+          "start_distance": 6.72651,
+          "best_distance": 3.94488,
+          "evaluations": 156,
+          "converged": false,
+          "si_sdr_db": 4.886,
+          "peak": 0.4611,
+          "at_bound": [
+            "HighpassFilter.cutoff_frequency_hz",
+            "PeakFilter.gain_db",
+            "PeakFilter.q",
+            "PeakFilter.cutoff_frequency_hz",
+            "PeakFilter.gain_db",
+            "PeakFilter.q",
+            "HighShelfFilter.cutoff_frequency_hz",
+            "HighShelfFilter.gain_db",
+            "NoiseGate.threshold_db",
+            "NoiseGate.release_ms",
+            "Compressor.threshold_db",
+            "Compressor.ratio"
+          ],
+          "final_admissible": false,
+          "final_rejected_for": [
+            "si_sdr"
+          ],
+          "params": [
+            {
+              "processor": "HighpassFilter",
+              "cutoff_frequency_hz": 120.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 525.0,
+              "gain_db": -6.0,
+              "q": 2.0
+            },
+            {
+              "processor": "PeakFilter",
+              "cutoff_frequency_hz": 6000.0,
+              "gain_db": 6.0,
+              "q": 1.0
+            },
+            {
+              "processor": "HighShelfFilter",
+              "cutoff_frequency_hz": 8000.0,
+              "gain_db": 3.0,
+              "q": 0.7
+            },
+            {
+              "processor": "NoiseGate",
+              "threshold_db": -35.0,
+              "attack_ms": 1.0,
+              "release_ms": 400.0
+            },
+            {
+              "processor": "Compressor",
+              "threshold_db": -30.0,
+              "ratio": 1.5,
+              "attack_ms": 15.0,
+              "release_ms": 75.0
+            }
+          ]
+        }
+      },
+      "best_template": "t4_tonal_air_gate",
+      "best_distance": 6.67792,
+      "closed_pct": 7.215,
+      "required_capability": "t3_tonal_air"
+    }
+  ]
+}

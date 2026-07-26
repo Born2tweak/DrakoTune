@@ -184,6 +184,59 @@ Two honest caveats visible in the same result:
 
 Remaining pairs are still being measured; this section covers P-01 only.
 
+> **F-8 is superseded by F-9.** Run `20260726-064149-search` was itself measured
+> with a leaky guard (below), and P-01's re-measurement under the repaired one
+> reaches +32.8% by a *different* chain — the low-mid bell is unused again, so the
+> "gentle mud cut at exactly 300 Hz" reading above does **not** survive. The
+> ~43%-was-gaming conclusion does survive.
+
+## Repaired guard, whole corpus (2026-07-26) — F-9
+
+The guard that made F-8's numbers trustworthy was enforced on a proxy it did not
+match (N-019): the 12 dB SI-SDR floor was *scored* during the search on one centred
+30 s window and only *reported* on the full signal. Two winners of run
+`20260726-064149-search` passed the window and reported **7.3 dB and 4.9 dB**
+full-signal, so 2 of 7 pairs in that aggregate did not satisfy the contract they
+were published under. The estimate is now the worst of five spaced windows and the
+winner is re-checked on the full signal.
+
+Re-run `20260726-131308-search`, all seven valid pairs, every winner verified
+admissible on the full signal:
+
+| pair | leaky guard | **repaired guard** | required capability (leaky → repaired) |
+|---|--:|--:|---|
+| P-01 | +35.2% | **+32.8%** | t5_full → t5_full |
+| P-02 | +16.5% | **+21.7%** | t5_full → t5_full |
+| P-05 | +62.8% | **+60.6%** | t5_full → t5_full |
+| P-06 | +50.7% | **+43.1%** | t5_full → t5_full |
+| P-07 | +36.0% | **+35.6%** | t2_tonal → t2_tonal |
+| P-09 | +40.3% | **+24.1%** | t5_full → **t3_tonal_air** |
+| P-10 | +45.2% | **+7.2%** | t5_full → **t3_tonal_air** |
+
+Median **+32.8%** (was +40.3%), mean **+32.2%**, bootstrap 95% CI
+**+20.6% .. +44.1%** — still excluding zero. Pairs closing ≥10%: **6** of 7;
+P-10 drops below that line.
+
+**The two pairs that moved are exactly the two that had violated the floor.** Their
+compressor gain was bought with preservation loss the guard was supposed to forbid,
+and with it forbidden both of them stop needing the compressor at all: their
+required capability falls from the full chain to tonal EQ plus air. This is direct
+evidence for the F-8 suspicion that "dynamics matter" was partly an artifact — on
+2 of 7 pairs it was.
+
+What holds after the repair:
+- Every one of the 7 winners now sits at **12.2–13.4 dB SI-SDR** — just above the
+  floor. The floor is binding on every pair, and N-019 showed the same floor
+  rejects an honest −4 dB low-mid cut. **So +32.8% is a lower bound on what an
+  admissible chain reaches, not an estimate of it.**
+- The champion applied **0 actions on 6 of 7** pairs (1 action on P-05). The
+  abstention measurement from N-015 is untouched by any of this.
+- 4 of 7 still require the full chain; 2 require tonal + air; 1 requires tonal only.
+
+What does **not** hold: any per-pair chain description from F-8, and any claim that
+the guards are what prevent destructive solutions — the admissible *bounds* are
+(N-019).
+
 ## What this does NOT show
 
 Not that DrakoTune's processors are good or bad (they barely ran); not any

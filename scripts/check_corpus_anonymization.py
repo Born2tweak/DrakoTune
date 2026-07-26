@@ -34,6 +34,7 @@ GUARDED = (
     "reports/evaluations/paired-corpus/gap_report_anonymized.json",
     "reports/evaluations/paired-corpus/oracle_report_anonymized.json",
     "reports/evaluations/paired-corpus/oracle_report_anonymized.md",
+    "reports/evaluations/paired-corpus/search_report_admissible_anonymized.json",
     "AURELIAN/00_CONTROL/NEGATIVE_RESULTS.md",
     "AURELIAN/02_RESEARCH/DT77_IMPROVEMENT_BRIEF.md",
 )
