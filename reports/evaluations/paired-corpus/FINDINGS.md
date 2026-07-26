@@ -136,6 +136,15 @@ what it engages (F-1) and what its specs permit (F-7) — not to absent DSP.
 5 of 6 pairs needed the full chain including gate and compressor; 1 needed only
 tonal EQ + air.
 
+**Reproducibility scope (measured, not assumed).** The search is deterministic
+*within one environment*: the instrumented re-run reproduced P-01 bit-identically
+(champion 2.834 → 1.074, +62.1%). It is **not** reproducible across environments:
+on CI (Linux/py3.12) a surrogate recovery case reached a different optimum from an
+identical starting distance (2.219 vs 1.057 here), i.e. greedy coordinate descent
+is path-sensitive and the path depends on the numpy/pedalboard build. The
+*direction and magnitude class* of F-7 is robust; the exact percentages are
+environment-bound and must be cited with the run id, not treated as constants.
+
 **What F-7 does not show:** that the planner can *find* these settings from the
 raw audio alone. The oracle is given the wet target; the planner is not. That is
 the burden of proof for any A-1/A-2 experiment, on held-out artists.
