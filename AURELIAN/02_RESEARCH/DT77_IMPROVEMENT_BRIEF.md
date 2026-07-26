@@ -9,6 +9,24 @@ promoted here, and promotion of any audible DSP change is a human-only gate
 F-1, F-4…F-7. All of it is directional, single-artist, lossy-MP3 and does **not**
 satisfy DEF-003. It ranks *where to look*; it establishes no perceptual claim.
 
+> ## ⚠ N-018 (2026-07-26): the numbers below are measured with a discredited objective
+>
+> The per-template parameters of the registry-safe search show it won by
+> **highpassing a rap vocal at 330 Hz** and **compressing at 20:1** (ratio pinned to
+> its maximum), with the low-mid bell left at 0.0 dB — safe to render, destructive
+> as audio. CI reproduced the same pathology from the other direction, choosing a
+> **+9 dB boost** where the truth was a −8 dB cut and still scoring 47%.
+>
+> **Retracted:** that ~46% of the champion→wet *quality* gap is recoverable with
+> existing processors, and that the planner's specs are what withhold it.
+> **Still standing:** that the registry can reduce the composite *distance* — which
+> now says more about the metric than the registry.
+>
+> The objective has since been corrected (admissible bounds, 12 dB preservation
+> floor, over-compression guard, adversarial regression tests), and the corpus is
+> being re-measured. **Treat every percentage in this section as superseded
+> pending that re-run.** Priorities below are ordered by what survives N-018.
+
 ## The finding that reorganised this brief (N-017)
 
 Three probes measured the same corpus with progressively wider search spaces.
@@ -126,16 +144,24 @@ implemented and a residual gap survives a full registry-safe search.
 
 ## Priority order (by measured impact)
 
-1. **A-1 + A-2 together** — engagement and spec range are coupled; each alone
-   saturates against the other. This is where the entire measured +46% lives.
-2. **A-3** bidirectional tonal objectives — cheap, and it is what four pairs
-   actually wanted.
-3. **C-4** a perceptually grounded target — without it, further optimisation
-   improves a number of unproven meaning.
-4. **A-4** dynamics, once per-capability attribution lands.
+0. **C-4 — a target that cannot be won by a bad answer. BLOCKING.** N-018 showed
+   the objective was gameable, so nothing measured with it supports a capability,
+   calibration or quality conclusion. The first correction has landed (admissible
+   bounds + preservation guards + adversarial tests); the open part is a target
+   with genuine *perceptual* grounding rather than spectral-distance-plus-guards.
+   Everything below is contingent on this.
+1. **Re-measure the corpus** under the corrected objective and re-derive A-1/A-2's
+   effect sizes. Until then their magnitudes are unknown, not merely uncertain.
+2. **A-1 + A-2 together** — engagement and spec range are coupled; each alone
+   saturates against the other. The *direction* survives N-018 (the champion does
+   abstain, and the specs are narrower than the registry); the *size* does not.
+3. **A-3** bidirectional tonal objectives — the registry can boost and no planner
+   objective asks it to. Cheap and independent of the metric question.
+4. **A-4** dynamics — note N-018 makes this suspect: the compressor was also the
+   metric's favourite exploit, so "dynamics matter" may be an artifact.
 5. **A-5** sibilance floor (N-014 constraints).
 6. **C-3, C-5** corpus recovery and ordering.
-7. ~~Track B~~ — withdrawn; no evidence.
+7. ~~Track B~~ — withdrawn; no evidence, and now less than none.
 
 ## Standing constraints
 

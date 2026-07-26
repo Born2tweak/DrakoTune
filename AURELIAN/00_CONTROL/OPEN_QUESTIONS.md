@@ -17,5 +17,6 @@
 | Q-013 | Evaluation reference | Which tasks legitimately admit a clean/reference signal, and which require blinded preference or defect judgments? | Research lead | DT-47 |
 | Q-014 | Genre strata | ~~Which rap/pop subgenres, vocal presentations, languages, and recording conditions are launch-critical?~~ **RESOLVED 2026-07-23 (D-028): owner accepted the recommended set** (rap/melodic_rap/pop · spoken_rapped/melodic · english · home_untreated/plosive_prone/sibilant_prone). Example-annotation reliability report deferred to first real annotation. | Product owner + audio lead | DT-54 |
 | Q-015 | Reproducibility | Will the project adopt locked Python environments and reproducible FFmpeg binaries per platform? | Engineering owner | DT-50 |
+| Q-016 | Oracle/optimisation target | What objective may an automated search optimise against a wet reference? N-018 showed a 5-axis spectral composite with a 5 dB SI-SDR floor is won by a destructive chain (330 Hz highpass + 20:1 compression). Admissible bounds and preservation guards are a stopgap; does a defensible target need perceptual grounding, and of what kind? | Research lead + audio lead | DT-77 |
 
 Questions that alter scope, legal posture, spending, claim language, or distribution are never auto-resolved.
