@@ -228,6 +228,255 @@ def run_oracle(pairs: list[dict], src_folder: Path, out_dir: Path,
           f"{agg.median_improvement_pct:+.2f}%, abstention {agg.abstention_rate:.0%}")
 
 
+def _search_markdown(rows: list[dict], template_names: list[str], summary: dict) -> str:
+    lines = [
+        "# DT-55E Track C — bounded oracle search (capability ablation)", "",
+        "Authorization D-029 (local/internal/eval-only). **Diagnostic only.**",
+        "Deterministic coordinate descent inside the **processor registry's own",
+        "safe ranges** (`clamp_params` enforced) — a much wider space than the",
+        "planner's strength mapping, which caps the muddiness cut at −4.0 dB while",
+        "`PeakFilter` permits −12..+12 dB (i.e. boosting too).", "",
+        "Each template adds one capability. The distance a template REACHES is the",
+        "evidence for which capability a pair needs. A candidate must hold the",
+        "−0.2 dBFS ceiling, zero clipping, and SI-SDR ≥ 5 dB against the raw —",
+        "spectral closeness bought by destroying the performance is rejected.", "",
+        "| pair | champ→wet | " + " | ".join(f"{n}" for n in template_names)
+        + " | best | closed | required capability |",
+        "|---|--:|" + "--:|" * len(template_names) + "---|--:|---|",
+    ]
+    for r in rows:
+        if "error" in r:
+            lines.append(f"| {r['pair_id']} | error: {r['error'][:40]} |"
+                         + " |" * (len(template_names) + 3))
+            continue
+        if "templates" not in r:
+            lines.append(f"| {r['pair_id']} | {r.get('verdict','—')} |"
+                         + " |" * (len(template_names) + 3))
+            continue
+        cells = []
+        for name in template_names:
+            d = r["templates"].get(name, {}).get("best_distance")
+            cells.append("—" if d is None else ("inf" if d == float("inf") else f"{d:.3f}"))
+        lines.append(
+            f"| {r['pair_id']} | {r['champion_distance']:.3f} | " + " | ".join(cells)
+            + f" | {r['best_template']} | {r['closed_pct']:+.1f}% "
+            + f"| {r['required_capability']} |")
+    lines += [
+        "", "## What each template adds", "",
+        "- `t1_hp_lowmid` — highpass + one bidirectional low-mid bell",
+        "- `t2_tonal` — adds a second bidirectional bell in the 2.5–5 kHz region",
+        "- `t3_tonal_air` — adds a high shelf (air)",
+        "- `t4_tonal_air_gate` — adds a **searched** NoiseGate threshold (Track C-1:"
+        " the planner's gate spec is strength-invariant, so denoising had only ever"
+        " been tested at −42 dB)",
+        "- `t5_full` — adds a compressor (threshold, ratio)", "",
+        "## Aggregate", "",
+        f"- pairs searched: **{summary['n_pairs']}**",
+        f"- median distance closed vs champion: **{summary['median_closed_pct']:+.2f}%**",
+        f"- mean: **{summary['mean_closed_pct']:+.2f}%** "
+        f"(bootstrap 95% CI {summary['ci95'][0]:+.2f}% .. {summary['ci95'][1]:+.2f}%)",
+        f"- pairs closing ≥10%: **{summary['n_closed_10pct']}** of {summary['n_pairs']}",
+        "", "### Required capability (smallest template within 2% of the best)", "",
+    ]
+    lines += [f"- `{k}`: {v}" for k, v in summary["required_capability_counts"].items()]
+    lines += ["", "### Parameters resting on a registry safe-range edge", ""]
+    lines += ([f"- `{k}`: {v}" for k, v in summary["at_bound_counts"].items()]
+              or ["- (none — the registry's ranges were not the binding constraint)"])
+    return "\n".join(lines) + "\n"
+
+
+def run_search(pairs: list[dict], src_folder: Path, out_dir: Path,
+               passes: int, points: int, max_evals: int, max_phrases: int) -> None:
+    """DT-55E Track C: coordinate descent over registry-safe ranges, per template."""
+    from src.paired_corpus.oracle import _bootstrap_ci
+    from src.paired_corpus.search import (
+        TEMPLATES, ablate, build_target, composite_distance,
+    )
+
+    template_names = [c.name for c in TEMPLATES]
+    rows: list[dict] = []
+    # Long searches must survive interruption: each pair's row is flushed as soon
+    # as it completes, so a killed run still yields the pairs it finished.
+    partial = out_dir / "partial_results.jsonl"
+    for i, pair in enumerate(pairs):
+        pid = f"P-{i+1:02d}"
+        t0 = time.time()
+        try:
+            raw_wav = decode(src_folder / pair["raw"]["filename"], pair["raw"]["sha256"])
+            wet_wav = decode(src_folder / pair["wet"]["filename"], pair["wet"]["sha256"])
+            raw, wet = load(raw_wav), load(wet_wav)
+            ev = classify_pair(raw, wet, SR)
+            if ev.verdict in ("incorrect_pair", "unusable"):
+                rows.append({"pair_id": pid, "verdict": ev.verdict})
+                print(f"[{i+1}/{len(pairs)}] {pid}: {ev.verdict} (not searched)", flush=True)
+                continue
+            amap = align_pair(raw, wet, SR)
+            target = build_target(wet, amap, max_phrases=max_phrases)
+            if target.n_phrases < 3:
+                rows.append({"pair_id": pid, "verdict": "inconclusive_alignment",
+                             "n_phrases": target.n_phrases})
+                print(f"[{i+1}/{len(pairs)}] {pid}: inconclusive_alignment "
+                      f"({target.n_phrases} phrases)", flush=True)
+                continue
+            champ, champ_actions = champion_render(raw_wav)
+            champ_d = composite_distance(champ, target)
+            results = ablate(raw, target, passes=passes, points=points,
+                             max_evaluations=max_evals)
+            per_template = {
+                r.chain_name: {
+                    "start_distance": r.start_distance, "best_distance": r.best_distance,
+                    "evaluations": r.evaluations, "converged": r.converged,
+                    "si_sdr_db": r.si_sdr_db, "peak": r.peak,
+                    "at_bound": list(r.at_bound),
+                    "params": [{"processor": s.processor, **s.params}
+                               for s in r.best_chain.slots],
+                } for r in results
+            }
+            best = min(results, key=lambda r: r.best_distance)
+            # Smallest template that gets within 2% of the best = the capability
+            # actually required; anything richer is not earning its complexity.
+            required = next(
+                (r.chain_name for r in results
+                 if r.best_distance <= best.best_distance * 1.02), best.chain_name)
+            closed = ((champ_d - best.best_distance) / champ_d * 100.0
+                      if champ_d and np.isfinite(champ_d) and champ_d > 0 else 0.0)
+            rows.append({
+                "pair_id": pid, "verdict": ev.verdict, "n_phrases": target.n_phrases,
+                "champion_actions": champ_actions,
+                "champion_distance": champ_d,
+                "templates": per_template,
+                "best_template": best.chain_name,
+                "best_distance": best.best_distance,
+                "closed_pct": round(closed, 3),
+                "required_capability": required,
+            })
+            print(f"[{i+1}/{len(pairs)}] {pid}: champ {champ_d:.3f} -> "
+                  f"{best.best_distance:.3f} ({closed:+.1f}%) via {best.chain_name}; "
+                  f"required {required} ({time.time()-t0:.0f}s)", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            rows.append({"pair_id": pid, "error": str(exc)})
+            print(f"[{i+1}/{len(pairs)}] {pid}: ERROR {exc}", flush=True)
+        with partial.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(rows[-1], default=str) + "\n")
+
+    searched = [r for r in rows if "templates" in r]
+    closed_vals = [r["closed_pct"] for r in searched]
+    req_counts: dict[str, int] = {}
+    bound_counts: dict[str, int] = {}
+    for r in searched:
+        req_counts[r["required_capability"]] = req_counts.get(r["required_capability"], 0) + 1
+        for name in r["templates"][r["best_template"]]["at_bound"]:
+            bound_counts[name] = bound_counts.get(name, 0) + 1
+    summary = {
+        "n_pairs": len(searched),
+        "median_closed_pct": round(float(np.median(closed_vals)), 3) if closed_vals else 0.0,
+        "mean_closed_pct": round(float(np.mean(closed_vals)), 3) if closed_vals else 0.0,
+        "ci95": list(_bootstrap_ci(closed_vals)),
+        "n_closed_10pct": sum(1 for v in closed_vals if v >= 10.0),
+        "required_capability_counts": dict(sorted(req_counts.items())),
+        "at_bound_counts": dict(sorted(bound_counts.items(), key=lambda kv: -kv[1])),
+    }
+    payload = {
+        "authorization": "D-029 (local/internal/eval-only)",
+        "method": "deterministic coordinate descent over PROCESSORS safe_ranges; "
+                  "capability ablation across templates; SI-SDR>=5 dB preservation "
+                  "floor and -0.2 dBFS ceiling enforced",
+        "budget": {"passes": passes, "points": points, "max_evaluations": max_evals,
+                   "max_phrases": max_phrases},
+        "limitation": "Diagnostic only; NO threshold tuned, NO promotion, NO claim; "
+                      "lossy sources; distance is not perceptual quality.",
+        "summary": summary, "results": rows,
+    }
+    (out_dir / "search_report_anonymized.json").write_text(
+        json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    (out_dir / "search_report.md").write_text(
+        _search_markdown(rows, template_names, summary), encoding="utf-8")
+    print("required capability:", json.dumps(summary["required_capability_counts"]))
+    print(f"median closed {summary['median_closed_pct']:+.2f}%, "
+          f"{summary['n_closed_10pct']}/{summary['n_pairs']} pairs >=10%")
+
+
+def run_ordering(pairs: list[dict], src_folder: Path, out_dir: Path,
+                 passes: int, points: int, max_evals: int, max_phrases: int) -> None:
+    """Does processor ORDER matter, and is the documented professional order best?
+
+    Each predeclared ordering of the full chain gets its own coordinate descent,
+    because parameters and order interact — comparing orderings at fixed
+    parameters would measure the parameters, not the order.
+    """
+    from src.paired_corpus.search import (
+        TEMPLATES_BY_NAME, build_target, composite_distance, coordinate_descent,
+        ordering_variants,
+    )
+
+    rows: list[dict] = []
+    for i, pair in enumerate(pairs):
+        pid = f"P-{i+1:02d}"
+        t0 = time.time()
+        try:
+            raw_wav = decode(src_folder / pair["raw"]["filename"], pair["raw"]["sha256"])
+            wet_wav = decode(src_folder / pair["wet"]["filename"], pair["wet"]["sha256"])
+            raw, wet = load(raw_wav), load(wet_wav)
+            ev = classify_pair(raw, wet, SR)
+            if ev.verdict in ("incorrect_pair", "unusable"):
+                rows.append({"pair_id": pid, "verdict": ev.verdict})
+                continue
+            amap = align_pair(raw, wet, SR)
+            target = build_target(wet, amap, max_phrases=max_phrases)
+            if target.n_phrases < 3:
+                rows.append({"pair_id": pid, "verdict": "inconclusive_alignment"})
+                continue
+            champ, _ = champion_render(raw_wav)
+            champ_d = composite_distance(champ, target)
+            per_order = {}
+            for chain in ordering_variants(TEMPLATES_BY_NAME["t5_full"]):
+                label = chain.name.split("|")[1]
+                r = coordinate_descent(raw, chain, target, passes=passes,
+                                       points=points, max_evaluations=max_evals)
+                per_order[label] = {
+                    "best_distance": r.best_distance, "si_sdr_db": r.si_sdr_db,
+                    "evaluations": r.evaluations, "at_bound": list(r.at_bound),
+                }
+            best_label = min(per_order, key=lambda k: per_order[k]["best_distance"])
+            spread = (max(v["best_distance"] for v in per_order.values())
+                      - min(v["best_distance"] for v in per_order.values()))
+            rows.append({
+                "pair_id": pid, "champion_distance": champ_d, "orderings": per_order,
+                "best_ordering": best_label,
+                "spread": round(spread, 5),
+                "spread_pct_of_best": round(
+                    spread / per_order[best_label]["best_distance"] * 100.0, 3)
+                if per_order[best_label]["best_distance"] else 0.0,
+            })
+            print(f"[{i+1}/{len(pairs)}] {pid}: best order {best_label}, "
+                  f"spread {spread:.3f} ({time.time()-t0:.0f}s)", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            rows.append({"pair_id": pid, "error": str(exc)})
+            print(f"[{i+1}/{len(pairs)}] {pid}: ERROR {exc}", flush=True)
+
+    scored = [r for r in rows if "orderings" in r]
+    wins: dict[str, int] = {}
+    for r in scored:
+        wins[r["best_ordering"]] = wins.get(r["best_ordering"], 0) + 1
+    spreads = [r["spread_pct_of_best"] for r in scored]
+    payload = {
+        "authorization": "D-029 (local/internal/eval-only)",
+        "method": "one independent coordinate descent per predeclared ordering "
+                  "(order and parameters interact)",
+        "limitation": "Diagnostic only; no promotion, no perceptual claim.",
+        "summary": {
+            "n_pairs": len(scored), "ordering_wins": dict(sorted(wins.items())),
+            "median_spread_pct": round(float(np.median(spreads)), 3) if spreads else 0.0,
+            "max_spread_pct": round(float(np.max(spreads)), 3) if spreads else 0.0,
+        },
+        "results": rows,
+    }
+    (out_dir / "ordering_report_anonymized.json").write_text(
+        json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    print("ordering wins:", json.dumps(payload["summary"]["ordering_wins"]))
+    print(f"median spread {payload['summary']['median_spread_pct']:.2f}% of best")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None)
@@ -235,7 +484,39 @@ def main() -> int:
     ap.add_argument("--sweep", action="store_true",
                     help="search the existing safe parameter space (strength grid) "
                          "instead of a single fixed point")
+    ap.add_argument("--search", action="store_true",
+                    help="DT-55E Track C: coordinate descent over registry-safe "
+                         "ranges with capability ablation")
+    ap.add_argument("--passes", type=int, default=3)
+    ap.add_argument("--points", type=int, default=5)
+    ap.add_argument("--max-evals", type=int, default=250)
+    ap.add_argument("--max-phrases", type=int, default=30)
+    ap.add_argument("--ordering", action="store_true",
+                    help="measure whether processor ORDER matters (predeclared orders)")
     args = ap.parse_args()
+    if args.ordering:
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        pairs = build_pairs(manifest, authorized_files(manifest))
+        if args.limit:
+            pairs = pairs[: args.limit]
+        out_dir = REPORTS / (time.strftime("%Y%m%d-%H%M%S") + "-ordering")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        run_ordering(pairs, Path(manifest["source_folder"]), out_dir,
+                     args.passes, args.points, args.max_evals, args.max_phrases)
+        print(f"wrote {out_dir}")
+        return 0
+    if args.search:
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        allowed = authorized_files(manifest)
+        pairs = build_pairs(manifest, allowed)
+        if args.limit:
+            pairs = pairs[: args.limit]
+        out_dir = REPORTS / (time.strftime("%Y%m%d-%H%M%S") + "-search")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        run_search(pairs, Path(manifest["source_folder"]), out_dir,
+                   args.passes, args.points, args.max_evals, args.max_phrases)
+        print(f"wrote {out_dir}")
+        return 0
     if args.oracle:
         from src.paired_corpus.oracle import STRENGTH_SWEEP
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
