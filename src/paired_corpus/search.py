@@ -195,6 +195,39 @@ LEGACY_TEMPLATES: tuple[Chain, ...] = _ladder(admissible=False)
 LEGACY_TEMPLATES_BY_NAME = {c.name: c for c in LEGACY_TEMPLATES}
 
 
+def contract(templates: tuple[Chain, ...] = TEMPLATES) -> dict:
+    """The space and guards a run actually enforced, as data.
+
+    N-018 landed because a report *described* a contract the code no longer ran
+    (registry-only space, 5 dB floor) while the code enforced another. Reports are
+    evidence; a report that misstates its own method is worse than no report. Every
+    generated artifact therefore takes its method text from here, and
+    `tests/test_oracle_search.py` asserts the two cannot drift apart.
+    """
+    admissible = any(slot.bounds for c in templates for slot in c.slots)
+    return {
+        "space": "admissible" if admissible else "registry_safe_only",
+        "space_note": (
+            "registry `safe_ranges` INTERSECTED with plausible-vocal bounds cited "
+            "from docs/research/ (never fitted to the corpus)"
+            if admissible else
+            "registry `safe_ranges` only — the N-018-discredited space, retained "
+            "solely to reproduce superseded runs; not capability or quality evidence"
+        ),
+        "si_sdr_floor_db": SI_SDR_FLOOR_DB,
+        "crest_floor_db": CREST_FLOOR_DB,
+        "max_crest_loss_db": MAX_CREST_LOSS_DB,
+        "ceiling_dbfs": round(20.0 * float(np.log10(CEILING)), 2),
+        "clipping_allowed": False,
+        "templates": [c.name for c in templates],
+        "objective": (
+            "mean scaled |wet − candidate| over aligned phrases on "
+            f"{', '.join(AXES)} — a spectral/dynamics distance to a lossy wet "
+            "reference, NOT perceptual quality (Q-016 open)"
+        ),
+    }
+
+
 def chain_to_plan(chain: Chain) -> ProcessingPlan:
     actions = tuple(
         ProcessingAction(
@@ -314,21 +347,32 @@ def _crest_db(x: np.ndarray) -> float:
     return 20.0 * float(np.log10(peak / rms))
 
 
-# SI-SDR over a whole take costs about as much as the render itself. During the
-# search it is estimated on one fixed, centred window; the reported result is
-# always recomputed over the full signal. The window is deterministic, so the
-# search is still reproducible.
+# SI-SDR over a whole take costs about as much as the render itself (measured:
+# ~86%), so the search estimates it on windows and the reported result recomputes
+# it over the full signal.
+#
+# **A single centred window was not a safe estimate.** On the 2026-07-26 corpus run
+# two winners passed the search's centred-window estimate and then reported 7.3 dB
+# and 4.9 dB full-signal — under a floor declared at 12 dB. A guard measured on a
+# proxy that disagrees with the reported metric is not a guard. The estimate is now
+# the MINIMUM over several evenly spaced windows, which tracks the worst-behaved
+# part of a take instead of whatever the middle happens to contain, and
+# `coordinate_descent` additionally re-checks its winner on the full signal and
+# fails closed.
 SI_SDR_WINDOW_S = 30.0
+SI_SDR_WINDOWS = 5
 
 
 def _preservation_db(raw: np.ndarray, audio: np.ndarray, full: bool) -> float:
+    """Worst-case SI-SDR estimate (dB). `full` measures the whole signal exactly."""
     n = min(len(audio), len(raw))
-    if not full and n > int(SI_SDR_WINDOW_S * SR):
-        width = int(SI_SDR_WINDOW_S * SR)
-        start = (n - width) // 2
-        sl = slice(start, start + width)
-        return float(si_sdr(raw[sl], audio[sl]))
-    return float(si_sdr(raw[:n], audio[:n]))
+    width = int(SI_SDR_WINDOW_S * SR)
+    if full or n <= width:
+        return float(si_sdr(raw[:n], audio[:n]))
+    # Deterministic, evenly spaced, non-overlapping-where-possible windows.
+    starts = np.linspace(0, n - width, SI_SDR_WINDOWS).round().astype(int)
+    return min(float(si_sdr(raw[s:s + width], audio[s:s + width]))
+               for s in dict.fromkeys(starts.tolist()))
 
 
 def evaluate(raw: np.ndarray, chain: Chain, target: WetTarget,
@@ -379,7 +423,12 @@ class SearchResult:
     converged: bool
     si_sdr_db: float
     peak: float
-    at_bound: tuple[str, ...]      # params resting on a registry safe-range edge
+    at_bound: tuple[str, ...]      # params resting on an effective search edge
+    # Full-signal re-check of the winner. The search scores candidates on a
+    # windowed SI-SDR estimate; if the exact measurement disagrees, the winner is
+    # NOT admissible and must not be reported as one (fail closed).
+    final_admissible: bool = True
+    final_rejected_for: tuple[str, ...] = ()
 
 
 def _axis_values(lo: float, hi: float, current: float, span: float,
@@ -393,7 +442,8 @@ def _axis_values(lo: float, hi: float, current: float, span: float,
 
 def coordinate_descent(raw: np.ndarray, chain: Chain, target: WetTarget,
                        passes: int = 3, points: int = 5,
-                       max_evaluations: int = 400) -> SearchResult:
+                       max_evaluations: int = 400,
+                       si_sdr_floor_db: float = SI_SDR_FLOOR_DB) -> SearchResult:
     """Deterministic coordinate descent inside the registry's safe ranges.
 
     One coordinate at a time, contracting the search span each pass. No RNG, so
@@ -401,7 +451,7 @@ def coordinate_descent(raw: np.ndarray, chain: Chain, target: WetTarget,
     to count as evidence.
     """
     best = chain
-    base = evaluate(raw, chain, target)
+    base = evaluate(raw, chain, target, si_sdr_floor_db=si_sdr_floor_db)
     best_score, start = base.penalized, base.distance
     evals, converged = 1, False
     coords = [(i, key) for i, slot in enumerate(chain.slots) for key in slot.search]
@@ -422,7 +472,8 @@ def coordinate_descent(raw: np.ndarray, chain: Chain, target: WetTarget,
                 params[key] = value
                 slots[slot_i] = replace(slots[slot_i], params=params)
                 cand = Chain(best.name, tuple(slots))
-                score = evaluate(raw, cand, target).penalized
+                score = evaluate(raw, cand, target,
+                                 si_sdr_floor_db=si_sdr_floor_db).penalized
                 evals += 1
                 if score < best_score - 1e-9:
                     best, best_score, improved = cand, score, True
@@ -431,7 +482,8 @@ def coordinate_descent(raw: np.ndarray, chain: Chain, target: WetTarget,
             converged = True
             break
 
-    final = evaluate(raw, best, target, full_si_sdr=True)
+    final = evaluate(raw, best, target, full_si_sdr=True,
+                     si_sdr_floor_db=si_sdr_floor_db)
     at_bound = []
     for slot_i, key in coords:
         lo, hi = best.slots[slot_i].range_for(key)
@@ -443,6 +495,7 @@ def coordinate_descent(raw: np.ndarray, chain: Chain, target: WetTarget,
         start_distance=start, evaluations=evals, passes=min(p + 1, passes),
         converged=converged, si_sdr_db=final.si_sdr_db, peak=final.peak,
         at_bound=tuple(at_bound),
+        final_admissible=final.safe, final_rejected_for=final.rejected_for,
     )
 
 

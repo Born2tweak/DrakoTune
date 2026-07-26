@@ -228,18 +228,30 @@ def run_oracle(pairs: list[dict], src_folder: Path, out_dir: Path,
           f"{agg.median_improvement_pct:+.2f}%, abstention {agg.abstention_rate:.0%}")
 
 
-def _search_markdown(rows: list[dict], template_names: list[str], summary: dict) -> str:
+def _search_markdown(rows: list[dict], template_names: list[str], summary: dict,
+                     contract: dict) -> str:
+    space_line = (
+        "Deterministic coordinate descent inside the **admissible** space — the "
+        "registry's `safe_ranges` intersected with plausible-vocal bounds cited from "
+        "`docs/research/` (N-018: safe-to-render is not the same question as "
+        "plausible-treatment)."
+        if contract["space"] == "admissible" else
+        "Deterministic coordinate descent inside the registry's `safe_ranges` **only** "
+        "— the N-018-discredited space, kept to reproduce superseded runs. Not "
+        "capability or quality evidence."
+    )
     lines = [
         "# DT-55E Track C — bounded oracle search (capability ablation)", "",
         "Authorization D-029 (local/internal/eval-only). **Diagnostic only.**",
-        "Deterministic coordinate descent inside the **processor registry's own",
-        "safe ranges** (`clamp_params` enforced) — a much wider space than the",
-        "planner's strength mapping, which caps the muddiness cut at −4.0 dB while",
-        "`PeakFilter` permits −12..+12 dB (i.e. boosting too).", "",
+        space_line, "",
         "Each template adds one capability. The distance a template REACHES is the",
-        "evidence for which capability a pair needs. A candidate must hold the",
-        "−0.2 dBFS ceiling, zero clipping, and SI-SDR ≥ 5 dB against the raw —",
-        "spectral closeness bought by destroying the performance is rejected.", "",
+        "evidence for which capability a pair needs. A candidate is rejected unless it",
+        f"holds the {contract['ceiling_dbfs']:.1f} dBFS ceiling, zero clipping, "
+        f"SI-SDR ≥ {contract['si_sdr_floor_db']:.0f} dB against the raw, crest ≥ "
+        f"{contract['crest_floor_db']:.0f} dB and crest loss ≤ "
+        f"{contract['max_crest_loss_db']:.0f} dB — spectral closeness bought by",
+        "destroying the performance is rejected.", "",
+        f"Objective: {contract['objective']}", "",
         "| pair | champ→wet | " + " | ".join(f"{n}" for n in template_names)
         + " | best | closed | required capability |",
         "|---|--:|" + "--:|" * len(template_names) + "---|--:|---|",
@@ -279,27 +291,41 @@ def _search_markdown(rows: list[dict], template_names: list[str], summary: dict)
         "", "### Required capability (smallest template within 2% of the best)", "",
     ]
     lines += [f"- `{k}`: {v}" for k, v in summary["required_capability_counts"].items()]
-    lines += ["", "### Parameters resting on a registry safe-range edge", ""]
+    lines += ["", "### Parameters resting on an effective search bound", "",
+              "The bound is the narrower of admissible and registry-safe. A winner "
+              "sitting ON a bound means the objective wanted to go further than the "
+              "bound allows: the measured gap closure is a floor, and the direction "
+              "the metric is pulling is itself evidence about the metric.", ""]
     lines += ([f"- `{k}`: {v}" for k, v in summary["at_bound_counts"].items()]
-              or ["- (none — the registry's ranges were not the binding constraint)"])
+              or ["- (none — no bound was the binding constraint)"])
     return "\n".join(lines) + "\n"
 
 
 def run_search(pairs: list[dict], src_folder: Path, out_dir: Path,
                passes: int, points: int, max_evals: int, max_phrases: int,
                only: tuple[str, ...] = ()) -> None:
-    """DT-55E Track C: coordinate descent over registry-safe ranges, per template."""
-    from src.paired_corpus.oracle import _bootstrap_ci
+    """DT-55E Track C: coordinate descent over the admissible space, per template."""
     from src.paired_corpus.search import (
         TEMPLATES, TEMPLATES_BY_NAME, ablate, build_target, composite_distance,
     )
+    from src.paired_corpus.search import contract as search_contract
 
     templates = tuple(TEMPLATES_BY_NAME[n] for n in only) if only else TEMPLATES
     template_names = [c.name for c in templates]
+    contract = search_contract(templates)
     rows: list[dict] = []
-    # Long searches must survive interruption: each pair's row is flushed as soon
-    # as it completes, so a killed run still yields the pairs it finished.
+    # Long searches must survive interruption: EVERY pair's row is flushed as soon
+    # as it is decided, so a killed run still yields the pairs it finished. Rows for
+    # excluded pairs must be flushed too — an `inconclusive_alignment` that is
+    # missing from the log reads as a pair that was never attempted, which is
+    # exactly the absence-as-evidence error N-016 was opened for.
     partial = out_dir / "partial_results.jsonl"
+
+    def record(row: dict) -> None:
+        rows.append(row)
+        with partial.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row, default=str) + "\n")
+
     for i, pair in enumerate(pairs):
         pid = f"P-{i+1:02d}"
         t0 = time.time()
@@ -309,14 +335,14 @@ def run_search(pairs: list[dict], src_folder: Path, out_dir: Path,
             raw, wet = load(raw_wav), load(wet_wav)
             ev = classify_pair(raw, wet, SR)
             if ev.verdict in ("incorrect_pair", "unusable"):
-                rows.append({"pair_id": pid, "verdict": ev.verdict})
+                record({"pair_id": pid, "verdict": ev.verdict})
                 print(f"[{i+1}/{len(pairs)}] {pid}: {ev.verdict} (not searched)", flush=True)
                 continue
             amap = align_pair(raw, wet, SR)
             target = build_target(wet, amap, max_phrases=max_phrases)
             if target.n_phrases < 3:
-                rows.append({"pair_id": pid, "verdict": "inconclusive_alignment",
-                             "n_phrases": target.n_phrases})
+                record({"pair_id": pid, "verdict": "inconclusive_alignment",
+                        "n_phrases": target.n_phrases})
                 print(f"[{i+1}/{len(pairs)}] {pid}: inconclusive_alignment "
                       f"({target.n_phrases} phrases)", flush=True)
                 continue
@@ -330,19 +356,33 @@ def run_search(pairs: list[dict], src_folder: Path, out_dir: Path,
                     "evaluations": r.evaluations, "converged": r.converged,
                     "si_sdr_db": r.si_sdr_db, "peak": r.peak,
                     "at_bound": list(r.at_bound),
+                    "final_admissible": r.final_admissible,
+                    "final_rejected_for": list(r.final_rejected_for),
                     "params": [{"processor": s.processor, **s.params}
                                for s in r.best_chain.slots],
                 } for r in results
             }
-            best = min(results, key=lambda r: r.best_distance)
+            # Only a winner that survives the FULL-signal re-check may be reported.
+            # A chain that passes the windowed estimate and then fails the exact
+            # measurement is a contract violation, not a result.
+            admissible = [r for r in results if r.final_admissible]
+            if not admissible:
+                record({"pair_id": pid, "verdict": "contract_violation",
+                        "n_phrases": target.n_phrases,
+                        "rejected_for": sorted({x for r in results
+                                                for x in r.final_rejected_for})})
+                print(f"[{i+1}/{len(pairs)}] {pid}: contract_violation "
+                      f"(no template survived the full-signal check)", flush=True)
+                continue
+            best = min(admissible, key=lambda r: r.best_distance)
             # Smallest template that gets within 2% of the best = the capability
             # actually required; anything richer is not earning its complexity.
             required = next(
-                (r.chain_name for r in results
+                (r.chain_name for r in admissible
                  if r.best_distance <= best.best_distance * 1.02), best.chain_name)
             closed = ((champ_d - best.best_distance) / champ_d * 100.0
                       if champ_d and np.isfinite(champ_d) and champ_d > 0 else 0.0)
-            rows.append({
+            record({
                 "pair_id": pid, "verdict": ev.verdict, "n_phrases": target.n_phrases,
                 "champion_actions": champ_actions,
                 "champion_distance": champ_d,
@@ -356,10 +396,27 @@ def run_search(pairs: list[dict], src_folder: Path, out_dir: Path,
                   f"{best.best_distance:.3f} ({closed:+.1f}%) via {best.chain_name}; "
                   f"required {required} ({time.time()-t0:.0f}s)", flush=True)
         except Exception as exc:  # noqa: BLE001
-            rows.append({"pair_id": pid, "error": str(exc)})
+            record({"pair_id": pid, "error": str(exc)})
             print(f"[{i+1}/{len(pairs)}] {pid}: ERROR {exc}", flush=True)
-        with partial.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(rows[-1], default=str) + "\n")
+
+    emit_search_report(rows, template_names, out_dir, contract,
+                       {"passes": passes, "points": points,
+                        "max_evaluations": max_evals, "max_phrases": max_phrases})
+
+
+def emit_search_report(rows: list[dict], template_names: list[str], out_dir: Path,
+                       contract: dict, budget: dict, rebuilt: bool = False) -> dict:
+    """Write the anonymized JSON + markdown for a set of per-pair search rows.
+
+    Separate from the search itself so a completed run (whose rows survive in
+    `partial_results.jsonl`) can be re-emitted without re-running a multi-hour
+    search — and so the report is regenerated from the SAME code path either way.
+
+    `rebuilt` is recorded because a rebuild describes the run with the CURRENT
+    tree's contract. That is correct only while the constants are unchanged since
+    the run; the flag makes the assumption visible instead of implied.
+    """
+    from src.paired_corpus.oracle import _bootstrap_ci
 
     searched = [r for r in rows if "templates" in r]
     closed_vals = [r["closed_pct"] for r in searched]
@@ -380,11 +437,14 @@ def run_search(pairs: list[dict], src_folder: Path, out_dir: Path,
     }
     payload = {
         "authorization": "D-029 (local/internal/eval-only)",
-        "method": "deterministic coordinate descent over PROCESSORS safe_ranges; "
-                  "capability ablation across templates; SI-SDR>=5 dB preservation "
-                  "floor and -0.2 dBFS ceiling enforced",
-        "budget": {"passes": passes, "points": points, "max_evaluations": max_evals,
-                   "max_phrases": max_phrases},
+        # Generated from the enforced constants, never hand-written: see
+        # src.paired_corpus.search.contract().
+        "method": contract,
+        "budget": budget,
+        "provenance": {
+            "report_rebuilt_from_partial_results": rebuilt,
+            "contract_source": "working tree at report-generation time",
+        },
         "limitation": "Diagnostic only; NO threshold tuned, NO promotion, NO claim; "
                       "lossy sources; distance is not perceptual quality.",
         "summary": summary, "results": rows,
@@ -392,10 +452,11 @@ def run_search(pairs: list[dict], src_folder: Path, out_dir: Path,
     (out_dir / "search_report_anonymized.json").write_text(
         json.dumps(payload, indent=2, default=str), encoding="utf-8")
     (out_dir / "search_report.md").write_text(
-        _search_markdown(rows, template_names, summary), encoding="utf-8")
+        _search_markdown(rows, template_names, summary, contract), encoding="utf-8")
     print("required capability:", json.dumps(summary["required_capability_counts"]))
     print(f"median closed {summary['median_closed_pct']:+.2f}%, "
           f"{summary['n_closed_10pct']}/{summary['n_pairs']} pairs >=10%")
+    return payload
 
 
 def run_ordering(pairs: list[dict], src_folder: Path, out_dir: Path,
@@ -497,7 +558,26 @@ def main() -> int:
                     help="comma-separated template subset, e.g. t1_hp_lowmid,t5_full")
     ap.add_argument("--ordering", action="store_true",
                     help="measure whether processor ORDER matters (predeclared orders)")
+    ap.add_argument("--rebuild-report", metavar="RUNDIR",
+                    help="regenerate a finished search run's report from its "
+                         "partial_results.jsonl (no re-search)")
     args = ap.parse_args()
+    if args.rebuild_report:
+        from src.paired_corpus.search import TEMPLATES, TEMPLATES_BY_NAME
+        from src.paired_corpus.search import contract as search_contract
+        run_dir = Path(args.rebuild_report)
+        rows = [json.loads(line) for line
+                in (run_dir / "partial_results.jsonl").read_text(encoding="utf-8").splitlines()
+                if line.strip()]
+        only = tuple(t for t in args.templates.split(",") if t)
+        templates = tuple(TEMPLATES_BY_NAME[n] for n in only) if only else TEMPLATES
+        emit_search_report(
+            rows, [c.name for c in templates], run_dir, search_contract(templates),
+            {"passes": args.passes, "points": args.points,
+             "max_evaluations": args.max_evals, "max_phrases": args.max_phrases},
+            rebuilt=True)
+        print(f"rebuilt {run_dir}")
+        return 0
     if args.ordering:
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
         pairs = build_pairs(manifest, authorized_files(manifest))

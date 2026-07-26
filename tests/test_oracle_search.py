@@ -17,20 +17,25 @@ import numpy as np
 import pytest
 
 from src.dsp_engine.processors import PROCESSORS
+from src.evaluation.reference_metrics import si_sdr
 from src.paired_corpus import align_pair, make_surrogate_pair
 from src.paired_corpus.search import (
+    CREST_FLOOR_DB,
     LEGACY_TEMPLATES,
     LEGACY_TEMPLATES_BY_NAME,
+    MAX_CREST_LOSS_DB,
     SI_SDR_FLOOR_DB,
     SR,
     TEMPLATES,
     TEMPLATES_BY_NAME,
     Chain,
     Slot,
+    _preservation_db,
     ablate,
     build_target,
     chain_to_plan,
     composite_distance,
+    contract,
     coordinate_descent,
     evaluate,
     reorder,
@@ -378,3 +383,76 @@ def test_search_within_admissible_space_returns_an_admissible_chain():
         for key in slot.search:
             lo, hi = slot.range_for(key)
             assert lo - 1e-6 <= slot.params[key] <= hi + 1e-6
+
+
+# ---------------------------------------------------------------------------
+# The report must describe the contract the code actually enforces
+# ---------------------------------------------------------------------------
+
+def test_contract_reports_the_constants_the_evaluator_enforces():
+    """N-018's second-order defect: a report claiming a 5 dB floor and a
+    registry-only space while the code enforced 12 dB and admissible bounds.
+    Method text is generated from these values, so they must not drift."""
+    c = contract(TEMPLATES)
+    assert c["space"] == "admissible"
+    assert c["si_sdr_floor_db"] == SI_SDR_FLOOR_DB
+    assert c["crest_floor_db"] == CREST_FLOOR_DB
+    assert c["max_crest_loss_db"] == MAX_CREST_LOSS_DB
+    assert c["clipping_allowed"] is False
+    assert c["templates"] == [t.name for t in TEMPLATES]
+    # The floor the contract advertises is the one a candidate is actually judged by.
+    raw, wet, amap = _pair(seed=131)
+    target = build_target(wet, amap)
+    ev = evaluate(raw, TEMPLATES_BY_NAME["t1_hp_lowmid"], target,
+                  full_si_sdr=True, si_sdr_floor_db=c["si_sdr_floor_db"])
+    assert ("si_sdr" in ev.rejected_for) == (ev.si_sdr_db < c["si_sdr_floor_db"])
+
+
+def test_contract_marks_the_legacy_space_as_discredited():
+    c = contract(LEGACY_TEMPLATES)
+    assert c["space"] == "registry_safe_only"
+    assert "N-018" in c["space_note"]
+
+
+def test_contract_objective_does_not_claim_perceptual_quality():
+    text = contract(TEMPLATES)["objective"].lower()
+    assert "not perceptual quality" in text
+
+
+# ---------------------------------------------------------------------------
+# The preservation guard must be measured the way it is reported
+# ---------------------------------------------------------------------------
+
+def test_windowed_preservation_estimate_is_worst_case_not_middle():
+    """A centred window let two corpus winners report 4.9 and 7.3 dB under a floor
+    declared at 12 dB: the middle of a take is not the part a guard should trust."""
+    rng = np.random.default_rng(7)
+    raw = rng.standard_normal(SR * 100).astype(np.float32) * 0.05
+    damaged = raw.copy()
+    # Damage lives at the END, where a centred window cannot see it.
+    damaged[-SR * 20:] += rng.standard_normal(SR * 20).astype(np.float32) * 0.05
+    windowed = _preservation_db(raw, damaged, full=False)
+    exact = _preservation_db(raw, damaged, full=True)
+    centred = si_sdr(raw[SR * 35:SR * 65], damaged[SR * 35:SR * 65])
+    assert windowed < centred - 3.0, "the estimate still ignores the damaged region"
+    assert windowed <= exact + 1.0, "the estimate must not flatter the exact value"
+
+
+def test_winner_failing_the_full_signal_check_is_marked_inadmissible():
+    raw, wet, amap = _pair(seed=149)
+    target = build_target(wet, amap)
+    # An unreachable floor makes the full-signal re-check fail by construction; the
+    # result must SAY so rather than reporting the chain as a winner.
+    r = coordinate_descent(raw, TEMPLATES_BY_NAME["t1_hp_lowmid"], target,
+                           passes=1, points=3, si_sdr_floor_db=200.0)
+    assert r.final_admissible is False
+    assert "si_sdr" in r.final_rejected_for
+
+
+def test_a_clean_search_reports_an_admissible_winner():
+    raw, wet, amap = _pair(seed=151)
+    target = build_target(wet, amap)
+    r = coordinate_descent(raw, TEMPLATES_BY_NAME["t2_tonal"], target, passes=2, points=4)
+    assert r.final_admissible is True
+    assert r.final_rejected_for == ()
+    assert r.si_sdr_db >= SI_SDR_FLOOR_DB
