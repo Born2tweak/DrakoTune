@@ -149,6 +149,41 @@ environment-bound and must be cited with the run id, not treated as constants.
 raw audio alone. The oracle is given the wet target; the planner is not. That is
 the burden of proof for any A-1/A-2 experiment, on held-out artists.
 
+## Corrected objective (2026-07-26) — F-8, first pair
+
+F-7's numbers were measured with an objective N-018 showed to be gameable. The
+objective now enforces *admissible* parameter bounds (cited priors, not fitted),
+a 12 dB SI-SDR preservation floor and an over-compression guard, and the exact
+chain that won under the old objective is a regression test that must fail.
+
+Re-measuring the best-aligned pair:
+
+| | old objective | corrected objective |
+|---|--:|--:|
+| P-01 distance closed | +62.1% | **+35.2%** |
+| highpass | 330 Hz (t1–t4) / 240 Hz | **75 Hz** |
+| low-mid bell | **0.0 dB — unused** | **−1.5 dB @ 300 Hz** |
+| compressor | ratio **20:1** (at bound) | ratio **1.66:1** |
+| gate | −15.75 dB | **−41.25 dB** |
+| SI-SDR | 5.4–6.6 dB | 12.3 dB |
+
+So roughly **43% of F-7's headline was metric gaming**, and a real, plausible
+improvement of **+35.2%** survives on this pair — now achieved by a chain a mixing
+engineer would recognise: a gentle mud cut at exactly the documented 300 Hz, a
+sane gate near the planner's own −42 dB, and gentle compression.
+
+Two honest caveats visible in the same result:
+- Three parameters still rest on an **admissible** bound (air-shelf frequency and
+  gain, compressor threshold) and SI-SDR sits just above its floor — the metric
+  still wants more air and more compression than professional practice endorses.
+  Further evidence that spectral distance is not quality (Q-016).
+- The ablation again shows t1 = t2 = t3 = t4 = 2.519, with only the compressor
+  moving it to 1.835. Since the compressor was also the old objective's favourite
+  exploit, "dynamics matter" remains suspect until the target is perceptually
+  grounded.
+
+Remaining pairs are still being measured; this section covers P-01 only.
+
 ## What this does NOT show
 
 Not that DrakoTune's processors are good or bad (they barely ran); not any
