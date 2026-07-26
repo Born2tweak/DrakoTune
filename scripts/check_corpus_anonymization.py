@@ -25,7 +25,8 @@ MANIFEST = REPO / "data" / "restricted" / "private_corpus_manifest.json"
 GENERIC = set("""a an the and or of to in on for with without from by at is are was were be been
 acapella acapellas vocal vocals studio official audio version raw wet dry mix mixed master
 mastered file files only high low same stay all clean track song music youtube mp3 wav
-prime his kid go me part live remix intro outro""".split())
+prime his kid go me part live remix intro outro
+well""".split())
 
 # Committed artifacts that discuss the corpus and must stay anonymized.
 GUARDED = (

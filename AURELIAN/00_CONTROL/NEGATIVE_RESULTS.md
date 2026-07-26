@@ -148,3 +148,63 @@ The ablation makes the mechanism explicit: t1 = t2 = t3 = **1.747** (adding a mi
 **Consequence for the roadmap:** DT-77 Track C-4 (a target with perceptual grounding) is not "the highest-value remaining method work" — it is a **precondition** for every other number in this thread. Nothing downstream of the oracle should be believed until the objective refuses destructive solutions.
 
 **Process lesson (third instance in this thread).** Each time the search space widened, the previous conclusion turned out to be an artifact of the measurement rather than a fact about the system: a fixed point (N-016), then the planner's mapping (N-017), now the objective itself (N-018). The recurring error is treating *whatever the harness optimises* as a proxy for quality without first proving the harness cannot be won by an obviously bad answer. **A new objective must be adversarially tested — by constructing a deliberately destructive candidate and requiring it to lose — before any result measured with it is reported.**
+
+## N-019 — The post-N-018 preservation guards do not exclude destruction, and reject an honest treatment
+
+2026-07-26, `src/paired_corpus/objective_audit.py` + `tests/test_objective_audit.py`.
+N-018's fix added admissible bounds, a 12 dB SI-SDR floor, an over-compression
+guard and adversarial regression tests. Making the adversarial rule *executable* —
+an audit that renders a catalogue of destructive candidates against any objective —
+showed that the credit for the fix belongs almost entirely to the bounds.
+
+On a pair whose wet is a known −8 dB low-mid cut, measured with the full-signal
+guards:
+
+| candidate | SI-SDR | crest | admitted by the guards? |
+|---|--:|--:|---|
+| `crush` — compressor 20:1 | **16.1 dB** | 9.9 dB | **yes** |
+| `gate_chop` — gate at −15.75 dB | **42.8 dB** | 10.0 dB | **yes** |
+| `tilt_hack` — +12 dB high shelf | **26.2 dB** | 11.0 dB | **yes** |
+| `body_removal` — 330 Hz highpass | −0.6 dB | 12.2 dB | no |
+| `wrong_direction_boost` — +9 dB where the truth was a cut | 7.4 dB | 10.1 dB | no |
+| **honest recovery** — −4 dB @ 350 Hz + 2.5:1 | **11.1 dB** | 13.0 dB | **no (floor)** |
+
+**Mechanism.** SI-SDR is scale-invariant and correlation-based. A compressor, a
+gate and a shelf all leave the waveform highly correlated with the raw, so they
+score *well* on it — a preservation floor does not measure whether a treatment is
+acceptable, only whether the signal was replaced. The crest guard does not catch
+them either (9.9–11.0 dB, above the 8 dB floor). Only the **admissible parameter
+bounds** keep these out of the corpus search.
+
+**Two consequences that change how the numbers must be read.**
+
+1. "The guards prevent destructive solutions" is false and must not be written.
+   The bounds prevent them. Any objective reused outside this bounded search — a
+   planner objective, a promotion criterion, a different harness — inherits none
+   of that protection.
+2. The 12 dB floor rejects a treatment squarely inside documented professional
+   practice (−4 dB low-mid cut plus gentle compression, 11.1 dB). It is
+   over-inclusive as well as under-inclusive, so **measured gap closure under it
+   is a lower bound on what an admissible chain can reach, not an estimate of it.**
+
+**Also fixed in the same pass (harness-integrity defects, same family):**
+
+- The floor was *scored* during the search on one centred 30 s window and only
+  *reported* on the full signal. Two winners of run `20260726-064149-search`
+  passed the window and then reported **7.3 dB and 4.9 dB** against a floor
+  declared at 12 dB — 2 of 7 pairs in that aggregate did not satisfy the contract
+  they were published under. The estimate is now the minimum over five evenly
+  spaced windows, and the winner is re-checked on the full signal with a
+  `contract_violation` verdict when it fails.
+- The generated report's method text was hand-written and still described the
+  pre-N-018 contract while the code enforced the corrected one. Method text is now
+  generated from the enforced constants and pinned by tests.
+- Rows for excluded pairs were never flushed to the run's recovery log, so a
+  rebuilt report lost the `inconclusive_alignment` accounting — absence reading as
+  "never attempted", the error N-016 exists to prevent.
+
+**What does NOT follow.** Passing the audit does not make an objective
+perceptually valid; it makes it not obviously invalid. On synthetic surrogates
+none of the six pathologies beats the honest candidate even under the *bare*
+distance, so a synthetic pass certifies nothing — the verdict belongs to
+(objective, pair). Q-016 remains open and DT-77 C-4 remains BLOCKING.

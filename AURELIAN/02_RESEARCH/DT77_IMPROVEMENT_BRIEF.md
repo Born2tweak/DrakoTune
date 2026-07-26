@@ -132,10 +132,23 @@ implemented and a residual gap survives a full registry-safe search.
   registry-bounded, validated by recovering a known in-capability transformation.
 - **C-3 Recover or retire the 2 `inconclusive_alignment` pairs** — open; 22% of
   the corpus still contributes nothing.
-- **C-4 A target with perceptual grounding** — open, and now the binding
+- **C-4 A target with perceptual grounding** — open, and still the binding
   methodological limit. Everything above optimises *composite spectral distance
   to a lossy YouTube wet*. That is not quality, and no amount of further search
   makes it quality. **This is the highest-value remaining method work.**
+
+  Progress (N-019, 2026-07-26): the adversarial rule is now executable —
+  `src/paired_corpus/objective_audit.py` scores any candidate objective against a
+  catalogue of destructive treatments plus an objective-independent honest
+  reference. Its first finding reassigns credit for the N-018 fix: the
+  *preservation guards* admit a 20:1 compressor (16 dB SI-SDR), a gate set above
+  the performance floor (43 dB) and a +12 dB shelf (26 dB), because SI-SDR is
+  scale-invariant and none of them decorrelates the waveform. The **admissible
+  bounds** are what excludes destruction. The same floor rejects an honest −4 dB
+  low-mid cut with gentle compression (11.1 dB), so **every gap-closure number
+  measured under it is a lower bound, not an estimate.** C-4 still needs a target
+  with real perceptual grounding; the audit only says an objective is not
+  *obviously* invalid.
 - **C-5 Processor ordering** — harness built (`--ordering`, predeclared orders
   including the professional order from `docs/research/vocal_chain_research.md`);
   not yet run on the corpus.
