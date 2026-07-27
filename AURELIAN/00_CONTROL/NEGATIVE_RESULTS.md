@@ -327,3 +327,47 @@ now capped at available headroom. And the first cross-objective comparison ranke
 references rather than objectives (N-020). **A measurement harness is not exempt
 from the discipline it enforces; every baseline, guard and check inside it is
 itself a measurement that can be wrong.**
+
+## N-022 — Pitch preservation cannot serve as a guard; envelope retention can
+
+2026-07-26, `src/paired_corpus/preservation.py` + `tests/test_preservation.py`.
+N-021 left one engineering blocker: a preservation constraint has to be measured
+against the performance that must survive rather than against the untreated input.
+The obvious formulation — keep pitch and timing — was measured before being built,
+and half of it failed.
+
+| candidate treatment | pitch-contour correlation | voiced-frame retention |
+|---|--:|--:|
+| exact inverse of the degradation (the correct answer) | **0.897** | 1.000 |
+| honest chain, noisy surrogate | 0.756–0.841 | 1.000 |
+| `crush` — compressor 20:1 | **1.000** | 1.000 |
+| `gate_chop` — gate above the performance floor | 0.594–0.654 | **0.75–0.79** |
+| `tilt_hack` — +12 dB shelf | 0.620–0.760 | 1.000 |
+
+**Pitch correlation is rejected as a guard component.** It scores a flawless 1.000
+for the worst dynamics pathology — compression genuinely does not move pitch, so
+pitch can never see it — while the *correct* answer scores lower than most
+pathologies, because the tonal change that makes an answer correct is what disturbs
+the tracker. Including it would rebuild N-021's anti-correlation in a new form. It
+is recorded here so the idea is not re-proposed as new. (It is also slow: ~3.5 s of
+YIN per 8 s of audio, unusable inside a search.)
+
+**Voiced-frame retention is kept.** It admits the exact inverse (1.000 on all four
+seeds, where the SI-SDR floor rejects it), admits honest treatments the floor also
+rejects, and rejects the gating the floor *admitted* at 43 dB SI-SDR. Cost is
+~60 ms per evaluation, so it can run inside a search.
+
+**Carried limitation, stated rather than discovered later:** neither retention nor
+the crest guards stop extreme compression. Rejecting that stays the objective's job,
+and against a provably optimal reference the objective does reject it.
+
+**Result.** With the constraint replaced, all four candidate objectives are
+**structurally sound** on the invertible pairs — every property the battery can
+check mechanically passes, for the first time in this thread. On noisy surrogates
+`composite_v1` and `mfcc_l1` are still beaten by one admitted pathology (a `Limiter`
+at its bound), so the result is not uniform across material.
+
+`certified_for_production` remains **False** for every candidate, because
+`PERCEPTUAL_ALIGNMENT` is untestable while DEF-003 stands. **Nothing is wired in and
+nothing is promoted:** replacing the admissibility rule changes every number the
+corpus has produced, which is Q-016's decision to take, not a refactor to slip in.

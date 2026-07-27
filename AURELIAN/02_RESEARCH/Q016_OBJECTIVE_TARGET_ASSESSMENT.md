@@ -69,8 +69,16 @@ gap-closure number measured under it is a lower bound.
    is — so the exact inverse, 92 dB from the target, is rejected on every seed. No
    value of the threshold fixes a constraint pointing the wrong way; it needs to be
    measured against the performance content that must survive, not against the
-   untreated input. **This is now the top engineering blocker.**
-3. **Listening data.** DEF-003. `PERCEPTUAL_ALIGNMENT` is permanently UNTESTABLE
+   untreated input. **Candidate replacement built and evidenced (N-022):**
+   `src/paired_corpus/preservation.py` measures voiced-frame retention plus the
+   existing crest/ceiling/clipping guards. It admits the exact inverse on all four
+   seeds and admits honest treatments the floor rejects, while rejecting the gating
+   the floor admitted at 43 dB SI-SDR; pitch-contour correlation was measured and
+   REJECTED as a component (1.000 for a 20:1 compressor). With it in place all four
+   candidate objectives are structurally sound on ground truth. **Not wired in:**
+   swapping the admissibility rule changes every number the corpus has produced, so
+   it is put to this decision rather than taken.
+3. **Listening data.** DEF-003. Unchanged by any of the above and not engineerable. `PERCEPTUAL_ALIGNMENT` is permanently UNTESTABLE
    until it exists, so **no objective in this repository can be certified for
    production**, by construction. That is the honest state, not a gap to be
    engineered around.
