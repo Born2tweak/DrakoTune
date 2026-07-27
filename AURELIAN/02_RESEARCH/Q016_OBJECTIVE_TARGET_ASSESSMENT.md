@@ -7,7 +7,7 @@ not make one, and no candidate here is promoted.
 **Sources:** the repository's registered ones only —
 `AURELIAN/02_RESEARCH/C_AUDIO_QUALITY_AND_LISTENING_STANDARDS.md` (S-E01…S-E07),
 `G_ENHANCEMENT_AND_ASSESSMENT_MODELS.md` (S-C01…S-C04, S-E05, S-E06), N-011,
-N-018, N-019, N-020.
+N-018, N-019, N-020, N-021, N-022.
 
 ## 1. The question is narrower than "which perceptual metric"
 
@@ -41,16 +41,18 @@ normalisation, which closes loudness inflation by construction rather than by a
 guard — the registry permits +12 dB of clean gain, and a metric that can be
 improved by turning it up will be.
 
-| candidate | what it adds | audit outcome (4 pairs) |
-|---|---|---|
-| `composite_v1` (in use) | 3 band ratios, crest, tilt | auditable; 1 admitted pathology outscored the reference (a `Limiter` at its bound, 1 of 4 pairs) |
-| `mfcc_l1` | spectral-envelope shape, c0 dropped | auditable on 3 of 4 pairs; 2 pathologies outscored the reference |
-| `logmel_l1` | frequency-resolved band differences | **untestable on every pair** — reference loses to no-op (N-020) |
-| `mrstft_log` | multiple time/frequency resolutions | **untestable on every pair** — same cause |
+| candidate | what it adds | on ground truth (invertible pairs) | on noisy surrogates |
+|---|---|---|---|
+| `composite_v1` (in use) | 3 band ratios, crest, tilt | recovers the exact inverse; **0 of 147** pathologies beat it | beaten once (a `Limiter` at its bound) |
+| `mfcc_l1` | spectral-envelope shape, c0 dropped | same | beaten once (same `Limiter`) |
+| `logmel_l1` | frequency-resolved band differences | same | clean; auditable only after log-magnitudes were floored (N-021) |
+| `mrstft_log` | multiple time/frequency resolutions | same | reference still loses to no-op, so **untestable** there |
 
-Every one of the four fails `CONSTRAINT_ADMITS_HONEST`: the 12 dB SI-SDR floor
-rejects a defensible −4 dB low-mid cut with gentle compression (N-019). So every
-gap-closure number measured under it is a lower bound.
+Two things follow. Under the **current** SI-SDR constraint all four fail
+`CONSTRAINT_ADMITS_HONEST`, so every gap-closure number measured under it is a lower
+bound (N-019, N-021). Under the **candidate** constraint (N-022) all four are
+structurally sound on ground truth — and gaming resistance then does not
+discriminate between them at all, so it cannot be the basis for choosing one.
 
 ## 4. What a decision needs that does not exist yet
 
@@ -85,11 +87,20 @@ gap-closure number measured under it is a lower bound.
 
 ## 5. Recommendation to the decision-makers
 
-Do **not** select an objective yet. The two blockers in §4.1 and §4.2 are ordinary
-engineering and can be cleared without a human decision; §4.3 cannot. Until then
-`composite_v1` keeps its **diagnostic-only** status by default rather than by
-merit, every number measured with it is a lower bound, and no DSP change may be
-promoted on the strength of it.
+Do **not** select an objective yet — but the reason has changed. §4.1 and §4.2 were
+ordinary engineering and both now have evidenced answers; §4.3 does not and cannot
+be engineered around. What remains is a decision with two parts:
+
+1. **Adopt or reject the candidate preservation constraint (N-022).** Adopting it
+   changes every number the corpus has produced — F-9's +32.8% included, since that
+   figure was measured under a constraint that rejects correct answers. That is a
+   re-measurement, not a refactor, and it needs sign-off.
+2. **Choose whether to pursue ViSQOL registration** (below), which is the only path
+   here that moves toward perceptual grounding without listening data.
+
+Until both are settled `composite_v1` keeps its **diagnostic-only** status by
+default rather than by merit, every number measured with it is a lower bound, and no
+DSP change may be promoted on the strength of it.
 
 If one metric is to be pursued for registration, the registered evidence points to
 **ViSQOL** — full-reference, permissively licensed, and the only candidate whose
