@@ -209,6 +209,32 @@ def check_non_degenerate(objective: Objective, raw: np.ndarray,
         {"honest": s_honest, **scores})
 
 
+def check_honest_reference_validity(objective: Objective, raw: np.ndarray,
+                                    honest: np.ndarray) -> PropertyResult:
+    """The honest reference must at least beat doing nothing under this objective.
+
+    Every gaming verdict is relative to the honest candidate, so a reference that
+    scores WORSE than the untreated raw makes "a pathology beat the honest one"
+    uninterpretable: near-no-op candidates then "win" without exploiting anything.
+
+    Measured, not assumed: the fixed reference chain used here beats no-op under
+    `composite_v1` and `mfcc_l1` and loses to it under `logmel_l1` and
+    `mrstft_log`, because the surrogate's raw carries a room comb no registry
+    processor can undo and the full-spectrum metrics are dominated by it. So a
+    single reference cannot rank objectives against each other, and the verdict is
+    UNTESTABLE rather than FAIL — the objective has not been shown to be bad, it
+    has not been shown to be anything.
+    """
+    s_honest, s_noop = float(objective(honest)), float(objective(raw))
+    ok = _finite(s_honest) and _finite(s_noop) and s_honest < s_noop
+    return PropertyResult(
+        "HONEST_REFERENCE_VALID", Verdict.PASS if ok else Verdict.UNTESTABLE,
+        f"honest {s_honest:.4f} vs untreated {s_noop:.4f}" + ("" if ok else
+        " — the reference loses to doing nothing, so gaming verdicts under this "
+        "objective carry no information"),
+        {"honest": s_honest, "noop": s_noop})
+
+
 def check_gaming_resistance(objective: Objective, raw: np.ndarray, honest: np.ndarray,
                             pathologies: Sequence[Pathology],
                             admissible: Admissibility | None) -> PropertyResult:
@@ -222,6 +248,13 @@ def check_gaming_resistance(objective: Objective, raw: np.ndarray, honest: np.nd
     survivors better.
     """
     s_honest = float(objective(honest))
+    if not (_finite(s_honest) and s_honest < float(objective(raw))):
+        return PropertyResult(
+            "GAMING_RESISTANCE", Verdict.UNTESTABLE,
+            "not evaluated: the honest reference does not beat doing nothing under "
+            "this objective, so 'a pathology outscores it' would say nothing about "
+            "gaming (see HONEST_REFERENCE_VALID)",
+            {"honest": s_honest, "noop": float(objective(raw))})
     beaten: list[tuple[str, float]] = []
     excluded = 0
     for path in pathologies:
@@ -305,6 +338,7 @@ def certify(objective: Objective, raw: np.ndarray, wet: np.ndarray,
         check_monotonicity(objective, raw, wet),
         check_level_invariance(objective, honest),
         check_non_degenerate(objective, raw, honest),
+        check_honest_reference_validity(objective, raw, honest),
         check_gaming_resistance(objective, raw, honest, catalogue, admissible),
         check_constraint_admits_honest(honest, admissible),
         check_perceptual_alignment(),

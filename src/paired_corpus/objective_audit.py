@@ -145,8 +145,16 @@ def honest_recovery_chain() -> Chain:
     the wet applied (a -4 dB low-mid cut at 250-500 Hz plus gentle compression),
     so its recovery is written out here directly: this is what an engineer who
     already knew the answer would do, chosen without consulting any score.
+
+    The gate is not decoration. `TRUTH["raw_noise_floor_db"]` is -45 dB and the wet
+    is built from the CLEAN signal, so the raw carries a noise floor the reference
+    does not. An honest reference that never denoises is under-specified against any
+    full-spectrum objective: every denoising candidate then beats it legitimately,
+    and the audit reports metric gaming where the real cause is a weak reference.
+    A gate well below the performance floor is what an engineer would actually do.
     """
     return Chain("honest_recovery", (
+        _slot("NoiseGate", threshold_db=-50.0, attack_ms=1.0, release_ms=250.0),
         _slot("PeakFilter", cutoff_frequency_hz=350.0, gain_db=-4.0, q=0.8),
         _slot("Compressor", threshold_db=-18.0, ratio=2.5, attack_ms=15.0,
               release_ms=75.0),

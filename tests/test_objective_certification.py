@@ -24,6 +24,7 @@ from src.paired_corpus.objective_certification import (
     check_determinism,
     check_level_invariance,
     check_monotonicity,
+    check_honest_reference_validity,
     check_non_degenerate,
 )
 from src.paired_corpus.search import (
@@ -182,3 +183,54 @@ def test_constraint_failure_is_not_reported_as_gaming(pair):
     # on it, not on a penalized composite.
     assert next(p for p in report.properties
                 if p.name == "IDENTITY_OPTIMUM").verdict is Verdict.PASS
+
+
+# ---------------------------------------------------------------------------
+# A gaming verdict is only meaningful relative to a valid reference (N-020)
+# ---------------------------------------------------------------------------
+
+def test_reference_that_loses_to_no_op_makes_gaming_untestable(pair):
+    """The confound that invalidated the first cross-objective comparison: under a
+    full-spectrum distance the fixed honest chain scores WORSE than untreated raw,
+    after which near-no-op candidates "beat" it without exploiting anything.
+
+    Fail-closed handling: UNTESTABLE, not FAIL. The objective has not been shown to
+    be bad; it has not been shown to be anything."""
+    from src.paired_corpus.objectives import CANDIDATES_BY_NAME
+    raw, wet, target, honest = pair
+    amap = align_pair(raw, wet, SR)
+
+    logmel = CANDIDATES_BY_NAME["logmel_l1"].build(wet, amap, target)
+    assert logmel(honest) > logmel(raw), "reference no longer loses to no-op here"
+    assert check_honest_reference_validity(logmel, raw, honest).verdict is Verdict.UNTESTABLE
+
+    report = certify(logmel, raw, wet, honest, admissible=_admissible(raw, target))
+    assert "GAMING_RESISTANCE" in report.untestable
+    assert "GAMING_RESISTANCE" not in report.failed
+
+
+def test_reference_that_beats_no_op_yields_a_real_gaming_verdict(pair):
+    raw, wet, target, honest = pair
+    obj = _distance(target)
+    assert obj(honest) < obj(raw)
+    assert check_honest_reference_validity(obj, raw, honest).verdict is Verdict.PASS
+    report = certify(obj, raw, wet, honest, admissible=_admissible(raw, target))
+    assert "GAMING_RESISTANCE" not in report.untestable
+
+
+def test_no_candidate_objective_can_be_selected_on_current_evidence(pair):
+    """N-020, recorded as a test so a future ranking has to earn it: two of the four
+    candidates cannot even be audited with the reference available, and all four are
+    rejected by the preservation constraint."""
+    from src.paired_corpus.objectives import CANDIDATES
+    raw, wet, target, honest = pair
+    amap = align_pair(raw, wet, SR)
+    adm = _admissible(raw, target)
+    verdicts = {}
+    for cand in CANDIDATES:
+        report = certify(cand.build(wet, amap, target), raw, wet, honest, admissible=adm)
+        verdicts[cand.name] = report
+        assert report.structurally_sound is False
+        assert "CONSTRAINT_ADMITS_HONEST" in report.failed
+    untestable_gaming = [n for n, r in verdicts.items() if "GAMING_RESISTANCE" in r.untestable]
+    assert set(untestable_gaming) == {"logmel_l1", "mrstft_log"}

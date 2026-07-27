@@ -208,3 +208,65 @@ perceptually valid; it makes it not obviously invalid. On synthetic surrogates
 none of the six pathologies beats the honest candidate even under the *bare*
 distance, so a synthetic pass certifies nothing — the verdict belongs to
 (objective, pair). Q-016 remains open and DT-77 C-4 remains BLOCKING.
+
+## N-020 — Candidate objectives cannot be ranked without a metric-independent honest reference
+
+2026-07-26, `src/paired_corpus/objectives.py` + `objective_certification.py`.
+Q-016 asks what an automated search may legitimately optimise. The obvious next
+step was to build richer candidates — a frequency-resolved log-mel distance, a
+cepstral (timbre-shape) distance, a multi-resolution STFT distance, all
+level-invariant by per-phrase RMS normalisation — and rank them by how well they
+resist the generated pathology catalogue. **That comparison does not work, and the
+reason generalises.**
+
+First pass, four candidates over four pairs, "destructive candidates that the
+guards admit and that outscore the honest reference":
+
+| candidate | beaten / scored |
+|---|--:|
+| `composite_v1` (in use) | **1 / 145** |
+| `mfcc_l1` | 22 / 145 |
+| `logmel_l1` | **80 / 145** |
+| `mrstft_log` | **80 / 145** |
+
+Read naively this says the crude 5-axis metric already in use is far harder to game
+than any richer one. It says no such thing. Measuring the reference itself:
+
+| candidate | untreated raw | honest reference | reference better than doing nothing? |
+|---|--:|--:|---|
+| `composite_v1` | 8.7701 | 8.2195 | yes |
+| `mfcc_l1` | 21.8962 | 20.1768 | yes |
+| `logmel_l1` | 2.8775 | **2.8819** | **no** |
+| `mrstft_log` | 2.0703 | **2.2600** | **no** |
+
+Under the two full-spectrum metrics the honest chain scores **worse than leaving
+the audio alone**, because the surrogate's raw carries a room comb no registry
+processor can undo and those metrics are dominated by that irreducible term. Once
+the reference loses to no-op, *every near-no-op candidate "beats" it* — the 80/145
+figure counts DeEsser and Compressor variants that barely change the signal, not
+exploits. The gaming verdict was measuring the reference, not the objective.
+
+**What follows.**
+
+- A single fixed honest reference cannot rank objectives against one another. A
+  chain that is a competent answer under one metric can be worse than no-op under
+  another, and each metric needs a reference defensible *in its own terms*.
+- Adding a gate to the reference did not fix it (identical totals), so the problem
+  is not a missing processor in the reference chain — it is that no admissible
+  chain approaches the wet under a full-spectrum metric on this surrogate.
+- **Nothing is selected.** Q-016 stays open. `composite_v1` keeps its diagnostic
+  status by default, not by merit — it has not been shown to be better, only to be
+  auditable with the reference that exists.
+
+**Encoded so it cannot recur silently:** the battery now checks
+`HONEST_REFERENCE_VALID` (does the reference beat no-op under this objective?) and,
+when it does not, reports `GAMING_RESISTANCE` as **UNTESTABLE rather than FAIL** —
+the objective has not been shown to be bad, it has not been shown to be anything.
+On the four pairs tried, `logmel_l1` and `mrstft_log` are untestable on every one.
+
+**Process lesson (fourth instance).** The pattern is now unmistakable: a fixed
+point (N-016), the planner's mapping (N-017), the objective (N-018), the guard's
+estimator and the report's own method text (N-019), and now the *reference* a
+verdict is measured against. Each time, the harness's own component was the thing
+being measured. Before believing any comparative verdict, measure the baseline it
+is relative to — including the one that looks too obvious to check.
