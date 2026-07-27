@@ -69,6 +69,23 @@ milestones:
   - {id: DT-90, title: Replicated Quality and Usability Evidence, horizon: H5, status: blocked, depends_on: [DT-87, DT-89], detail: MILESTONES/DT_85_92.md}
   - {id: DT-91, title: Public Release and Claims Gate, horizon: H5, status: blocked, depends_on: [DT-88, DT-89, DT-90], detail: MILESTONES/DT_85_92.md}
   - {id: DT-92, title: General-Mixing Expansion Decision, horizon: H5, status: blocked, depends_on: [DT-91], detail: MILESTONES/DT_85_92.md}
+  # V3 track (D-030, 2026-07-27). DEF-003 re-scoped to gate public quality claims only,
+  # so product advancement no longer waits on a recruited listening study. Wave 1 =
+  # V3 Alpha (DT-93..DT-99); Wave 2 = V3 Beta (DT-100..DT-106). Detail: MILESTONES/DT_93_106.md
+  - {id: DT-93, title: V3 Governance Unblock and Feature Boundary, horizon: V3A, status: in_progress, depends_on: [], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-94, title: Graph Execution Stereo Contracts and Primitive Exposure, horizon: V3A, status: ready, depends_on: [DT-93], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-95, title: Natural Rescue-Bold and Modern-Rap-Bold Audible Chains, horizon: V3A, status: blocked, depends_on: [DT-94], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-96, title: VocalRider Parallel Compression Sends Ducking and Dynamic Tone, horizon: V3A, status: blocked, depends_on: [DT-94], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-97, title: Workstation Upload Modes Synchronized AB Macros and Export, horizon: V3A, status: blocked, depends_on: [DT-95], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-98, title: Transposition Doubling and Pitch-Correction Spike, horizon: V3A, status: blocked, depends_on: [DT-96], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-99, title: Deployable V3 Alpha with Rendered Examples, horizon: V3A, status: blocked, depends_on: [DT-97, DT-98], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-100, title: Real Pitch Correction and Formant Behavior, horizon: V3B, status: blocked, depends_on: [DT-98], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-101, title: Denoising and Room-Reduction Backends, horizon: V3B, status: blocked, depends_on: [DT-95], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-102, title: Production-Fingerprint Extraction, horizon: V3B, status: blocked, depends_on: [DT-99], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-103, title: Corpus-Informed Candidate Initialization, horizon: V3B, status: blocked, depends_on: [DT-102], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-104, title: Melodic Aggressive and Intimate Modes, horizon: V3B, status: blocked, depends_on: [DT-96, DT-99], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-105, title: Audio-Reactive Visual System and 3D Centerpiece, horizon: V3B, status: blocked, depends_on: [DT-97], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-106, title: V3 Beta Integration and Release, horizon: V3B, status: blocked, depends_on: [DT-100, DT-101, DT-103, DT-104, DT-105], detail: MILESTONES/DT_93_106.md}
 execution_profiles:
   automatic_internal:
     human_gate_categories: []
@@ -123,6 +140,10 @@ lanes:
     max_active: 1
     default_resource_class: medium
     milestone_ids: [DT-56, DT-57, DT-59, DT-60, DT-61, DT-63, DT-64, DT-66, DT-67, DT-78, DT-81, DT-82, DT-83, DT-84, DT-90]
+  v3_engine:
+    max_active: 2
+    default_resource_class: medium
+    milestone_ids: [DT-93, DT-94, DT-95, DT-96, DT-97, DT-98, DT-99, DT-100, DT-101, DT-102, DT-103, DT-104, DT-105, DT-106]
 resource_classes:
   low: {cpu: low, memory: low, network: optional_public_metadata, external_people: false}
   medium: {cpu: medium, memory: medium, network: optional_authorized, external_people: false}
@@ -177,3 +198,17 @@ milestone_execution:
   DT-90: {lane: research_validation, profile: human_study, resource_class: external_people, write_set: [replication_data, replication_results, claim_eligibility], evidence_key: dt90_replication_package, claim_impact: public_review_candidate}
   DT-91: {lane: product_data, profile: public_release, resource_class: high, write_set: [release_decision, public_claim_matrix, release_artifacts], evidence_key: dt91_signed_release_packet, claim_impact: exact_public_claims}
   DT-92: {lane: product_data, profile: strategic_scope, resource_class: low, write_set: [scope_decision, next_roadmap_epoch], evidence_key: dt92_signed_scope_decision, claim_impact: no_automatic_expansion}
+  DT-93: {lane: v3_engine, profile: automatic_internal, resource_class: low, write_set: [deficiency_register, decision_log, milestone_registry, project_state], evidence_key: dt93_v3_boundary, claim_impact: quarantine_only}
+  DT-94: {lane: v3_engine, profile: automatic_internal, resource_class: medium, write_set: [processor_registry, graph_engine, channel_contracts, rendered_audio], evidence_key: dt94_graph_stereo_primitives, claim_impact: none}
+  DT-95: {lane: v3_engine, profile: automatic_internal, resource_class: medium, write_set: [mode_contracts, rendered_audio, distinctness_tests], evidence_key: dt95_audible_chains, claim_impact: none}
+  DT-96: {lane: v3_engine, profile: automatic_internal, resource_class: medium, write_set: [graph_engine, processor_registry, rendered_audio], evidence_key: dt96_dynamics_sends, claim_impact: none}
+  DT-97: {lane: v3_engine, profile: automatic_internal, resource_class: medium, write_set: [webapp_api, frontend_client, export_surface], evidence_key: dt97_workstation, claim_impact: none}
+  DT-98: {lane: v3_engine, profile: automatic_internal, resource_class: medium, write_set: [processor_registry, graph_engine, rendered_audio], evidence_key: dt98_transposition_spike, claim_impact: none}
+  DT-99: {lane: v3_engine, profile: product_scope, resource_class: medium, write_set: [deployment, public_examples], evidence_key: dt99_v3_alpha, claim_impact: public_surface_gate}
+  DT-100: {lane: v3_engine, profile: automatic_internal, resource_class: high, write_set: [pitch_engine, processor_registry, rendered_audio], evidence_key: dt100_pitch_correction, claim_impact: none}
+  DT-101: {lane: v3_engine, profile: rights_spend, resource_class: high, write_set: [repair_backends, dependency_manifest, sbom], evidence_key: dt101_denoise_dereverb, claim_impact: license_gate}
+  DT-102: {lane: v3_engine, profile: automatic_internal, resource_class: medium, write_set: [fingerprint_schema, corpus_deltas], evidence_key: dt102_fingerprints, claim_impact: descriptive_only}
+  DT-103: {lane: v3_engine, profile: automatic_internal, resource_class: medium, write_set: [candidate_initialization, mode_contracts], evidence_key: dt103_corpus_informed_init, claim_impact: descriptive_only}
+  DT-104: {lane: v3_engine, profile: automatic_internal, resource_class: medium, write_set: [mode_contracts, rendered_audio], evidence_key: dt104_expanded_modes, claim_impact: none}
+  DT-105: {lane: v3_engine, profile: automatic_internal, resource_class: medium, write_set: [frontend_client, visual_system], evidence_key: dt105_visual_system, claim_impact: none}
+  DT-106: {lane: v3_engine, profile: product_scope, resource_class: medium, write_set: [release_decision, deployment], evidence_key: dt106_v3_beta, claim_impact: public_surface_gate}

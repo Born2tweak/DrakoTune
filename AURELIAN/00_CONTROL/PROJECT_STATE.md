@@ -3,7 +3,7 @@
 **State date:** 2026-07-21  
 **Audited commit:** `a3c51637a0c2ed18994a6950a45a72ccb753a93d`  
 **Planning epoch:** H0 complete; 2026-07-23 reconciliation resolved the consolidated human decision (D-A/D-B/D-C) — frontier now DT-54 (H1)  
-**Delivery posture:** DT-45–DT-54 complete (D-025/026/027 + D-028 Q-014 accepted 2026-07-23). **Next autonomous milestone: DT-56** (listening protocol); DT-55 ready but rights/spend-gated; DT-69/DT-70 unblocked/deferred. Remaining gates are real-corpus rights + listening-study spend/recruitment (DEF-003). System scorecard: NOT RELEASABLE (no category at 10; pre-release, honest). See `control/RECONCILIATION_RECORD.md` §6–§8.  
+**Delivery posture (updated 2026-07-27, D-030):** DT-45–DT-58 autonomous portions complete; DT-77 measurement phase produced N-016..N-022. **Active track: V3 Engine (DT-93..DT-106)** — DEF-003 is re-scoped to gate *public quality claims only*, so implementation, experimentation, internal promotion and personal use proceed autonomously. Current milestone: **DT-93 → DT-94 → DT-95**. Human gates remaining: DT-99/DT-106 public surface, DT-101 backend licensing, and the untouched real-corpus rights + listening-study spend/recruitment gates (which now bar *claims*, not shipping). System scorecard: NOT RELEASABLE for public claims (no category at 10; pre-release, honest). See `control/RECONCILIATION_RECORD.md` §6–§8 and `AURELIAN/05_ROADMAP/MILESTONES/DT_93_106.md`.  
 **Planning package:** Aurelian v1.2
 
 ## Verified baseline

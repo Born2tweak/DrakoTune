@@ -50,11 +50,31 @@ deficiencies:
     status: open_until_validated
     disposition: parked_behind_gate
     disposition_note: >
-      Gate = rights-clean representative corpus acquisition (spend) + participant
-      recruitment (human contact) + preregistered blinded listening. None can be done
-      autonomously. Blocks perceptual_quality, generalization, product_advancement, claims.
+      RE-SCOPED 2026-07-27 by D-030 (owner authority). Gate = rights-clean representative
+      corpus acquisition (spend) + participant recruitment (human contact) + preregistered
+      blinded listening. None can be done autonomously.
+
+      What it blocks (unchanged in kind, narrowed in reach): PUBLIC scientific quality
+      claims. No "professional", "studio-quality", "better than", or comparative
+      effectiveness statement may be published without this evidence, and no claim of any
+      kind may derive from the D-029 private corpus.
+
+      What it no longer blocks: implementation, experimentation, internal promotion,
+      personal use, and product advancement. The owner is the sole preference authority
+      and has declined to act as a recurring manual QA gate; milestones therefore complete
+      on automated technical safety, graph validity, and mode-distinctness evidence.
+      Owner A/B reactions are captured opportunistically and may trigger revision, but are
+      never a precondition for shipping a reversible engineering slice.
+
+      Rationale: the previous scope made every audible improvement wait on a study that
+      cannot be run, which produced a two-week measurement loop with zero product change.
+      Blocking claims achieves the honesty goal; blocking implementation did not.
     gate: HG-REAL-AUDIO-RIGHTS + human study recruitment (DT-55/62/56/57/66/67)
-    affected_categories: [perceptual_quality, generalization, product_advancement, claims]
+    affected_categories: [claims_public]
+    superseded_scope:
+      previous_affected_categories: [perceptual_quality, generalization, product_advancement, claims]
+      superseded_by: D-030
+      superseded_on: "2026-07-27"
     required_evidence:
       - Rights-cleared representative corpus
       - Preregistered qualified blinded listening results
