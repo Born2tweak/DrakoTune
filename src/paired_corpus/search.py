@@ -382,6 +382,19 @@ def evaluate(raw: np.ndarray, chain: Chain, target: WetTarget,
     reason is reported rather than silently folded into a number."""
     out, _ = execute_plan(raw, SR, chain_to_plan(chain))
     audio = (out[:, 0] if out.ndim == 2 else out).astype(np.float32)
+    return evaluate_audio(raw, audio, target, full_si_sdr, si_sdr_floor_db)
+
+
+def evaluate_audio(raw: np.ndarray, audio: np.ndarray, target: WetTarget,
+                   full_si_sdr: bool = False,
+                   si_sdr_floor_db: float = SI_SDR_FLOOR_DB) -> Evaluation:
+    """Score already-rendered audio — the guarded objective, as a function of audio.
+
+    Split out from `evaluate` so the certification battery can put the SAME scoring
+    the search uses under audit, including candidates no chain in the search space
+    can author. An objective that is only reachable through the search cannot be
+    audited independently of it.
+    """
     peak = float(np.max(np.abs(audio)) + 1e-12)
     clip = float(np.mean(np.abs(audio) >= 0.999))
     sdr = _preservation_db(raw, audio, full_si_sdr)

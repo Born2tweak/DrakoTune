@@ -31,6 +31,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from src.dsp_engine.processors import PROCESSORS
 from src.paired_corpus.search import SR, Chain, Slot, chain_to_plan
 from src.dsp_engine import execute_plan
 
@@ -101,6 +102,38 @@ PATHOLOGIES: tuple[Pathology, ...] = (
         "the two cheapest axes bought together — the actual N-018 winning shape",
     ),
 )
+
+
+# Registry-extreme pathologies, GENERATED rather than listed. A hand-written
+# catalogue only contains the exploits someone already thought of — which is how
+# N-018 survived a review that had adversarial tests in it. Every searchable
+# parameter of every registry processor is driven to each end of its safe range,
+# so a new processor or a widened range enters the battery automatically.
+#
+# `Gain` is included deliberately: loudness inflation is the cheapest exploit of
+# any metric that is not level-invariant, and the registry permits +12 dB.
+_EXTREME_SKIP = {"attack_ms", "release_ms", "harmonics"}
+
+
+def generated_pathologies() -> tuple[Pathology, ...]:
+    """One candidate per (processor, parameter, extreme) over the registry."""
+    out: list[Pathology] = []
+    for name, spec in sorted(PROCESSORS.items()):
+        defaults = {k: (lo + hi) / 2.0 for k, (lo, hi) in spec.safe_ranges.items()}
+        for key, (lo, hi) in sorted(spec.safe_ranges.items()):
+            if key in _EXTREME_SKIP:
+                continue
+            for edge, value in (("min", lo), ("max", hi)):
+                params = dict(defaults)
+                params[key] = value
+                out.append(Pathology(
+                    f"extreme.{name}.{key}.{edge}",
+                    Chain(f"extreme.{name}.{key}.{edge}", (_slot(name, **params),)),
+                    f"{name}.{key} driven to its {edge} safe-range edge ({value}); "
+                    "registry-safe by construction, and generated rather than "
+                    "chosen, so an unanticipated exploit still enters the battery",
+                ))
+    return tuple(out)
 
 
 def honest_recovery_chain() -> Chain:
