@@ -108,3 +108,58 @@ def make_surrogate_pair(seed: int, wet_delay_s: float = 0.0
     if wet_delay_s > 0:
         wet = np.concatenate([np.zeros(int(wet_delay_s * SR), dtype=np.float32), wet])
     return raw, wet, SR, dict(TRUTH)
+
+
+# ---------------------------------------------------------------------------
+# Invertible surrogate (N-020)
+# ---------------------------------------------------------------------------
+#
+# `make_surrogate_pair` degrades the clean signal with additive noise and an 11 ms
+# room comb. Neither is invertible by anything in the processor registry, so on
+# that pair NO admissible chain can approach the wet under a full-spectrum metric:
+# the honest reference scores worse than doing nothing, and every gaming verdict
+# measured against it is uninterpretable (N-020).
+#
+# This pair is built so the honest answer is KNOWN TO BE OPTIMAL. The degradation
+# is a chain of registry filters with exact inverses inside the admissible space,
+# and the wet is the clean signal itself. A candidate that outscores the exact
+# inverse is therefore gaming the metric, with no room for the "maybe the reference
+# was weak" explanation that N-020 had to fall back on.
+
+INVERTIBLE_DEGRADATION = (
+    # (processor, params applied to the CLEAN signal to make the raw)
+    ("PeakFilter", {"cutoff_frequency_hz": 300.0, "gain_db": 5.0, "q": 0.8}),
+    ("PeakFilter", {"cutoff_frequency_hz": 3500.0, "gain_db": -3.0, "q": 1.4}),
+    ("HighShelfFilter", {"cutoff_frequency_hz": 9000.0, "gain_db": -3.0, "q": 0.7}),
+)
+
+
+def invertible_inverse() -> tuple[tuple[str, dict], ...]:
+    """The exact inverse of `INVERTIBLE_DEGRADATION`: same filters, negated gains.
+
+    Every parameter here is inside the admissible search space, so this is a chain
+    the search could actually author — which is what makes "the search failed to
+    find it" a meaningful statement about the search rather than about the space.
+    """
+    return tuple((proc, {**params, "gain_db": -params["gain_db"]})
+                 for proc, params in reversed(INVERTIBLE_DEGRADATION))
+
+
+def make_invertible_pair(seed: int) -> tuple[np.ndarray, np.ndarray, int, dict]:
+    """(raw, wet, sr, truth) where wet is clean and raw = clean through known EQ.
+
+    No additive noise and no comb: the only difference between raw and wet is a
+    filter chain the registry owns, so the best achievable distance is ~0 and the
+    chain that achieves it is written down.
+    """
+    from src.dsp_engine import execute_plan
+    from src.paired_corpus.search import Chain, Slot, chain_to_plan
+
+    clean = make_performance(seed)
+    wet = (clean / (np.max(np.abs(clean)) + 1e-12) * 0.7).astype(np.float32)
+    chain = Chain("degrade", tuple(Slot(p, dict(params), ())
+                                   for p, params in INVERTIBLE_DEGRADATION))
+    out, _ = execute_plan(wet, SR, chain_to_plan(chain))
+    raw = (out[:, 0] if out.ndim == 2 else out).astype(np.float32)
+    return raw, wet, SR, {"degradation": INVERTIBLE_DEGRADATION,
+                          "inverse": invertible_inverse()}

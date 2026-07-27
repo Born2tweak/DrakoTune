@@ -200,11 +200,14 @@ def test_reference_that_loses_to_no_op_makes_gaming_untestable(pair):
     raw, wet, target, honest = pair
     amap = align_pair(raw, wet, SR)
 
-    logmel = CANDIDATES_BY_NAME["logmel_l1"].build(wet, amap, target)
-    assert logmel(honest) > logmel(raw), "reference no longer loses to no-op here"
-    assert check_honest_reference_validity(logmel, raw, honest).verdict is Verdict.UNTESTABLE
+    # `mrstft_log` is the surviving case on the noisy/comb surrogate: its reference
+    # still loses to no-op there. (`logmel_l1` no longer does, once log-magnitudes
+    # are floored -- see LOG_FLOOR_DB.)
+    mrstft = CANDIDATES_BY_NAME["mrstft_log"].build(wet, amap, target)
+    assert mrstft(honest) > mrstft(raw), "reference no longer loses to no-op here"
+    assert check_honest_reference_validity(mrstft, raw, honest).verdict is Verdict.UNTESTABLE
 
-    report = certify(logmel, raw, wet, honest, admissible=_admissible(raw, target))
+    report = certify(mrstft, raw, wet, honest, admissible=_admissible(raw, target))
     assert "GAMING_RESISTANCE" in report.untestable
     assert "GAMING_RESISTANCE" not in report.failed
 
@@ -233,4 +236,67 @@ def test_no_candidate_objective_can_be_selected_on_current_evidence(pair):
         assert report.structurally_sound is False
         assert "CONSTRAINT_ADMITS_HONEST" in report.failed
     untestable_gaming = [n for n, r in verdicts.items() if "GAMING_RESISTANCE" in r.untestable]
-    assert set(untestable_gaming) == {"logmel_l1", "mrstft_log"}
+    assert set(untestable_gaming) == {"mrstft_log"}
+
+
+# ---------------------------------------------------------------------------
+# Invertible surrogate: a reference that is provably optimal (N-021)
+# ---------------------------------------------------------------------------
+
+def _invertible(seed=101):
+    from src.paired_corpus.surrogates import make_invertible_pair
+    raw, wet, _, truth = make_invertible_pair(seed=seed)
+    inverse = render(raw, Chain("inv", tuple(Slot(p, dict(q), ())
+                                             for p, q in truth["inverse"])))
+    amap = align_pair(raw, wet, SR)
+    return raw, wet, amap, build_target(wet, amap), inverse
+
+
+def test_exact_inverse_recovers_the_target_under_every_candidate():
+    """N-020's blocker cleared: on a pair whose degradation the registry can invert
+    exactly, the honest answer is optimal for every candidate objective, so a
+    gaming verdict no longer depends on how good the reference happened to be."""
+    from src.paired_corpus.objectives import CANDIDATES
+    raw, wet, amap, ft, inverse = _invertible()
+    for cand in CANDIDATES:
+        obj = cand.build(wet, amap, ft)
+        assert obj(inverse) < obj(raw), f"{cand.name}: inverse loses to doing nothing"
+        assert obj(inverse) <= obj(wet) + 0.05, f"{cand.name}: inverse is far from the target"
+
+
+def test_no_pathology_beats_the_exact_inverse():
+    """With a provably optimal reference, none of the 44 destructive candidates
+    outscores it — so the earlier 80/145 'gaming' figure was the reference, exactly
+    as N-020 concluded."""
+    raw, wet, amap, ft, inverse = _invertible()
+    report = certify(_distance(ft), raw, wet, inverse,
+                     admissible=_admissible(raw, ft))
+    gaming = next(p for p in report.properties if p.name == "GAMING_RESISTANCE")
+    assert gaming.verdict is Verdict.PASS
+    assert gaming.measurements["beaten_by"] == []
+
+
+def test_the_preservation_floor_rejects_the_mathematically_correct_answer():
+    """N-021, and it is not a tuning complaint. SI-SDR is measured against the RAW,
+    so the better a treatment corrects the raw the further it is from it: the exact
+    inverse sits 92 dB from the target and 11.5-11.9 dB from the raw, and the 12 dB
+    floor rejects it on every seed. A constraint anti-correlated with correctness
+    cannot be made right by moving the number."""
+    from src.evaluation.reference_metrics import si_sdr
+    for seed in (101, 103, 107, 211):
+        raw, wet, amap, ft, inverse = _invertible(seed)
+        ev = evaluate_audio(raw, inverse, ft, full_si_sdr=True)
+        n = min(len(inverse), len(wet))
+        assert si_sdr(wet[:n], inverse[:n]) > 60.0, "the inverse is not actually correct"
+        assert ev.rejected_for == ("si_sdr",)
+        assert ev.safe is False
+
+
+def test_level_invariance_check_does_not_clip_the_candidate():
+    """The check scaled candidates up into clipping and then reported every metric
+    as level-sensitive — it was measuring its own distortion. Positive gain is now
+    capped at the available headroom."""
+    raw, wet, amap, ft, inverse = _invertible()
+    result = check_level_invariance(_distance(ft), inverse)
+    assert result.verdict is Verdict.PASS
+    assert result.measurements["headroom_db"] < 6.0, "pick a candidate with little headroom"

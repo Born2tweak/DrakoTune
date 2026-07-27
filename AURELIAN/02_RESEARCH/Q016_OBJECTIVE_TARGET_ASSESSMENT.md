@@ -54,14 +54,22 @@ gap-closure number measured under it is a lower bound.
 
 ## 4. What a decision needs that does not exist yet
 
-1. **A metric-independent honest reference.** N-020's blocker. Options: per-pair
-   references defended by an engineer against each metric; or surrogates whose
-   degradation is fully invertible by the registry (the current one contains a room
-   comb that is not), so "the best an admissible chain can do" is well defined.
-2. **A preservation constraint that admits honest work.** N-019. The current floor
-   is simultaneously too permissive (admits compression, gating, shelving) and too
-   strict (rejects a professional low-mid cut). A floor on waveform correlation is
-   the wrong instrument for both jobs.
+1. ~~**A metric-independent honest reference.**~~ **Cleared (N-021):**
+   `make_invertible_pair` builds a surrogate whose degradation is three registry
+   filters, so the exact inverse is inside the admissible space and provably
+   optimal. All four candidates recover it. With a reference that cannot be blamed,
+   **none of the 147 admitted pathologies beats it under any candidate** — so
+   gaming resistance does not discriminate between them, and selection still cannot
+   be made on this evidence.
+2. **A preservation constraint that admits honest work.** N-019 said the current
+   floor is both too permissive (admits compression, gating, shelving) and too
+   strict (rejects a professional low-mid cut). **N-021 shows it is worse than
+   mis-tuned: it is anti-correlated with correctness.** SI-SDR is measured against
+   the RAW, and the better a treatment corrects the raw the further from the raw it
+   is — so the exact inverse, 92 dB from the target, is rejected on every seed. No
+   value of the threshold fixes a constraint pointing the wrong way; it needs to be
+   measured against the performance content that must survive, not against the
+   untreated input. **This is now the top engineering blocker.**
 3. **Listening data.** DEF-003. `PERCEPTUAL_ALIGNMENT` is permanently UNTESTABLE
    until it exists, so **no objective in this repository can be certified for
    production**, by construction. That is the honest state, not a gap to be

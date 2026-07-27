@@ -33,6 +33,20 @@ from src.paired_corpus.alignment import AlignmentMap
 from src.paired_corpus.search import SR, WetTarget, composite_distance
 
 _EPS = 1e-10
+# Log-magnitude distances are dominated by near-silent frames unless the magnitude
+# is floored: log(1e-10) is -230 dB, so two different flavours of digital silence
+# between phrases can outweigh every audible difference. Caught by the invertible
+# surrogate (N-020 follow-up), where `mrstft_log` scored the EXACT inverse of the
+# degradation worse than the untreated raw. The floor is relative to each segment's
+# own peak, so it scales with the material instead of assuming an absolute level.
+LOG_FLOOR_DB = -80.0
+
+
+def _floored_log(mag: np.ndarray) -> np.ndarray:
+    """log-magnitude with a peak-relative floor at LOG_FLOOR_DB."""
+    peak = float(np.max(mag)) if mag.size else 0.0
+    floor = max(peak * (10 ** (LOG_FLOOR_DB / 20.0)), _EPS)
+    return np.log(np.maximum(mag, floor))
 
 
 @dataclass(frozen=True)
@@ -103,7 +117,7 @@ def _log_mel(x: np.ndarray, n_mels: int = 64) -> np.ndarray:
     import librosa
     mel = librosa.feature.melspectrogram(y=x.astype(np.float32), sr=SR, n_fft=2048,
                                          hop_length=512, n_mels=n_mels, power=2.0)
-    return np.log(mel + _EPS)
+    return _floored_log(mel)
 
 
 def _logmel_distance(a: np.ndarray, b: np.ndarray) -> float:
@@ -141,7 +155,7 @@ def _mrstft_distance(a: np.ndarray, b: np.ndarray,
         n = min(sa.shape[0], sb.shape[0])
         if n == 0:
             continue
-        total += float(np.mean(np.abs(np.log(sa[:n] + _EPS) - np.log(sb[:n] + _EPS))))
+        total += float(np.mean(np.abs(_floored_log(sa[:n]) - _floored_log(sb[:n]))))
     return total / max(len(ffts), 1)
 
 

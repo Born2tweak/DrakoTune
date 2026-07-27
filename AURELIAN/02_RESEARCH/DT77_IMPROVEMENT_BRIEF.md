@@ -158,6 +158,23 @@ implemented and a residual gap survives a full registry-safe search.
   measured under it is a lower bound, not an estimate.** C-4 still needs a target
   with real perceptual grounding; the audit only says an objective is not
   *obviously* invalid.
+
+  Extended into a fail-closed certification battery (N-020, N-021):
+  `objective_certification.py` checks determinism, identity-optimum, monotonicity,
+  level invariance, non-degeneracy, honest-reference validity, gaming resistance
+  against a registry-GENERATED pathology catalogue, and constraint-admits-honest.
+  `PERCEPTUAL_ALIGNMENT` is permanently UNTESTABLE while DEF-003 stands, so
+  production certification is unreachable by construction — nothing here can be
+  called perceptually valid.
+
+  **Top engineering blocker is now the preservation constraint, not the distance
+  (N-021).** On a surrogate whose degradation the registry inverts exactly, the
+  correct answer measures 92 dB from the target and 11.5–11.9 dB from the raw, and
+  the 12 dB floor rejects it on every seed: SI-SDR against the raw punishes
+  correction, so no threshold value fixes it. Four candidate objectives
+  (`composite_v1`, `logmel_l1`, `mfcc_l1`, `mrstft_log`) exist and none is
+  selected — against a provably optimal reference all four resist all 147 admitted
+  pathologies, so gaming resistance does not separate them.
 - **C-5 Processor ordering** — harness built (`--ordering`, predeclared orders
   including the professional order from `docs/research/vocal_chain_research.md`);
   not yet run on the corpus.

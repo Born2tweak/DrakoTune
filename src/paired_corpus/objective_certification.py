@@ -176,15 +176,32 @@ def check_level_invariance(objective: Objective, candidate: np.ndarray,
     """
     base = float(objective(candidate))
     moved = {}
+    # A gain that clips is not a pure level change. Scaling up to 1.0 and clipping
+    # made every candidate "fail" level invariance on the invertible surrogate,
+    # where the honest answer peaks near full scale -- the check was measuring its
+    # own distortion. Positive gain is therefore capped at the available headroom,
+    # and dropped entirely when there is none.
+    peak = float(np.max(np.abs(candidate))) + 1e-12
+    headroom_db = 20.0 * float(np.log10(1.0 / peak))
     for g in gains_db:
-        scaled = np.clip(candidate * (10 ** (g / 20.0)), -1.0, 1.0).astype(np.float32)
+        if g > 0 and g > headroom_db:
+            moved[f"{g:+.0f}dB"] = None  # no headroom; not a testable direction here
+            continue
+        scaled = (candidate * (10 ** (g / 20.0))).astype(np.float32)
         moved[f"{g:+.0f}dB"] = float(objective(scaled))
-    worst = max(abs(v - base) for v in moved.values()) if moved else float("inf")
+    moved = {k: v for k, v in moved.items() if v is not None}
+    if not moved:
+        return PropertyResult(
+            "LEVEL_INVARIANCE", Verdict.UNTESTABLE,
+            "no gain change could be applied without clipping, so level invariance "
+            "was not exercised", {"base": base, "headroom_db": round(headroom_db, 3)})
+    worst = max(abs(v - base) for v in moved.values())
     ok = _finite(base) and worst <= tolerance
     return PropertyResult(
         "LEVEL_INVARIANCE", Verdict.PASS if ok else Verdict.FAIL,
         f"largest score change under a pure gain change: {worst:.3e}",
-        {"base": base, "scaled": moved, "tolerance": tolerance})
+        {"base": base, "scaled": moved, "tolerance": tolerance,
+         "headroom_db": round(headroom_db, 3)})
 
 
 def check_non_degenerate(objective: Objective, raw: np.ndarray,

@@ -270,3 +270,60 @@ estimator and the report's own method text (N-019), and now the *reference* a
 verdict is measured against. Each time, the harness's own component was the thing
 being measured. Before believing any comparative verdict, measure the baseline it
 is relative to — including the one that looks too obvious to check.
+
+## N-021 — The preservation floor is anti-correlated with correctness
+
+2026-07-26, `src/paired_corpus/surrogates.py::make_invertible_pair` +
+`tests/test_objective_certification.py`.
+
+N-020 blocked objective comparison on the absence of a metric-independent honest
+reference. The fix is a surrogate whose degradation the registry can invert
+**exactly**: the wet is the clean signal, the raw is the clean signal through three
+registry filters, and the inverse is the same filters with negated gains — a chain
+inside the admissible search space. On that pair the honest answer is provably
+optimal, so a gaming verdict no longer depends on how good the reference happened
+to be.
+
+It cleared N-020 and immediately exposed something larger.
+
+| seed | exact inverse → SI-SDR vs the TARGET | → SI-SDR vs the RAW | admitted by the 12 dB floor? |
+|---|--:|--:|---|
+| 101 | 92.41 dB | 11.53 dB | **no** |
+| 103 | 92.55 dB | 11.62 dB | **no** |
+| 107 | 92.97 dB | 11.76 dB | **no** |
+| 211 | 92.90 dB | 11.92 dB | **no** |
+
+The mathematically correct answer — 92 dB from the target, i.e. essentially exact
+— is **rejected on every seed**.
+
+**Mechanism, and why it is not a threshold complaint.** The preservation floor
+measures SI-SDR against the **raw**. The better a treatment corrects the raw, the
+further it is from the raw. A constraint of that shape does not merely have the
+wrong value; it points the wrong way, penalising exactly the treatments the search
+is supposed to find. Lowering the number trades one failure for the other N-019
+already recorded: at 5 dB it admitted a 20:1 compressor.
+
+**Consequences.**
+
+- F-9's reading is confirmed and strengthened. Every winner sat at 12.2–13.4 dB
+  because the search was pressed against a constraint that punishes correction.
+  **+32.8% is a lower bound, and the constraint is why.**
+- A preservation constraint must be measured against something other than the
+  untreated input — the performance content that must survive, not the input's
+  waveform. Specifying that is Q-016 work.
+
+**On ranking the candidates:** with a provably optimal reference, all four
+candidate objectives resist all 147 admitted pathologies (0 beaten). Gaming
+resistance therefore does **not** discriminate between them on ground truth, and
+nothing is selected. What the invertible pair did discriminate is a defect in one
+candidate: `mrstft_log` scored the exact inverse *worse than the untreated raw*
+because log-magnitude distance is dominated by near-silent frames. Both
+log-magnitude candidates now floor magnitudes 80 dB below each segment's own peak.
+
+**Process lesson (fifth and sixth instances, both inside this battery).** The
+`LEVEL_INVARIANCE` check scaled candidates up into clipping and then reported every
+metric as level-sensitive — it was measuring its own distortion; positive gain is
+now capped at available headroom. And the first cross-objective comparison ranked
+references rather than objectives (N-020). **A measurement harness is not exempt
+from the discipline it enforces; every baseline, guard and check inside it is
+itself a measurement that can be wrong.**
