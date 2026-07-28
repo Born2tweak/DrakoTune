@@ -27,14 +27,12 @@ Thumbs.db
 htmlcov/
 .coverage
 
-# Audio output artifacts (large binaries).
-# Recursive: DT-94/DT-95 render demos into output/v3_renders/, and renders made
-# from the D-029 private corpus are local/internal-only — they must never be
-# committed regardless of how deep the output tree gets.
-output/**/*.wav
-output/**/*.mp3
-output/**/*.flac
-output/*.wav
+# Audio output artifacts and render scratch space.
+# The whole tree is ignored, not just the audio: DT-94/DT-95 write renders and
+# per-run report.json here, and anything derived from the D-029 private corpus
+# (including its measurements) is local/internal-only and must never be
+# committed. Committed evidence goes to reports/ after the anonymization gate.
+output/
 
 # Dataset governance (docs/data/DATASET_GOVERNANCE.md): raw/restricted/derived
 # audio never enters git; only data/manifests/ and data/licenses/ are tracked.
