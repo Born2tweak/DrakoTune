@@ -435,3 +435,57 @@ One honest shortcoming visible in the renders: every chain leaves the material q
 for safety and wrong for auditioning — an A/B where one side is quieter is not a fair
 comparison. Loudness-matched audition is a DT-97 requirement, tracked there, not a
 property of these chains.
+
+## F-12 — the attenuate-only output stage was penalising correct chains (2026-07-28, DT-96)
+
+The M09 executor applied an attenuate-only ceiling on the stated principle that a
+makeup limiter "would boost quiet material and inflate loudness, violating never assume
+louder is better". That principle is correct for *evaluation* and wrong for *export*.
+
+Measured consequence: every DT-95 mode render came back **3.7-8.3 dB quieter than its
+source**, at inconsistent levels between modes. Any chain that cut anything — which is
+every corrective chain — handed the user a quiet file. A vocal that is correct but quiet
+reads as worse, so the guard meant to prevent inflated results was silently penalising
+the treatments it was protecting.
+
+Fix: three separate intents (`gain_staging.py`). RAW is unchanged level and remains the
+only thing evaluation measures. AUDITION is left alone because fair comparison is done by
+loudness-matching the *pair* (ADR 0004), not by pushing each side to a target. EXPORT
+makes up to an intended peak. Only boosting is capped (12 dB); attenuation always applies
+in full; the hard ceiling still runs last in every stage. After the fix all six
+mode x intensity renders land at -1 dBFS instead of scattered between -3.7 and -8.3 dB.
+
+**The generalisable error:** one rule was serving two purposes with opposite requirements.
+It was never wrong as stated — it was applied at a stage where its rationale did not hold.
+
+## F-13 — capability existed, the product did not have it (2026-07-28, DT-96/97)
+
+DT-94 and DT-95 were reported as delivering graph routing, stereo contracts, eight
+primitives and three distinct modes. All of that was true and none of it was reachable by
+a user: every path ran through `scripts/v3_render_check.py` and `scripts/v3_render_modes.py`.
+The orchestration layer, application service, web job layer, HTTP API, CLI and batch
+runner had no notion of a mode.
+
+Recorded because it is a distinct failure mode from the N-016..N-022 family. Those were
+measurement artifacts — a conclusion describing the harness rather than the system. This
+one is the inverse: working code with no route to the user, where the demo *is* the harness.
+"Verified by a script" and "shipped" are not the same claim, and the render scripts made
+the first look like the second.
+
+Closed by wiring every route (`tests/test_v3_integration.py` pins both the
+application/CLI route and the browser route, plus that a V2 request is unaffected).
+
+## F-14 — macro controls, and the rule that keeps them honest (2026-07-28, DT-97)
+
+The workstation exposes six ordinary-language controls (Repair, Smoothness, Body, Clarity,
+Presence, Space). The design constraint worth recording: **a macro may only adjust
+processors the selected chain already contains, and never adds a capability.**
+
+Consequence, deliberately kept visible: Natural has no send, so Space cannot do anything
+there. Rather than silently doing nothing — a control that appears to work and does not is
+worse than an absent one — `apply_macros` reports it as `inert` and the inspector shows it.
+
+Centre (50) is exactly the authored chain, so the modes remain the reference point, and
+the source graph is never mutated so a revision stays reproducible from mode + macro
+values alone. Nothing here optimises against a distance objective, so the Q-016 gaming
+concerns do not apply to this layer.

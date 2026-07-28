@@ -75,9 +75,9 @@ milestones:
   - {id: DT-93, title: V3 Governance Unblock and Feature Boundary, horizon: V3A, status: complete, depends_on: [], detail: MILESTONES/DT_93_106.md}
   - {id: DT-94, title: Graph Execution Stereo Contracts and Primitive Exposure, horizon: V3A, status: complete, depends_on: [DT-93], detail: MILESTONES/DT_93_106.md}
   - {id: DT-95, title: Natural Rescue-Bold and Modern-Rap-Bold Audible Chains, horizon: V3A, status: complete, depends_on: [DT-94], detail: MILESTONES/DT_93_106.md}
-  - {id: DT-96, title: VocalRider Parallel Compression Sends Ducking and Dynamic Tone, horizon: V3A, status: ready, depends_on: [DT-94], detail: MILESTONES/DT_93_106.md}
-  - {id: DT-97, title: Workstation Upload Modes Synchronized AB Macros and Export, horizon: V3A, status: ready, depends_on: [DT-95], detail: MILESTONES/DT_93_106.md}
-  - {id: DT-98, title: Transposition Doubling and Pitch-Correction Spike, horizon: V3A, status: blocked, depends_on: [DT-96], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-96, title: VocalRider Parallel Compression Sends Ducking and Dynamic Tone, horizon: V3A, status: complete, depends_on: [DT-94], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-97, title: Workstation Upload Modes Synchronized AB Macros and Export, horizon: V3A, status: complete, depends_on: [DT-95], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-98, title: Transposition Doubling and Pitch-Correction Spike, horizon: V3A, status: ready, depends_on: [DT-96], detail: MILESTONES/DT_93_106.md}
   - {id: DT-99, title: Deployable V3 Alpha with Rendered Examples, horizon: V3A, status: blocked, depends_on: [DT-97, DT-98], detail: MILESTONES/DT_93_106.md}
   - {id: DT-100, title: Real Pitch Correction and Formant Behavior, horizon: V3B, status: blocked, depends_on: [DT-98], detail: MILESTONES/DT_93_106.md}
   - {id: DT-101, title: Denoising and Room-Reduction Backends, horizon: V3B, status: blocked, depends_on: [DT-95], detail: MILESTONES/DT_93_106.md}
