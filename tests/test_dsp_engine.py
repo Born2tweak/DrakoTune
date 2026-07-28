@@ -27,6 +27,17 @@ _VALID_PARAMS = {
     "HumNotch": {"base_hz": 60.0, "gain_db": -12.0, "q": 8.0, "harmonics": 3},
     "DeEsser": {"band_lo_hz": 5000.0, "band_hi_hz": 9000.0,
                 "frame_threshold": 0.18, "max_reduction_db": 8.0},
+    # DT-94 primitives.
+    "LowShelfFilter": {"cutoff_frequency_hz": 200.0, "gain_db": 3.0, "q": 0.7},
+    "LowpassFilter": {"cutoff_frequency_hz": 8000.0},
+    "Reverb": {"room_size": 0.5, "damping": 0.5, "wet_level": 0.3,
+               "dry_level": 0.7, "width": 1.0, "freeze_mode": 0.0},
+    "Delay": {"delay_seconds": 0.15, "feedback": 0.25, "mix": 0.3},
+    "Distortion": {"drive_db": 8.0},
+    "Clipping": {"threshold_db": -6.0},
+    "Chorus": {"rate_hz": 1.0, "depth": 0.3, "centre_delay_ms": 10.0,
+               "feedback": 0.1, "mix": 0.3},
+    "PitchShift": {"semitones": -2.0},
 }
 
 

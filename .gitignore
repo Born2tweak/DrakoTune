@@ -27,7 +27,13 @@ Thumbs.db
 htmlcov/
 .coverage
 
-# Audio output artifacts (large binaries)
+# Audio output artifacts (large binaries).
+# Recursive: DT-94/DT-95 render demos into output/v3_renders/, and renders made
+# from the D-029 private corpus are local/internal-only — they must never be
+# committed regardless of how deep the output tree gets.
+output/**/*.wav
+output/**/*.mp3
+output/**/*.flac
 output/*.wav
 
 # Dataset governance (docs/data/DATASET_GOVERNANCE.md): raw/restricted/derived

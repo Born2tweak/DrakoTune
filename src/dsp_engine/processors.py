@@ -13,19 +13,31 @@ from dataclasses import dataclass
 from typing import Callable
 
 from pedalboard import (
+    Chorus,
+    Clipping,
     Compressor,
+    Delay,
+    Distortion,
     Gain,
     HighpassFilter,
     HighShelfFilter,
     Limiter,
+    LowpassFilter,
+    LowShelfFilter,
     NoiseGate,
     PeakFilter,
     Pedalboard,
+    PitchShift,
+    Reverb,
 )
 
 from src.dsp_engine.deesser import de_ess
 
-PROCESSOR_ENGINE_VERSION = "1.1.0"  # 1.1.0 (M30): array processors + DeEsser
+# 1.1.0 (M30): array processors + DeEsser
+# 2.0.0 (DT-94): graph routing (serial/parallel/send) + explicit channel
+#   contracts + 8 previously-unexposed pedalboard primitives. Major because the
+#   registry grew from 9 to 17 entries and buffers are now canonical 2-D.
+PROCESSOR_ENGINE_VERSION = "2.0.0"
 
 
 @dataclass(frozen=True)
@@ -114,6 +126,75 @@ PROCESSORS: dict[str, ProcessorSpec] = {
                        gain_db=p["gain_db"], q=p["q"])
             for k in range(1, int(p["harmonics"]) + 1)
         ]),
+    ),
+    # ---------------------------------------------------------------------
+    # DT-94: primitives that ship with pedalboard but were never exposed.
+    #
+    # Exposing a primitive removes a dependency/licensing barrier; it does NOT
+    # make a finished production processor. Naming here is deliberately literal
+    # about what the code does — the tuned, composite versions (tasteful
+    # saturation, ducked plate-style sends, mono-safe doubling) are DT-96, and
+    # the honest-naming rule is recorded in MILESTONES/DT_93_106.md.
+    # ---------------------------------------------------------------------
+    "LowShelfFilter": ProcessorSpec(
+        "LowShelfFilter", "shape_body",
+        {"cutoff_frequency_hz": (60.0, 600.0), "gain_db": (-12.0, 12.0), "q": (0.3, 4.0)},
+        "medium", True,
+        lambda p: LowShelfFilter(**p),
+    ),
+    "LowpassFilter": ProcessorSpec(
+        "LowpassFilter", "reduce_brightness",
+        {"cutoff_frequency_hz": (2000.0, 20000.0)},
+        "medium", True,
+        lambda p: LowpassFilter(**p),
+    ),
+    # Generic algorithmic reverb. NOT a plate — pedalboard's Reverb is a
+    # Freeverb-style room. Mode presets tune it; none of them may be labelled
+    # "plate" until a real plate implementation exists.
+    "Reverb": ProcessorSpec(
+        "Reverb", "add_space",
+        {"room_size": (0.0, 1.0), "damping": (0.0, 1.0), "wet_level": (0.0, 1.0),
+         "dry_level": (0.0, 1.0), "width": (0.0, 1.0), "freeze_mode": (0.0, 0.0)},
+        "medium", True,
+        lambda p: Reverb(**p),
+    ),
+    "Delay": ProcessorSpec(
+        "Delay", "add_depth",
+        {"delay_seconds": (0.0, 2.0), "feedback": (0.0, 0.9), "mix": (0.0, 1.0)},
+        "medium", True,
+        lambda p: Delay(**p),
+    ),
+    # Raw nonlinearity. Tasteful saturation needs a drive curve, oversampling and
+    # a program-dependent wet/dry blend on top of this — that is DT-96 work, not
+    # an inherited capability.
+    "Distortion": ProcessorSpec(
+        "Distortion", "add_harmonics",
+        {"drive_db": (0.0, 24.0)},
+        "high", True,
+        lambda p: Distortion(**p),
+    ),
+    "Clipping": ProcessorSpec(
+        "Clipping", "soft_clip",
+        {"threshold_db": (-24.0, 0.0)},
+        "high", True,
+        lambda p: Clipping(**p),
+    ),
+    "Chorus": ProcessorSpec(
+        "Chorus", "add_movement",
+        {"rate_hz": (0.1, 5.0), "depth": (0.0, 1.0), "centre_delay_ms": (1.0, 30.0),
+         "feedback": (0.0, 0.5), "mix": (0.0, 1.0)},
+        "medium", True,
+        lambda p: Chorus(**p),
+    ),
+    # TRANSPOSITION ONLY. This shifts the whole signal by a fixed interval; it
+    # performs no pitch detection and no per-note correction. It must never be
+    # surfaced as "tuning", "pitch correction" or "Auto-Tune" (DT-100 is the
+    # milestone that would earn those words).
+    "PitchShift": ProcessorSpec(
+        "PitchShift", "transpose",
+        {"semitones": (-12.0, 12.0)},
+        "high", True,
+        lambda p: PitchShift(**p),
     ),
 }
 
