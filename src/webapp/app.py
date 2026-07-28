@@ -7,6 +7,7 @@ before/after players. No accounts, billing, or AI (out of scope).
 """
 
 import os
+from html import escape
 
 from fastapi import FastAPI, Form, Request, UploadFile
 from pathlib import Path
@@ -17,6 +18,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 from src.webapp.feedback import record_feedback
 from src.modes import INTENSITY_ORDER, get_mode, list_modes
 from src.webapp.jobs import (
+    UnknownModeError,
     audio_path,
     delete_job,
     get_job,
@@ -121,8 +123,19 @@ def api_modes() -> JSONResponse:
 
     `capabilities` is the honest per-mode list; the client renders it verbatim
     rather than inventing marketing copy for a chain it cannot inspect.
+
+    `counts` exists because "all six renders" was read by a reviewer as "six
+    modes". There are 3 modes and 4 intensities. An intensity is a strength
+    setting on an authored chain, not an independent product, and the API says
+    so rather than leaving the arithmetic to the reader.
     """
     return JSONResponse({
+        "counts": {
+            "modes": len(list_modes()),
+            "intensities_per_mode": len(INTENSITY_ORDER),
+            "note": ("An intensity varies the strength of a mode's authored "
+                     "chain. Modes are distinct chains; intensities are not."),
+        },
         "modes": [
             {
                 "name": spec.name,
@@ -154,6 +167,15 @@ async def api_upload(
                                  macros=macros or None)
     except ServerBusyError as exc:
         return JSONResponse({"error": "server_busy", "detail": str(exc)}, status_code=503)
+    except UnknownModeError as exc:
+        # Refuse rather than substitute. An explicit selection the server cannot
+        # honour is a client error, not a licence to render something else.
+        return JSONResponse({
+            "error": "unknown_mode",
+            "detail": str(exc),
+            "requested": exc.requested,
+            "available_modes": exc.available,
+        }, status_code=400)
     return JSONResponse(_job_response(job))
 
 
@@ -175,6 +197,11 @@ async def form_upload(
         return HTMLResponse(
             page("DrakoTune — busy", f"<h1>Busy right now</h1><p>{exc}. Please retry shortly.</p>"),
             status_code=503)
+    except UnknownModeError as exc:
+        return HTMLResponse(
+            page("DrakoTune — unknown mode",
+                 f"<h1>Unknown mode</h1><p>{escape(str(exc))}</p>"),
+            status_code=400)
     return RedirectResponse(url=f"/jobs/{job.id}", status_code=303)
 
 

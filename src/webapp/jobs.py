@@ -21,6 +21,7 @@ from src.dsp_engine.executor import render_mode
 from src.dsp_engine.gain_staging import GainStage
 from src.evaluation import evaluate
 from src.evaluation.ab_export import export_matched_pair
+from src.evaluation.delivery_metrics import measure_delivery
 from src.ingestion import preflight
 from src.modes import apply_macros, build_graph, list_modes, parse_macros
 from src.dsp.preprocess import preprocess, probe_channels
@@ -37,6 +38,20 @@ STATUS_FAILED = "failed"
 RETENTION_SECONDS = 3600  # working audio is cleaned up after this age
 
 
+class UnknownModeError(ValueError):
+    """An explicit mode selection that does not name a real mode.
+
+    Carries the available list so the API can answer the question the caller
+    actually has ("then what may I ask for?") instead of only refusing.
+    """
+
+    def __init__(self, requested: str, available: tuple[str, ...] | list[str]):
+        self.requested = requested
+        self.available = list(available)
+        super().__init__(
+            f"unknown mode {requested!r}; available: {', '.join(self.available)}")
+
+
 @dataclass
 class Job:
     id: str
@@ -51,6 +66,10 @@ class Job:
     intensity: str | None = None
     channels: int = 1  # channel count of the delivered file
     macros: dict = field(default_factory=lambda: {"changed": [], "inert": []})
+    # What the EXPORT gain stage did, and what the delivered file measures.
+    # Both are descriptive: `delivery` is telemetry, never a quality verdict.
+    gain_staging: dict | None = None
+    delivery: dict | None = None
     # Loudness-matched preview pair (M27): fair comparison, ADR 0004.
     before_preview_path: Path | None = None
     after_preview_path: Path | None = None
@@ -83,6 +102,8 @@ class Job:
             "intensity": self.intensity,
             "channels": self.channels,
             "macros": dict(self.macros),
+            "gain_staging": self.gain_staging,
+            "delivery": self.delivery,
         }
 
 
@@ -144,8 +165,14 @@ def process_upload(filename: str, data: bytes, preset: str = "clean",
     # V3 mode dispatch. Diagnosis runs identically either way — a mode changes
     # what is applied, not what was measured — so the report and the Advanced
     # Inspector stay meaningful for both paths.
+    #
+    # An explicit selection is never reinterpreted. DT-97 shipped this as a
+    # silent coercion to None, which meant a typo ("modrn_rap") rendered the V2
+    # chain and reported mode=null — the user asked for one thing and received
+    # another with no signal that it had happened. Omitting `mode` is still a
+    # valid request for the V2 path; only an explicit unknown value is refused.
     if mode is not None and mode not in list_modes():
-        mode = None
+        raise UnknownModeError(mode, list_modes())
     try:
         bundle = analyze_and_plan(str(normalized), report, asset_id=name,
                                   preset=preset, mode=mode, intensity=intensity)
@@ -158,12 +185,20 @@ def process_upload(filename: str, data: bytes, preset: str = "clean",
     _, advisory = diagnose_advisory(str(normalized), asset_id=name)
     processed = workdir / "after.wav"
     macro_summary: dict = {"changed": [], "inert": []}
+    gain_staging: dict | None = None
     if bundle.is_v3:
         # EXPORT staging: the delivered file lands at an intended level rather
         # than wherever the chain happened to leave it.
         macro_values = macros if isinstance(macros, dict) else parse_macros(macros)
-        render_mode(str(normalized), str(processed), bundle.mode, bundle.intensity,
-                    stage=GainStage.EXPORT, macros=macro_values)
+        execution = render_mode(str(normalized), str(processed), bundle.mode,
+                                bundle.intensity, stage=GainStage.EXPORT,
+                                macros=macro_values)
+        # Surface what the stage did. A clamped makeup means the chain left the
+        # signal more than MAX_MAKEUP_DB below target, which is a fact about the
+        # render worth seeing rather than inferring from the output level.
+        gain_staging = next(
+            (dict(a.parameters) for a in execution.applied
+             if a.objective_id == "output_safety"), None)
         _, macro_report = apply_macros(build_graph(bundle.mode, bundle.intensity),
                                        macro_values)
         macro_summary = macro_report.to_dict()
@@ -197,6 +232,8 @@ def process_upload(filename: str, data: bytes, preset: str = "clean",
         intensity=bundle.intensity,
         channels=probe_channels(processed) or 1,
         macros=macro_summary,
+        gain_staging=gain_staging,
+        delivery=measure_delivery(str(processed)).to_dict(),
         before_preview_path=before_preview if previews_matched else None,
         after_preview_path=after_preview if previews_matched else None,
         previews_matched=previews_matched,

@@ -489,3 +489,67 @@ Centre (50) is exactly the authored chain, so the modes remain the reference poi
 the source graph is never mutated so a revision stays reproducible from mode + macro
 values alone. Nothing here optimises against a distance objective, so the Q-016 gaming
 concerns do not apply to this layer.
+
+## F-15 — consistent peak is not consistent loudness (2026-07-28, DT-97 corrective)
+
+F-12 closed with "all six mode x intensity renders land at -1 dBFS instead of scattered
+between -3.7 and -8.3 dB". That sentence is true and was read — by an external reviewer,
+reasonably — as evidence that the modes now deliver a consistent level. It is not.
+
+Measured with `src/evaluation/delivery_metrics.py` on the DT-97 product renders:
+
+| render                  | peak dBFS | true peak | integrated LUFS | crest dB |
+|-------------------------|-----------|-----------|-----------------|----------|
+| natural_bold            |   -1.00   |   -1.00   |     -13.65      |  13.02   |
+| natural_balanced        |   -1.00   |   -0.98   |     -13.68      |  13.06   |
+| rescue_bold             |   -1.00   |   -1.00   |     -14.64      |  14.13   |
+| rescue_balanced         |   -1.00   |   -1.00   |     -14.93      |  14.48   |
+| modern_rap_bold         |   -1.00   |   -0.99   |     -15.97      |  15.47   |
+| modern_rap_balanced     |   -1.00   |   -1.00   |     -17.15      |  16.73   |
+
+The peaks are identical to two decimal places. The integrated loudness spans **3.50 LU**.
+Modern Rap balanced is audibly quieter than Natural despite both peaking at -1 dBFS,
+because peak describes one sample and loudness describes the programme. The crest column
+shows why: the spread is dynamics, not an error.
+
+Second observation from the same instrument: the 12 dB makeup cap is not hypothetical. A
+1 s 300 Hz test tone through Rescue/Bold left the signal 14.2 dB below target, the cap
+engaged, and the delivered file peaked at **-2.22 dBFS**. So even the peak claim holds
+only while the cap stays disengaged — which nothing previously reported.
+
+**The generalisable error:** a fix was verified with the same single statistic that
+motivated it. Peak was the symptom, peak was the remedy, peak was the proof — and the
+measurement that would have distinguished "levels are consistent" from "peaks are
+consistent" was simply not taken. This is the N-016 family pattern (a conclusion
+describing the harness) in its cheapest form: not a wrong measurement, an absent one.
+
+Corrective, all descriptive: `delivery_metrics.py` reports sample peak, 4x-oversampled
+true peak, integrated LUFS, crest factor, clipping count, and for stereo the channel
+correlation and mono fold-down delta. It is wired into the job payload and the
+workstation inspector, and `gain_staging` (including `makeup_clamped`) is now reported
+rather than inferred.
+
+Explicitly NOT done: these are not combined into a score, and no threshold is asserted on
+any of them. `certified_for_production` remains unreachable while DEF-003 stands
+(`objective_certification.PERCEPTUAL_ALIGNMENT` is UNTESTABLE by construction), so a
+quality verdict built from these numbers would be exactly the unsupported claim the
+certification battery exists to refuse. `tests/test_delivery_metrics.py` pins the payload
+against acquiring a score/grade/verdict key.
+
+One defect found in this module by its own tests: total L/R cancellation produced a
+`None` fold-down delta, because the implementation guarded `mono_level <= 0` as
+unmeasurable. The single most severe stereo failure would have been reported as missing
+data. Fixed to floor at -120 dB — absence of evidence must not read as evidence of
+absence (N-016).
+
+## F-16 — an explicit selection was silently substituted (2026-07-28, DT-97 corrective)
+
+`webapp/jobs.py` coerced an unrecognised mode to `None` and rendered the V2 chain, so
+`mode=modrn_rap` produced a completed job reporting `mode: null`. The user asked for one
+thing, received another, and nothing in the response said so. The application service had
+raised a typed error for the same input since DT-96; only the web layer swallowed it.
+
+Now `UnknownModeError` carries the available list and the API answers 400 with it.
+Omitting `mode` remains a valid V2 request — absence is not an error, only an explicit
+unknown value is. Recorded because the failure was invisible by construction: every
+signal that something went wrong had been removed by the fallback that handled it.

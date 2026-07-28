@@ -28,7 +28,7 @@ from src.dsp_engine.gain_staging import (
 from src.evaluation.semantics.enums import ResultStatus
 from src.orchestration import analyze_and_plan
 from src.webapp.app import app
-from src.webapp.jobs import process_upload
+from src.webapp.jobs import UnknownModeError, process_upload
 
 FIXTURE = "fixtures/audio/muddy.wav"
 SR = 44100
@@ -139,10 +139,65 @@ class TestWebRoute:
         b, _ = sf.read(str(job.after_preview_path), dtype="float32")
         assert _rms(a) == pytest.approx(_rms(b), rel=0.35)
 
-    def test_invalid_mode_falls_back_rather_than_failing_the_upload(self):
-        job = process_upload("v.wav", open(FIXTURE, "rb").read(), mode="bogus")
+    def test_explicit_invalid_mode_is_refused_never_substituted(self):
+        """DT-97 corrective: a typo must not silently render a different chain.
+
+        The original behaviour coerced an unknown mode to None and rendered V2,
+        so a user who asked for "modrn_rap" received the V2 clean chain and a
+        job reporting mode=null. Asking for something that does not exist is now
+        an error carrying the list of things that do.
+        """
+        with pytest.raises(UnknownModeError) as excinfo:
+            process_upload("v.wav", open(FIXTURE, "rb").read(), mode="modrn_rap")
+        assert excinfo.value.requested == "modrn_rap"
+        assert "modern_rap" in excinfo.value.available
+
+    def test_omitting_mode_is_still_a_valid_v2_request(self):
+        """Only an *explicit* unknown value is refused; absence is not an error."""
+        job = process_upload("v.wav", open(FIXTURE, "rb").read())
         assert job.status == "completed"
         assert job.mode is None
+
+    def test_job_reports_what_the_gain_stage_did(self):
+        """F-12 follow-up: the makeup applied is a fact, not something to infer."""
+        job = process_upload("v.wav", open(FIXTURE, "rb").read(),
+                             mode="rescue", intensity="bold")
+        assert job.gain_staging is not None
+        assert job.gain_staging["stage"] == "export"
+        assert "applied_db" in job.gain_staging
+        assert "makeup_clamped" in job.gain_staging
+
+    def test_job_reports_delivered_file_measurements(self):
+        """Descriptive telemetry about the file the user keeps."""
+        job = process_upload("v.wav", open(FIXTURE, "rb").read(),
+                             mode="modern_rap", intensity="bold")
+        d = job.delivery
+        assert d is not None
+        for key in ("sample_peak_dbfs", "true_peak_dbfs", "integrated_lufs",
+                    "crest_factor_db", "clipped_samples", "channels"):
+            assert key in d, f"missing delivery metric: {key}"
+
+    def test_delivery_metrics_are_not_a_quality_verdict(self):
+        """The payload must stay descriptive; a score here would be a claim."""
+        job = process_upload("v.wav", open(FIXTURE, "rb").read(), mode="natural")
+        forbidden = ("score", "quality", "grade", "rating", "verdict")
+        assert not [k for k in job.delivery if any(f in k.lower() for f in forbidden)]
+
+    def test_modes_endpoint_distinguishes_modes_from_intensities(self, client):
+        body = client.get("/api/modes").json()
+        assert body["counts"]["modes"] == 3
+        assert body["counts"]["intensities_per_mode"] == 4
+
+    def test_api_rejects_an_unknown_mode_with_the_available_list(self, client):
+        with open(FIXTURE, "rb") as fh:
+            resp = client.post("/api/audio/upload",
+                               files={"file": ("vocal.wav", fh, "audio/wav")},
+                               data={"mode": "modrn_rap"})
+        assert resp.status_code == 400
+        body = resp.json()
+        assert body["error"] == "unknown_mode"
+        assert body["requested"] == "modrn_rap"
+        assert "modern_rap" in body["available_modes"]
 
 
 # -- Gain staging ------------------------------------------------------------

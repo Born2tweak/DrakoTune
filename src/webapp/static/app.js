@@ -468,11 +468,17 @@ function renderInspector(job) {
     objectives: job.objectives,
     warnings: job.warnings,
     previews_loudness_matched: job.previews_matched,
+    gain_staging: job.gain_staging,
+    delivered_file: job.delivery,
   };
   $("inspector-body").innerHTML =
     "<h4>Run</h4><pre></pre><h4>Note</h4>" +
     "<pre>Measurements describe what changed. They are not evidence that it " +
-    "sounds better — that judgement is yours.</pre>";
+    "sounds better — that judgement is yours.\n\n" +
+    "delivered_file reports the exported audio: peak, true peak, integrated " +
+    "loudness, crest factor, and (for stereo) channel correlation and what " +
+    "summing to mono costs. A consistent peak is not consistent loudness, and " +
+    "none of these numbers is a quality score.</pre>";
   $("inspector-body").querySelector("pre").textContent = JSON.stringify(rows, null, 2);
 }
 
