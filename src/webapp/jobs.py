@@ -22,7 +22,7 @@ from src.dsp_engine.gain_staging import GainStage
 from src.evaluation import evaluate
 from src.evaluation.ab_export import export_matched_pair
 from src.ingestion import preflight
-from src.modes import list_modes
+from src.modes import apply_macros, build_graph, list_modes, parse_macros
 from src.dsp.preprocess import preprocess, probe_channels
 from src.orchestration import analyze_and_plan
 from src.reports import build_report, render_markdown
@@ -50,6 +50,7 @@ class Job:
     mode: str | None = None
     intensity: str | None = None
     channels: int = 1  # channel count of the delivered file
+    macros: dict = field(default_factory=lambda: {"changed": [], "inert": []})
     # Loudness-matched preview pair (M27): fair comparison, ADR 0004.
     before_preview_path: Path | None = None
     after_preview_path: Path | None = None
@@ -81,6 +82,7 @@ class Job:
             "mode": self.mode,
             "intensity": self.intensity,
             "channels": self.channels,
+            "macros": dict(self.macros),
         }
 
 
@@ -106,7 +108,8 @@ def audio_path(job_id: str, which: str) -> Path | None:
 
 
 def process_upload(filename: str, data: bytes, preset: str = "clean",
-                   mode: str | None = None, intensity: str | None = None) -> Job:
+                   mode: str | None = None, intensity: str | None = None,
+                   macros: str | dict | None = None) -> Job:
     """Run the deterministic pipeline on an uploaded file and store the job."""
     job_id = uuid.uuid4().hex
     name = Path(filename or "vocal").stem or "vocal"
@@ -154,11 +157,16 @@ def process_upload(filename: str, data: bytes, preset: str = "clean",
 
     _, advisory = diagnose_advisory(str(normalized), asset_id=name)
     processed = workdir / "after.wav"
+    macro_summary: dict = {"changed": [], "inert": []}
     if bundle.is_v3:
         # EXPORT staging: the delivered file lands at an intended level rather
         # than wherever the chain happened to leave it.
+        macro_values = macros if isinstance(macros, dict) else parse_macros(macros)
         render_mode(str(normalized), str(processed), bundle.mode, bundle.intensity,
-                    stage=GainStage.EXPORT)
+                    stage=GainStage.EXPORT, macros=macro_values)
+        _, macro_report = apply_macros(build_graph(bundle.mode, bundle.intensity),
+                                       macro_values)
+        macro_summary = macro_report.to_dict()
     else:
         render_plan(str(normalized), str(processed), bundle.plan)
     evaluation = evaluate(str(normalized), str(processed), plan=bundle.plan, eval_id=name)
@@ -188,6 +196,7 @@ def process_upload(filename: str, data: bytes, preset: str = "clean",
         mode=bundle.mode,
         intensity=bundle.intensity,
         channels=probe_channels(processed) or 1,
+        macros=macro_summary,
         before_preview_path=before_preview if previews_matched else None,
         after_preview_path=after_preview if previews_matched else None,
         previews_matched=previews_matched,

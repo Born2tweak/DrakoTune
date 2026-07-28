@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "web",
+      "name": "drakotune-web",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "uvicorn", "src.webapp.app:app", "--port", "8000"],
-      "port": 8000
+      "runtimeArgs": ["-m", "uvicorn", "src.webapp.app:app", "--port", "8099"],
+      "port": 8099
     }
   ]
 }

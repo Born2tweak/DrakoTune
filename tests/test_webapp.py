@@ -24,7 +24,7 @@ def _upload(name: str, data: bytes, content_type: str = "audio/wav") -> dict:
 
 class TestUploadFlow:
     def test_index_serves_upload_form(self):
-        resp = client.get("/")
+        resp = client.get("/classic")
         assert resp.status_code == 200
         assert "<form" in resp.text and "Analyze" in resp.text
 

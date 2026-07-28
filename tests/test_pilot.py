@@ -23,7 +23,7 @@ def _upload(name: str) -> dict:
 
 class TestVisibleLimitations:
     def test_landing_states_what_it_is_not(self):
-        text = client.get("/").text
+        text = client.get("/classic").text
         assert "isn" in text  # "What this is — and isn't"
         assert "not a professional" in text.lower()
         assert 'href="/privacy"' in text

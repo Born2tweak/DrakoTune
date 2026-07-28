@@ -21,6 +21,7 @@ selected by optimising a distance — a human chose these values and a human can
 listen to the result.
 """
 
+from src.modes.macros import MACRO_NAMES, apply_macros, parse_macros
 from src.modes.contracts import (
     INTENSITY_ORDER,
     Intensity,
@@ -32,6 +33,9 @@ from src.modes.contracts import (
 )
 
 __all__ = [
+    "MACRO_NAMES",
+    "apply_macros",
+    "parse_macros",
     "INTENSITY_ORDER",
     "Intensity",
     "ModeSpec",

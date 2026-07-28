@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DrakoTune</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<a href="#stage-upload" class="skip">Skip to content</a>
+<div id="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="name">DrakoTune</span>
+    </div>
+    <button id="about-toggle" class="ghost" aria-expanded="false">About</button>
+  </header>
+
+  <aside id="about" class="about" hidden>
+    <p>Experimental build. Your audio is processed on this machine and working
+       files are deleted automatically after one hour.</p>
+    <p>Single lead vocal. Not a mixing or mastering service.</p>
+    <p><a href="/privacy">Privacy</a> &middot; <a href="/classic">Classic view</a></p>
+  </aside>
+
+  <!-- ---------------- Stage 1: source ---------------- -->
+  <section id="stage-upload" class="stage">
+    <div id="drop" class="drop" tabindex="0" role="button"
+         aria-label="Choose or drop a vocal file">
+      <div class="drop-inner">
+        <div class="drop-icon" aria-hidden="true"></div>
+        <p class="drop-title">Drop a vocal</p>
+        <p class="drop-sub">or click to choose &middot; WAV, MP3, FLAC</p>
+      </div>
+      <label for="file" class="visually-hidden">Vocal audio file</label>
+      <input id="file" type="file" accept="audio/*" hidden>
+    </div>
+
+    <div class="beat-row">
+      <label class="beat" for="beat">
+        <span class="visually-hidden">Instrumental audio file</span>
+        <input id="beat" type="file" accept="audio/*" hidden>
+        <span class="beat-label">Add an instrumental</span>
+        <span class="beat-note">optional &middot; for reference while you listen</span>
+      </label>
+      <span id="beat-name" class="beat-name"></span>
+    </div>
+  </section>
+
+  <!-- ---------------- Stage 2: direction ---------------- -->
+  <section id="stage-mode" class="stage" hidden>
+    <div class="picked">
+      <span id="picked-name" class="picked-name"></span>
+      <button id="change-file" class="ghost small">Change</button>
+    </div>
+
+    <h2 class="section-title">Pick a direction</h2>
+    <div id="modes" class="modes"></div>
+
+    <h2 class="section-title">How far to push it</h2>
+    <div id="intensities" class="intensities" role="radiogroup"
+         aria-label="Intensity"></div>
+
+    <button id="go" class="primary">Process</button>
+    <p id="go-note" class="note"></p>
+  </section>
+
+  <!-- ---------------- Stage 3: workstation ---------------- -->
+  <section id="stage-work" class="stage" hidden>
+
+    <div class="ab">
+      <button id="ab-original" class="ab-side" aria-pressed="false">Original</button>
+      <button id="ab-processed" class="ab-side is-on" aria-pressed="true">Processed</button>
+    </div>
+    <p class="ab-note" id="ab-note">Both sides are volume-matched, so you are
+       comparing the sound and not the loudness.</p>
+
+    <canvas id="wave" class="wave" height="132"
+            aria-label="Waveform. Click to seek."></canvas>
+
+    <div class="transport">
+      <button id="play" class="play" aria-label="Play">
+        <span class="icon-play" aria-hidden="true"></span>
+      </button>
+      <span id="time" class="time">0:00 / 0:00</span>
+      <label class="loop">
+        <input id="loop" type="checkbox"> Loop
+      </label>
+      <span class="spacer"></span>
+      <span id="mode-badge" class="badge"></span>
+    </div>
+
+    <h2 class="section-title">Adjust</h2>
+    <div id="macros" class="macros"></div>
+    <div class="macro-actions">
+      <button id="reapply" class="primary">Apply changes</button>
+      <button id="reset-macros" class="ghost small">Reset</button>
+    </div>
+
+    <div class="exports">
+      <button id="export" class="primary">Export</button>
+      <button id="export-original" class="ghost">Export original</button>
+      <button id="restart" class="ghost">New track</button>
+    </div>
+
+    <details id="inspector" class="inspector">
+      <summary>Advanced &mdash; technical inspector</summary>
+      <div id="inspector-body" class="inspector-body"></div>
+    </details>
+  </section>
+
+  <div id="busy" class="busy" hidden>
+    <div class="spinner" aria-hidden="true"></div>
+    <p id="busy-text">Processing&hellip;</p>
+  </div>
+
+  <p id="error" class="error" hidden></p>
+
+</div>
+
+<footer class="foot">
+  <a href="/privacy">Privacy</a>
+</footer>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>

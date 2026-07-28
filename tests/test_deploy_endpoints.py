@@ -39,4 +39,4 @@ def test_normal_upload_not_blocked_by_cap():
 
 
 def test_pilot_banner_present_on_pages():
-    assert "Experimental pilot" in client.get("/").text
+    assert "Experimental pilot" in client.get("/classic").text

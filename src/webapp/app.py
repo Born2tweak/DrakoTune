@@ -9,6 +9,9 @@ before/after players. No accounts, billing, or AI (out of scope).
 import os
 
 from fastapi import FastAPI, Form, Request, UploadFile
+from pathlib import Path
+
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
 from src.webapp.feedback import record_feedback
@@ -80,11 +83,35 @@ def _job_response(job) -> dict:
         urls["before"] = signed_url(job.id, "before")
     if job.after_path is not None:
         urls["after"] = signed_url(job.id, "after")
+    # Loudness-matched pair for the A/B transport. Comparing the raw export
+    # levels would let a louder side win on volume alone, which is exactly the
+    # bias ADR 0004 exists to remove.
+    if job.before_preview_path is not None:
+        urls["before_preview"] = signed_url(job.id, "before_preview")
+    if job.after_preview_path is not None:
+        urls["after_preview"] = signed_url(job.id, "after_preview")
     data["audio_urls"] = urls
+    data["previews_matched"] = job.previews_matched
+    data["chain"] = getattr(job, "chain_description", "")
     return data
+
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
+app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
 
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
+    """The V3 workstation (DT-97).
+
+    A client-side app consuming the JSON API. The legacy server-rendered report
+    page stays reachable at /classic and is unchanged — routing moved, the old
+    surface was not deleted, so nothing that depended on it broke.
+    """
+    return (_STATIC_DIR / "index.html").read_text(encoding="utf-8")
+
+
+@app.get("/classic", response_class=HTMLResponse)
+def classic_index() -> str:
     return page("DrakoTune", render_upload())
 
 
@@ -117,12 +144,14 @@ async def api_upload(
     preset: str = Form("clean"),
     mode: str = Form(""),
     intensity: str = Form(""),
+    macros: str = Form(""),
 ) -> JSONResponse:
     data = await file.read()
     try:
         with job_slot():
             job = process_upload(file.filename or "vocal", data, preset=preset,
-                                 mode=mode or None, intensity=intensity or None)
+                                 mode=mode or None, intensity=intensity or None,
+                                 macros=macros or None)
     except ServerBusyError as exc:
         return JSONResponse({"error": "server_busy", "detail": str(exc)}, status_code=503)
     return JSONResponse(_job_response(job))
@@ -134,12 +163,14 @@ async def form_upload(
     preset: str = Form("clean"),
     mode: str = Form(""),
     intensity: str = Form(""),
+    macros: str = Form(""),
 ):
     data = await file.read()
     try:
         with job_slot():
             job = process_upload(file.filename or "vocal", data, preset=preset,
-                                 mode=mode or None, intensity=intensity or None)
+                                 mode=mode or None, intensity=intensity or None,
+                                 macros=macros or None)
     except ServerBusyError as exc:
         return HTMLResponse(
             page("DrakoTune — busy", f"<h1>Busy right now</h1><p>{exc}. Please retry shortly.</p>"),

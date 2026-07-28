@@ -168,16 +168,18 @@ def render_mode(
     intensity: str | None = None,
     *,
     stage: GainStage | str = GainStage.EXPORT,
+    macros: dict | None = None,
 ) -> ExecutionResult:
     """Read input, render a named V3 mode, write output.
 
     Channel count follows the graph: a mode that widens emits stereo and the
     written file is stereo. Nothing is collapsed to mono on the way out.
     """
-    from src.modes import build_graph  # local: modes depend on the engine
+    from src.modes import apply_macros, build_graph  # local: modes need the engine
 
     audio, sample_rate = sf.read(input_path, dtype="float32")
     node = build_graph(mode, intensity)
+    node, _macro_report = apply_macros(node, macros)
     processed, result = execute_graph(audio, int(sample_rate), node, stage=stage)
     sf.write(output_path, processed, int(sample_rate), subtype="PCM_16")
     return result

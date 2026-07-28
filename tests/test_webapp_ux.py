@@ -25,7 +25,7 @@ def _result_html(name: str) -> str:
 
 class TestAccessibilityBasics:
     def test_pages_declare_lang_and_viewport(self):
-        for html_text in (client.get("/").text, _result_html("harsh")):
+        for html_text in (client.get("/classic").text, _result_html("harsh")):
             assert '<html lang="en"' in html_text
             assert 'name="viewport"' in html_text
 
@@ -33,7 +33,7 @@ class TestAccessibilityBasics:
         assert 'class="skip"' in client.get("/").text
 
     def test_upload_input_is_labeled(self):
-        text = client.get("/").text
+        text = client.get("/classic").text
         assert '<label for="file"' in text and 'id="file"' in text
 
 
@@ -87,5 +87,8 @@ class TestPresetVisibility:
         assert "Clean — defect correction only" in r2.text
 
     def test_upload_form_offers_preset_choice(self):
-        text = client.get("/").text
+        # DT-97: the V2 preset selector lives on the classic page. The
+        # workstation's equivalent choice is mode + intensity, served by
+        # /api/modes and covered in tests/test_workstation.py.
+        text = client.get("/classic").text
         assert 'name="preset"' in text and "Polished" in text
