@@ -17,9 +17,12 @@ from pathlib import Path
 
 from src.diagnostics.advisory import diagnose_advisory
 from src.dsp_engine import render_plan
+from src.dsp_engine.executor import render_mode
+from src.dsp_engine.gain_staging import GainStage
 from src.evaluation import evaluate
 from src.evaluation.ab_export import export_matched_pair
 from src.ingestion import preflight
+from src.modes import list_modes
 from src.dsp.preprocess import preprocess, probe_channels
 from src.orchestration import analyze_and_plan
 from src.reports import build_report, render_markdown
@@ -43,6 +46,10 @@ class Job:
     before_path: Path | None = None
     after_path: Path | None = None
     preset: str = "clean"  # processing preset used (M39; ADR 0005)
+    # V3 selection (DT-96/97). When `mode` is set the render used a mode graph.
+    mode: str | None = None
+    intensity: str | None = None
+    channels: int = 1  # channel count of the delivered file
     # Loudness-matched preview pair (M27): fair comparison, ADR 0004.
     before_preview_path: Path | None = None
     after_preview_path: Path | None = None
@@ -71,6 +78,9 @@ class Job:
             "warnings": list(self.warnings),
             "has_report": bool(self.report_markdown),
             "preset": self.preset,
+            "mode": self.mode,
+            "intensity": self.intensity,
+            "channels": self.channels,
         }
 
 
@@ -95,7 +105,8 @@ def audio_path(job_id: str, which: str) -> Path | None:
     return path if path and path.exists() else None
 
 
-def process_upload(filename: str, data: bytes, preset: str = "clean") -> Job:
+def process_upload(filename: str, data: bytes, preset: str = "clean",
+                   mode: str | None = None, intensity: str | None = None) -> Job:
     """Run the deterministic pipeline on an uploaded file and store the job."""
     job_id = uuid.uuid4().hex
     name = Path(filename or "vocal").stem or "vocal"
@@ -126,10 +137,30 @@ def process_upload(filename: str, data: bytes, preset: str = "clean") -> Job:
 
     if preset not in ("clean", "polished"):
         preset = "clean"
-    bundle = analyze_and_plan(str(normalized), report, asset_id=name, preset=preset)
+
+    # V3 mode dispatch. Diagnosis runs identically either way — a mode changes
+    # what is applied, not what was measured — so the report and the Advanced
+    # Inspector stay meaningful for both paths.
+    if mode is not None and mode not in list_modes():
+        mode = None
+    try:
+        bundle = analyze_and_plan(str(normalized), report, asset_id=name,
+                                  preset=preset, mode=mode, intensity=intensity)
+    except (KeyError, ValueError) as exc:
+        job = Job(id=job_id, name=name, status=STATUS_FAILED,
+                  message=f"Invalid mode selection: {exc}", workdir=workdir)
+        _JOBS[job_id] = job
+        return job
+
     _, advisory = diagnose_advisory(str(normalized), asset_id=name)
     processed = workdir / "after.wav"
-    render_plan(str(normalized), str(processed), bundle.plan)
+    if bundle.is_v3:
+        # EXPORT staging: the delivered file lands at an intended level rather
+        # than wherever the chain happened to leave it.
+        render_mode(str(normalized), str(processed), bundle.mode, bundle.intensity,
+                    stage=GainStage.EXPORT)
+    else:
+        render_plan(str(normalized), str(processed), bundle.plan)
     evaluation = evaluate(str(normalized), str(processed), plan=bundle.plan, eval_id=name)
     report_obj = build_report(bundle, evaluation, asset_name=name,
                               advisory_interpretations=advisory)
@@ -154,6 +185,9 @@ def process_upload(filename: str, data: bytes, preset: str = "clean") -> Job:
         before_path=normalized,
         after_path=processed,
         preset=preset,
+        mode=bundle.mode,
+        intensity=bundle.intensity,
+        channels=probe_channels(processed) or 1,
         before_preview_path=before_preview if previews_matched else None,
         after_preview_path=after_preview if previews_matched else None,
         previews_matched=previews_matched,

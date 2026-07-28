@@ -53,12 +53,27 @@ def probe_channels(input_path: str | Path) -> int | None:
         return None
 
 
-def preprocess(input_path: str | Path, output_path: str | Path) -> Path:
-    """Normalize a vocal file to 44100Hz, 16-bit, mono WAV using FFmpeg.
+def preprocess(
+    input_path: str | Path,
+    output_path: str | Path,
+    channels: int = TARGET_CHANNELS,
+) -> Path:
+    """Normalize a vocal file to 44100Hz, 16-bit WAV using FFmpeg.
+
+    Mono remains the default and the right choice for a *lead vocal input*: a
+    single performance carries no stereo information worth preserving, and
+    summing it first keeps every downstream measurement unambiguous.
+
+    `channels=2` exists because that default was previously a hard rule, which
+    made stereo output impossible no matter what the graph did (DT-94/F-10). The
+    input stage and the output stage are now separate decisions: a mono vocal can
+    be fed to a V3 graph that emits stereo effects, and the export path preserves
+    whatever width the graph produced.
 
     Args:
         input_path: Path to the raw vocal file (WAV, MP3, etc.)
         output_path: Path where the normalized WAV will be written.
+        channels: 1 (default, vocal-only) or 2.
 
     Returns:
         Path to the normalized output file.
@@ -69,6 +84,9 @@ def preprocess(input_path: str | Path, output_path: str | Path) -> Path:
     """
     input_path = Path(input_path)
     output_path = Path(output_path)
+
+    if channels not in (1, 2):
+        raise ValueError(f"channels must be 1 or 2, got {channels}")
 
     if not input_path.exists():
         raise FileNotFoundError(f"Input file not found: {input_path}")
@@ -82,7 +100,7 @@ def preprocess(input_path: str | Path, output_path: str | Path) -> Path:
         "-y",
         "-i", str(input_path),
         "-ar", str(TARGET_SAMPLE_RATE),
-        "-ac", str(TARGET_CHANNELS),
+        "-ac", str(channels),
         "-sample_fmt", "s16",
         "-c:a", "pcm_s16le",
         str(output_path),

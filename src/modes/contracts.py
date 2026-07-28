@@ -88,9 +88,10 @@ def _natural(intensity: Intensity) -> GraphNode:
 # Rescue — for weak microphones and untreated rooms.
 #
 # V1 SCOPE, stated honestly: this chain has NO broadband denoiser and NO
-# dereverberation. It has a gate, rumble/hum removal, static resonance cuts, and
-# tonal reduction of room-coloured low-mids. Real denoising and room reduction
-# are DT-101 and arrive in Rescue V2.
+# dereverberation. It has a gate, rumble/hum removal, dynamic low-mid control,
+# and measured resonance suppression. Suppressing a room's ringing frequencies
+# reduces its tonal signature; it does not remove the reflections themselves.
+# Real denoising and dereverberation are DT-101 and arrive in Rescue V2.
 # ---------------------------------------------------------------------------
 def _rescue(intensity: Intensity) -> GraphNode:
     nodes: list[GraphNode] = [
@@ -100,16 +101,29 @@ def _rescue(intensity: Intensity) -> GraphNode:
         Processor("NoiseGate", {"threshold_db": -46.0, "attack_ms": 2.0, "release_ms": 220.0}),
         # Tonal room reduction: cut the boxy low-mid build-up a small untreated
         # room adds. This is EQ, not dereverberation — the reflections remain.
-        Processor("PeakFilter", {"cutoff_frequency_hz": 300.0, "gain_db": -5.0, "q": 1.1}),
-        Processor("PeakFilter", {"cutoff_frequency_hz": 500.0, "gain_db": -3.0, "q": 1.6}),
-        # Static resonance cut. The dynamic version is DT-96.
-        Processor("PeakFilter", {"cutoff_frequency_hz": 2400.0, "gain_db": -3.5, "q": 3.5}),
+        Processor("PeakFilter", {"cutoff_frequency_hz": 300.0, "gain_db": -3.0, "q": 1.1}),
+        # DT-96: dynamic low-mid control. Acts only while the boxiness is
+        # actually excessive, so sustained notes in that range are not gutted the
+        # way the previous always-on cut did.
+        Processor("DynamicEQ", {"band_lo_hz": 220.0, "band_hi_hz": 520.0,
+                                "threshold_ratio": 1.25, "max_reduction_db": 6.0,
+                                "smoothing_ms": 60.0}),
+        # DT-96: find this room's actual ringing frequencies instead of assuming
+        # a fixed 2.4 kHz notch that may hit nothing at all.
+        Processor("ResonanceSuppressor", {"search_lo_hz": 180.0, "search_hi_hz": 5000.0,
+                                          "max_resonances": 3, "prominence_ratio": 1.8,
+                                          "max_reduction_db": 6.0}),
         Processor("DeEsser", {"band_lo_hz": 4800.0, "band_hi_hz": 9500.0,
                               "frame_threshold": 0.16, "max_reduction_db": 7.0}),
     ]
 
     if _at_least(intensity, Intensity.BALANCED):
         nodes += [
+            # DT-96: ride levels BEFORE compression so the compressor is left
+            # with far less to do. Weak-mic takes vary wildly word to word.
+            Processor("VocalRider", {"target_percentile": 70.0, "max_boost_db": 7.0,
+                                     "max_cut_db": 5.0, "smoothing_ms": 130.0,
+                                     "silence_floor_db": -45.0}),
             Processor("Compressor", {"threshold_db": -22.0, "ratio": 3.0,
                                      "attack_ms": 8.0, "release_ms": 120.0}),
             Processor("HighShelfFilter", {"cutoff_frequency_hz": 8000.0,
@@ -123,7 +137,11 @@ def _rescue(intensity: Intensity) -> GraphNode:
             branch=Serial([
                 Processor("Compressor", {"threshold_db": -32.0, "ratio": 6.0,
                                          "attack_ms": 3.0, "release_ms": 110.0}),
-                Processor("Distortion", {"drive_db": 6.0}),
+                # DT-96: oversampled, blended saturation rather than raw
+                # Distortion — a thin weak-mic take needs harmonics that are not
+                # aliased grit.
+                Processor("Saturation", {"drive_db": 7.0, "character": 0.35,
+                                         "mix": 0.7, "oversample": 4}),
                 Processor("Gain", {"gain_db": 3.0}),
             ]),
             blend=0.35, label="rescue_density",
@@ -154,6 +172,10 @@ def _modern_rap(intensity: Intensity) -> GraphNode:
         Processor("PeakFilter", {"cutoff_frequency_hz": 320.0, "gain_db": -4.0, "q": 1.3}),
         Processor("DeEsser", {"band_lo_hz": 5200.0, "band_hi_hz": 10000.0,
                               "frame_threshold": 0.15, "max_reduction_db": 8.0}),
+        # DT-96: rider first — every word forward before any compressor acts.
+        Processor("VocalRider", {"target_percentile": 75.0, "max_boost_db": 6.0,
+                                 "max_cut_db": 6.0, "smoothing_ms": 100.0,
+                                 "silence_floor_db": -45.0}),
         # Serial stage one: fast peak control so no word stabs.
         Processor("Compressor", {"threshold_db": -18.0, "ratio": 3.0,
                                  "attack_ms": 4.0, "release_ms": 90.0}),
@@ -164,6 +186,11 @@ def _modern_rap(intensity: Intensity) -> GraphNode:
             # Serial stage two: slower levelling, so neither compressor works hard.
             Processor("Compressor", {"threshold_db": -26.0, "ratio": 2.5,
                                      "attack_ms": 25.0, "release_ms": 220.0}),
+            # DT-96: dynamic harshness control. A static cut here would dull the
+            # whole vocal; this only acts when the upper mids actually stab.
+            Processor("DynamicEQ", {"band_lo_hz": 2000.0, "band_hi_hz": 4500.0,
+                                    "threshold_ratio": 1.35, "max_reduction_db": 5.0,
+                                    "smoothing_ms": 40.0}),
             Processor("PeakFilter", {"cutoff_frequency_hz": 3200.0, "gain_db": 2.5, "q": 1.1}),
             Processor("HighShelfFilter", {"cutoff_frequency_hz": 9500.0,
                                           "gain_db": 3.5, "q": 0.7}),
@@ -174,7 +201,10 @@ def _modern_rap(intensity: Intensity) -> GraphNode:
             branch=Serial([
                 Processor("Compressor", {"threshold_db": -34.0, "ratio": 10.0,
                                          "attack_ms": 1.5, "release_ms": 80.0}),
-                Processor("Distortion", {"drive_db": 9.0}),
+                # DT-96: harder character than Rescue (more odd harmonics), still
+                # oversampled and blended so consonants survive.
+                Processor("Saturation", {"drive_db": 9.0, "character": 0.6,
+                                         "mix": 0.8, "oversample": 4}),
                 Processor("Gain", {"gain_db": 4.0}),
             ]),
             blend=0.45, label="rap_density",
@@ -226,10 +256,11 @@ MODES: dict[str, ModeSpec] = {
             "rumble removal",
             "mains hum removal",
             "noise gating (not broadband denoising)",
-            "tonal room-colour reduction (not dereverberation)",
-            "static resonance reduction",
+            "dynamic low-mid control",
+            "measured resonance suppression (not dereverberation)",
             "sibilance control",
-            "parallel density",
+            "phrase-level level riding",
+            "parallel density with oversampled saturation",
             "tight ducked room",
         ),
         build=_rescue,
@@ -241,8 +272,10 @@ MODES: dict[str, ModeSpec] = {
         capabilities=(
             "rumble removal",
             "low-mid cut",
+            "phrase-level level riding",
             "serial two-stage compression",
-            "parallel density",
+            "dynamic harshness control",
+            "parallel density with oversampled saturation",
             "presence and air",
             "ducked slap delay",
             "ducked short room",

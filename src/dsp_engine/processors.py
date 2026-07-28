@@ -32,12 +32,20 @@ from pedalboard import (
 )
 
 from src.dsp_engine.deesser import de_ess
+from src.dsp_engine.dynamics import (
+    dynamic_eq,
+    saturate,
+    suppress_resonances,
+    vocal_rider,
+)
 
 # 1.1.0 (M30): array processors + DeEsser
 # 2.0.0 (DT-94): graph routing (serial/parallel/send) + explicit channel
 #   contracts + 8 previously-unexposed pedalboard primitives. Major because the
 #   registry grew from 9 to 17 entries and buffers are now canonical 2-D.
-PROCESSOR_ENGINE_VERSION = "2.0.0"
+# 2.1.0 (DT-96): VocalRider, DynamicEQ, ResonanceSuppressor and oversampled
+#   Saturation — implementations, not aliases (see dsp_engine/dynamics.py).
+PROCESSOR_ENGINE_VERSION = "2.1.0"
 
 
 @dataclass(frozen=True)
@@ -195,6 +203,41 @@ PROCESSORS: dict[str, ProcessorSpec] = {
         {"semitones": (-12.0, 12.0)},
         "high", True,
         lambda p: PitchShift(**p),
+    ),
+    # ---------------------------------------------------------------------
+    # DT-96: substantive processors. Each exists because no pedalboard plugin
+    # does the job — see src/dsp_engine/dynamics.py for why in each case.
+    # ---------------------------------------------------------------------
+    "VocalRider": ProcessorSpec(
+        "VocalRider", "level_performance",
+        {"target_percentile": (40.0, 90.0), "max_boost_db": (0.0, 12.0),
+         "max_cut_db": (0.0, 12.0), "smoothing_ms": (20.0, 500.0),
+         "silence_floor_db": (-70.0, -25.0)},
+        "medium", True,
+        process=lambda audio, sr, p: vocal_rider(audio, sr, **p),
+    ),
+    "DynamicEQ": ProcessorSpec(
+        "DynamicEQ", "dynamic_tone",
+        {"band_lo_hz": (50.0, 8000.0), "band_hi_hz": (100.0, 16000.0),
+         "threshold_ratio": (1.0, 4.0), "max_reduction_db": (0.0, 12.0),
+         "smoothing_ms": (20.0, 300.0)},
+        "medium", True,
+        process=lambda audio, sr, p: dynamic_eq(audio, sr, **p),
+    ),
+    "ResonanceSuppressor": ProcessorSpec(
+        "ResonanceSuppressor", "suppress_resonance",
+        {"search_lo_hz": (80.0, 1000.0), "search_hi_hz": (1000.0, 12000.0),
+         "max_resonances": (1, 6), "prominence_ratio": (1.2, 5.0),
+         "max_reduction_db": (0.0, 12.0)},
+        "medium", True,
+        process=lambda audio, sr, p: suppress_resonances(audio, sr, **p),
+    ),
+    "Saturation": ProcessorSpec(
+        "Saturation", "add_density",
+        {"drive_db": (0.0, 18.0), "character": (0.0, 1.0),
+         "mix": (0.0, 1.0), "oversample": (1, 8)},
+        "medium", True,
+        process=lambda audio, sr, p: saturate(audio, sr, **p),
     ),
 }
 

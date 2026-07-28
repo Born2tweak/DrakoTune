@@ -22,6 +22,12 @@ def main() -> None:
     parser.add_argument("--preset", choices=("clean", "polished"), default="clean",
                         help="clean = defect correction only; polished = adds gentle "
                              "style compression (ADR 0005)")
+    parser.add_argument("--mode", default=None,
+                        help="V3 mode: natural | rescue | modern_rap")
+    parser.add_argument("--intensity", default=None,
+                        choices=("subtle", "balanced", "bold", "extreme"))
+    parser.add_argument("--stereo", action="store_true",
+                        help="Preprocess to stereo so V3 width/effects survive export")
     args = parser.parse_args()
 
     in_dir = Path(args.input_dir)
@@ -29,7 +35,9 @@ def main() -> None:
         print(f"Error: not a directory: {in_dir}")
         sys.exit(1)
 
-    summary = run_batch(in_dir, args.output_dir, preset=args.preset)
+    summary = run_batch(in_dir, args.output_dir, preset=args.preset,
+                        mode=args.mode, intensity=args.intensity,
+                        channels=2 if args.stereo else 1)
     c = summary.counts()
     print(f"Processed {len(summary.items)} file(s): "
           f"{c['completed']} completed, {c['blocked']} blocked, {c['failed']} failed.")

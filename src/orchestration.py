@@ -36,11 +36,31 @@ class PlanBundle:
     interpretations: tuple[Interpretation, ...]
     advisory: DiagnosticResult | None = None
     advisory_interpretations: tuple[Interpretation, ...] = ()
+    # V3 (DT-95/96). When `mode` is set the render path uses the mode's authored
+    # graph instead of the V2 plan. The plan is still built and returned, because
+    # the diagnosis it carries is what the report and the Advanced Inspector show
+    # — selecting a mode changes how audio is rendered, not what was measured.
+    mode: str | None = None
+    intensity: str | None = None
+
+    @property
+    def is_v3(self) -> bool:
+        return self.mode is not None
 
 
 def analyze_and_plan(audio_path: str, preflight_report=None, asset_id: str = "input",
-                     preset: str = "clean") -> PlanBundle:
-    """Run diagnostics + decision to produce a ProcessingPlan. Renders no audio."""
+                     preset: str = "clean", mode: str | None = None,
+                     intensity: str | None = None) -> PlanBundle:
+    """Run diagnostics + decision to produce a ProcessingPlan. Renders no audio.
+
+    `mode`/`intensity` select a V3 authored chain (see `src.modes`). Diagnosis is
+    unchanged and still runs in full: a mode decides what to apply, never what
+    was observed. An unknown mode raises rather than silently falling back, so a
+    typo cannot quietly deliver V2 output under a V3 label.
+    """
+    if mode is not None:
+        from src.modes import build_graph  # validates mode + intensity now
+        build_graph(mode, intensity)
     safety = diagnose_safety(audio_path, asset_id=asset_id)
     loudness = diagnose_loudness(audio_path, asset_id=asset_id)
     spectral, interpretations = diagnose_spectral(audio_path, asset_id=asset_id)
@@ -75,4 +95,6 @@ def analyze_and_plan(audio_path: str, preflight_report=None, asset_id: str = "in
         interpretations=interpretations,
         advisory=advisory_result,
         advisory_interpretations=advisory_interps,
+        mode=mode,
+        intensity=intensity,
     )

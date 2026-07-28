@@ -25,8 +25,11 @@ from src.application.commands import (
     EvaluateResult,
     RenderResult,
 )
+from src.dsp_engine.executor import execute_graph
+from src.dsp_engine.gain_staging import GainStage
 from src.evaluation import evaluate
 from src.evaluation.semantics.enums import ResultStatus
+from src.modes import build_graph
 from src.orchestration import PlanBundle, analyze_and_plan
 from src.shared_types import ProcessingPlan
 
@@ -50,9 +53,12 @@ class ApplicationService:
         )
 
     # -- Analyze / Plan (no audio) -----------------------------------------
-    def analyze(self, audio_path: str, *, preset: str = "clean") -> AnalyzeResult:
+    def analyze(self, audio_path: str, *, preset: str = "clean",
+                mode: str | None = None, intensity: str | None = None) -> AnalyzeResult:
         try:
-            bundle: PlanBundle = analyze_and_plan(audio_path, preset=preset)
+            bundle: PlanBundle = analyze_and_plan(
+                audio_path, preset=preset, mode=mode, intensity=intensity
+            )
         except Exception as exc:  # decode/analysis failure -> typed error
             return AnalyzeResult(ResultStatus.ERROR, reasons=(f"analyze_failed:{type(exc).__name__}",))
         return AnalyzeResult(
@@ -125,6 +131,55 @@ class ApplicationService:
         if cancel is not None and cancel():
             # Post-render cancellation: do not write output.
             return RenderResult(ResultStatus.CANCELLED, build=build, reasons=("cancelled_after_render",))
+
+        sf.write(output_path, processed, int(sample_rate), subtype="PCM_16")
+        return RenderResult(
+            ResultStatus.PASSED,
+            output_path=output_path,
+            applied_chain=result.chain_description(),
+            skipped=result.skipped,
+            build=build,
+        )
+
+    # -- Render a V3 mode (DT-96 integration) ------------------------------
+    def render_mode(
+        self,
+        input_path: str,
+        output_path: str,
+        mode: str,
+        intensity: str | None = None,
+        *,
+        stage: GainStage | str = GainStage.EXPORT,
+        cancel: Callable[[], bool] | None = None,
+    ) -> RenderResult:
+        """Render a named V3 mode through the same guarantees as `render`.
+
+        This is the product path: CLI, batch and the web job layer all reach V3
+        through here, so mode renders get the same typed errors, cancellation
+        points, output safety and build identity as a V2 plan render.
+        """
+        build = self._build_identity()
+        if cancel is not None and cancel():
+            return RenderResult(ResultStatus.CANCELLED, build=build,
+                                reasons=("cancelled_before_render",))
+        try:
+            node = build_graph(mode, intensity)
+        except (KeyError, ValueError) as exc:
+            return RenderResult(ResultStatus.ERROR, build=build,
+                                reasons=(f"unknown_mode:{exc}",))
+        try:
+            audio, sample_rate = sf.read(input_path, dtype="float32")
+        except Exception as exc:
+            return RenderResult(ResultStatus.ERROR, build=build,
+                                reasons=(f"decode_failed:{type(exc).__name__}",))
+        try:
+            processed, result = execute_graph(audio, int(sample_rate), node, stage=stage)
+        except Exception as exc:
+            return RenderResult(ResultStatus.ERROR, build=build,
+                                reasons=(f"render_failed:{type(exc).__name__}",))
+        if cancel is not None and cancel():
+            return RenderResult(ResultStatus.CANCELLED, build=build,
+                                reasons=("cancelled_after_render",))
 
         sf.write(output_path, processed, int(sample_rate), subtype="PCM_16")
         return RenderResult(

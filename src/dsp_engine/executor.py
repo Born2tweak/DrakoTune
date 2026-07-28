@@ -7,13 +7,18 @@ logs applied and skipped processors, and never overwrites the original audio.
 """
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import numpy as np
 import soundfile as sf
 from pedalboard import Pedalboard
 
+from src.dsp_engine.gain_staging import GainStage, stage_output
 from src.dsp_engine.processors import PROCESSOR_ENGINE_VERSION, PROCESSORS, clamp_params
 from src.shared_types import ProcessingPlan
+
+if TYPE_CHECKING:  # graph imports the registry; keep the runtime edge one-way
+    from src.dsp_engine.graph import GraphNode
 
 # Output-safety ceiling: attenuate-only headroom protection. This is deliberately
 # NOT a makeup limiter — a limiter with auto-gain would boost quiet material and
@@ -120,5 +125,59 @@ def render_plan(
     """Read input, execute the plan, write output. Original is never modified."""
     audio, sample_rate = sf.read(input_path, dtype="float32")
     processed, result = execute_plan(audio, int(sample_rate), plan)
+    sf.write(output_path, processed, int(sample_rate), subtype="PCM_16")
+    return result
+
+
+# ---------------------------------------------------------------------------
+# V3 graph execution (DT-96 integration).
+#
+# The flat path above is untouched: V2 requests render exactly as before. These
+# entry points are what the planner, application service, CLI and web jobs use
+# when a mode is selected, so V3 reaches the product through the same executor
+# that owns output safety rather than through a standalone script.
+# ---------------------------------------------------------------------------
+def execute_graph(
+    audio: np.ndarray,
+    sample_rate: int,
+    node: "GraphNode",
+    *,
+    stage: GainStage | str = GainStage.RAW,
+) -> tuple[np.ndarray, ExecutionResult]:
+    """Render a V3 graph with the executor's output-safety guarantees.
+
+    Gain staging is explicit so evaluation can ask for RAW (unmodified level, the
+    only thing safe to measure) while an export asks for EXPORT.
+    """
+    from src.dsp_engine.graph import render_graph  # local: avoids a cycle
+
+    processed = render_graph(audio, sample_rate, node)
+    processed, gain = stage_output(processed, stage)
+
+    applied = [AppliedAction("graph", {"topology": node.describe()}, (), "v3_graph")]
+    applied.append(AppliedAction("output_ceiling", {
+        "ceiling_dbfs": CEILING_DBFS, **gain.to_dict()
+    }, (), "output_safety"))
+    return processed, ExecutionResult(applied=tuple(applied))
+
+
+def render_mode(
+    input_path: str,
+    output_path: str,
+    mode: str,
+    intensity: str | None = None,
+    *,
+    stage: GainStage | str = GainStage.EXPORT,
+) -> ExecutionResult:
+    """Read input, render a named V3 mode, write output.
+
+    Channel count follows the graph: a mode that widens emits stereo and the
+    written file is stereo. Nothing is collapsed to mono on the way out.
+    """
+    from src.modes import build_graph  # local: modes depend on the engine
+
+    audio, sample_rate = sf.read(input_path, dtype="float32")
+    node = build_graph(mode, intensity)
+    processed, result = execute_graph(audio, int(sample_rate), node, stage=stage)
     sf.write(output_path, processed, int(sample_rate), subtype="PCM_16")
     return result

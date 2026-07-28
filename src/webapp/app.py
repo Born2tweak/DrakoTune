@@ -12,6 +12,7 @@ from fastapi import FastAPI, Form, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
 from src.webapp.feedback import record_feedback
+from src.modes import INTENSITY_ORDER, get_mode, list_modes
 from src.webapp.jobs import (
     audio_path,
     delete_job,
@@ -87,23 +88,58 @@ def index() -> str:
     return page("DrakoTune", render_upload())
 
 
+@app.get("/api/modes")
+def api_modes() -> JSONResponse:
+    """Discovery for the workstation client: modes, intensities, capabilities.
+
+    `capabilities` is the honest per-mode list; the client renders it verbatim
+    rather than inventing marketing copy for a chain it cannot inspect.
+    """
+    return JSONResponse({
+        "modes": [
+            {
+                "name": spec.name,
+                "title": spec.title,
+                "summary": spec.summary,
+                "capabilities": list(spec.capabilities),
+                "default_intensity": spec.default_intensity.value,
+            }
+            for spec in (get_mode(n) for n in list_modes())
+        ],
+        "intensities": [i.value for i in INTENSITY_ORDER],
+        "default_mode": "rescue",
+    })
+
+
 @app.post("/api/audio/upload")
-async def api_upload(file: UploadFile, preset: str = Form("clean")) -> JSONResponse:
+async def api_upload(
+    file: UploadFile,
+    preset: str = Form("clean"),
+    mode: str = Form(""),
+    intensity: str = Form(""),
+) -> JSONResponse:
     data = await file.read()
     try:
         with job_slot():
-            job = process_upload(file.filename or "vocal", data, preset=preset)
+            job = process_upload(file.filename or "vocal", data, preset=preset,
+                                 mode=mode or None, intensity=intensity or None)
     except ServerBusyError as exc:
         return JSONResponse({"error": "server_busy", "detail": str(exc)}, status_code=503)
     return JSONResponse(_job_response(job))
 
 
 @app.post("/upload")
-async def form_upload(file: UploadFile, preset: str = Form("clean")):
+async def form_upload(
+    file: UploadFile,
+    preset: str = Form("clean"),
+    mode: str = Form(""),
+    intensity: str = Form(""),
+):
     data = await file.read()
     try:
         with job_slot():
-            job = process_upload(file.filename or "vocal", data, preset=preset)
+            job = process_upload(file.filename or "vocal", data, preset=preset,
+                                 mode=mode or None, intensity=intensity or None)
     except ServerBusyError as exc:
         return HTMLResponse(
             page("DrakoTune — busy", f"<h1>Busy right now</h1><p>{exc}. Please retry shortly.</p>"),

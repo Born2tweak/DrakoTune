@@ -38,6 +38,15 @@ _VALID_PARAMS = {
     "Chorus": {"rate_hz": 1.0, "depth": 0.3, "centre_delay_ms": 10.0,
                "feedback": 0.1, "mix": 0.3},
     "PitchShift": {"semitones": -2.0},
+    # DT-96 substantive processors.
+    "VocalRider": {"target_percentile": 70.0, "max_boost_db": 6.0, "max_cut_db": 6.0,
+                   "smoothing_ms": 120.0, "silence_floor_db": -45.0},
+    "DynamicEQ": {"band_lo_hz": 200.0, "band_hi_hz": 500.0, "threshold_ratio": 1.3,
+                  "max_reduction_db": 6.0, "smoothing_ms": 40.0},
+    "ResonanceSuppressor": {"search_lo_hz": 150.0, "search_hi_hz": 6000.0,
+                            "max_resonances": 3, "prominence_ratio": 2.0,
+                            "max_reduction_db": 6.0},
+    "Saturation": {"drive_db": 6.0, "character": 0.5, "mix": 0.5, "oversample": 4},
 }
 
 

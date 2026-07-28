@@ -12,6 +12,8 @@ from pathlib import Path
 
 from src.dsp.preprocess import preprocess
 from src.dsp_engine import render_plan
+from src.dsp_engine.executor import render_mode
+from src.dsp_engine.gain_staging import GainStage
 from src.evaluation import evaluate
 from src.ingestion import preflight
 from src.orchestration import analyze_and_plan
@@ -87,14 +89,16 @@ def _find_audio(input_dir: Path) -> list[Path]:
                   if p.is_file() and p.suffix.lower() in AUDIO_EXTS)
 
 
-def _process_one(src: Path, out_root: Path, preset: str = "clean") -> BatchItem:
+def _process_one(src: Path, out_root: Path, preset: str = "clean",
+                 mode: str | None = None, intensity: str | None = None,
+                 channels: int = 1) -> BatchItem:
     name = src.stem
     workdir = out_root / name
     workdir.mkdir(parents=True, exist_ok=True)
 
     normalized = workdir / "before.wav"
     try:
-        preprocess(src, normalized)
+        preprocess(src, normalized, channels=channels)
     except Exception as exc:  # noqa: BLE001
         return BatchItem(name=name, status=STATUS_FAILED,
                          message=f"decode failed: {type(exc).__name__}")
@@ -105,9 +109,14 @@ def _process_one(src: Path, out_root: Path, preset: str = "clean") -> BatchItem:
                          message="preflight: " + ", ".join(pf.blockers),
                          warnings=pf.warnings)
 
-    bundle = analyze_and_plan(str(normalized), pf, asset_id=name, preset=preset)
+    bundle = analyze_and_plan(str(normalized), pf, asset_id=name, preset=preset,
+                              mode=mode, intensity=intensity)
     processed = workdir / "after.wav"
-    render_plan(str(normalized), str(processed), bundle.plan)
+    if bundle.is_v3:
+        render_mode(str(normalized), str(processed), bundle.mode, bundle.intensity,
+                    stage=GainStage.EXPORT)
+    else:
+        render_plan(str(normalized), str(processed), bundle.plan)
     evaluation = evaluate(str(normalized), str(processed), plan=bundle.plan, eval_id=name)
     report = build_report(bundle, evaluation, asset_name=name,
                           advisory_interpretations=getattr(bundle, "advisory_interpretations", ()))
@@ -130,13 +139,18 @@ def _process_one(src: Path, out_root: Path, preset: str = "clean") -> BatchItem:
 
 
 def run_batch(input_dir: str | Path, output_dir: str | Path, write_summary: bool = True,
-              preset: str = "clean") -> BatchSummary:
+              preset: str = "clean", mode: str | None = None,
+              intensity: str | None = None, channels: int = 1) -> BatchSummary:
     """Process every audio file in input_dir; write per-file outputs + a summary."""
     input_dir = Path(input_dir)
     out_root = Path(output_dir)
     out_root.mkdir(parents=True, exist_ok=True)
 
-    summary = BatchSummary(items=[_process_one(src, out_root, preset=preset) for src in _find_audio(input_dir)])
+    summary = BatchSummary(items=[
+        _process_one(src, out_root, preset=preset, mode=mode,
+                     intensity=intensity, channels=channels)
+        for src in _find_audio(input_dir)
+    ])
 
     if write_summary:
         (out_root / "summary.json").write_text(

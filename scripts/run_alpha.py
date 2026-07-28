@@ -27,6 +27,9 @@ from src.dsp.preprocess import preprocess, probe_channels
 from src.decision import evaluate_safety
 from src.diagnostics import diagnose_loudness, diagnose_safety
 from src.dsp_engine import render_plan
+from src.dsp_engine.executor import render_mode
+from src.dsp_engine.gain_staging import GainStage
+from src.modes import build_graph
 from src.evaluation import evaluate
 from src.ingestion import PreflightError, ensure_processable
 from src.orchestration import analyze_and_plan
@@ -70,6 +73,21 @@ def main() -> None:
              "gentle style compression + de-esser guard (ADR 0005)",
     )
     parser.add_argument(
+        "--mode", type=str, default=None,
+        help="V3 mode: natural | rescue | modern_rap. Selects an authored "
+             "production chain instead of the V2 decision plan.",
+    )
+    parser.add_argument(
+        "--intensity", type=str, default=None,
+        choices=("subtle", "balanced", "bold", "extreme"),
+        help="V3 intensity (default: the mode's own default, usually bold)",
+    )
+    parser.add_argument(
+        "--stereo", action="store_true",
+        help="Preprocess to stereo. Mono is the right default for a lead vocal; "
+             "use this when a V3 mode's width/effects should be preserved.",
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="Bypass preflight blockers (silent/too-short/corrupt) and process anyway",
@@ -101,7 +119,8 @@ def main() -> None:
         # Step 1: FFmpeg preprocessing
         print("[1/5] Preprocessing with FFmpeg...")
         normalized_path = Path(tmpdir) / "normalized.wav"
-        preprocess(input_path, normalized_path)
+        preprocess(input_path, normalized_path,
+                   channels=2 if args.stereo else 1)
         print("      Normalized to 44100Hz, 16-bit, mono")
 
         # Preflight validation (M03): stop bad input before wasting analysis/DSP.
@@ -150,11 +169,22 @@ def main() -> None:
         # v2 engine (default since M19): decision-driven plan execution.
         if use_v2:
             print()
-            print("[plan] Decision-driven plan execution (v2 engine)")
             processed_path = Path(tmpdir) / "processed.wav"
             bundle = analyze_and_plan(str(normalized_path), preflight_report,
-                                      preset=args.preset)
-            exec_result = render_plan(str(normalized_path), str(processed_path), bundle.plan)
+                                      preset=args.preset, mode=args.mode,
+                                      intensity=args.intensity)
+            if bundle.is_v3:
+                # Diagnosis still ran in full; the mode decides what is applied.
+                print(f"[mode] V3 chain: {bundle.mode} / "
+                      f"{bundle.intensity or 'default'}")
+                exec_result = render_mode(
+                    str(normalized_path), str(processed_path),
+                    bundle.mode, bundle.intensity, stage=GainStage.EXPORT)
+                print(f"      topology: {build_graph(bundle.mode, bundle.intensity).describe()}")
+            else:
+                print("[plan] Decision-driven plan execution (v2 engine)")
+                exec_result = render_plan(str(normalized_path), str(processed_path),
+                                          bundle.plan)
             goals = ", ".join(o.goal for o in bundle.plan.objectives) or "none"
             print(f"      objectives: {goals}")
             print(f"      chain: {exec_result.chain_description()}")
