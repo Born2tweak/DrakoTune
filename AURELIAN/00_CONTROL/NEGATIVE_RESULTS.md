@@ -371,3 +371,67 @@ at its bound), so the result is not uniform across material.
 `PERCEPTUAL_ALIGNMENT` is untestable while DEF-003 stands. **Nothing is wired in and
 nothing is promoted:** replacing the admissibility rule changes every number the
 corpus has produced, which is Q-016's decision to take, not a refactor to slip in.
+
+---
+
+## F-10 — the engine exposed 7 of ~20 installed plugins (2026-07-28, DT-94)
+
+Not a negative result about the product's *quality*; a negative result about the
+**inventory**, recorded because three weeks of work proceeded without anyone stating it.
+
+pedalboard 0.9.23 was already a declared dependency and already installed. It ships
+roughly twenty plugins. The registry exposed **nine processors built from seven of
+them** (Gain, Highpass, Peak, HighShelf, Compressor, NoiseGate, Limiter, plus the
+array DeEsser and a composite HumNotch).
+
+Never exposed, despite being installed, licence-cleared under the existing hosted-only
+posture (ADR-0001), and requiring no new dependency: `Reverb`, `Delay`, `Distortion`,
+`Clipping`, `Chorus`, `PitchShift`, `LowShelfFilter`, `LowpassFilter`, `Convolution`,
+`Bitcrush`, `Phaser`, and `Mix` (parallel routing).
+
+Consequence for prior conclusions: **N-016's `missing_processor` verdict and DT-77's
+Track B ("new DSP is measurably necessary but unidentified") were both computed over a
+search space that omitted every space, saturation, and parallel-routing capability the
+project already had.** Those verdicts are not wrong about what the *searched* chains
+achieved; they are uninformative about what the *installed* library can achieve. This is
+the same failure the N-016..N-022 sequence kept finding — a conclusion that describes the
+harness rather than the system — appearing one level further out, in the registry itself.
+
+**What was NOT concluded:** that exposing these primitives improves anything. A plugin
+is a raw material. `Distortion` is not tasteful saturation, `Reverb` is a generic
+algorithmic room and not a plate, `Chorus` is not a mono-compatible doubler, `Mix` is not
+parallel compression, and `PitchShift` is transposition with no pitch detection or
+correction in it at all. Turning primitives into production processors is DT-96; the
+honest-naming rule is enforced by test (`tests/test_modes.py`), not by convention.
+
+Second defect found while building the channel contract: the executor's array-processor
+path collapsed any 2-D buffer to channel 0 (`processed[:, 0]` then `reshape(-1, 1)`), and
+`src/dsp/preprocess.py` normalises inputs to mono. The engine was mono **by accident, not
+by contract**, and any width, doubling or panned send built before DT-94 would have been
+silently discarded before export. Fixed: array processors now map per channel, buffers
+are canonical `(samples, channels)`, and `mono_compatibility()` fails closed on a widened
+signal that cancels when summed.
+
+## F-11 — mode distinctness, measured (2026-07-28, DT-95)
+
+Prior state: two preset labels (`adaptive`, `polished`) whose entire difference was one
+gentle glue compressor. Measured on a real raw rap acapella (D-029, local-only), the three
+new authored chains separate by **-9.1 to -13.8 dB level-matched RMS difference** at both
+Balanced and Bold, and differ structurally at every intensity. All 12 mode x intensity
+renders pass hard technical safety (finite, within ceiling, duration preserved, not gated
+away, mono-compatible).
+
+Level matching is load-bearing in that measurement: without it a pure gain change reads as
+a large difference. A test asserts a 0.5x copy scores *below* the distinctness floor.
+
+**Standing limits, unchanged.** Distinctness is a *difference* measure. It establishes
+that the modes are not the same thing; it establishes nothing about any of them sounding
+good, and no perceptual claim follows. DEF-003 still bars public quality claims (D-030
+re-scoped it to bar exactly that and no longer to bar implementation). Bold-by-default is
+a creative default the owner chose, not evidence.
+
+One honest shortcoming visible in the renders: every chain leaves the material quieter
+(-3.7 to -8.3 dB) because the output stage is attenuate-only by design. That is correct
+for safety and wrong for auditioning — an A/B where one side is quieter is not a fair
+comparison. Loudness-matched audition is a DT-97 requirement, tracked there, not a
+property of these chains.
