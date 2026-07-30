@@ -11,6 +11,11 @@ today's dependencies and measured them, rather than assuming they compose.
 **Headline: DT-100 cannot be built from the current primitives.** Two stages fail
 on measurement, not on taste. Both need new components with their own gates.
 
+> **Update 2026-07-30 — R1 is built (F-19).** `src/dsp_engine/pitch.py` delivers the
+> continuous-valued estimator this report specified: no lattice, <5 cents on known
+> tones, 0.03x realtime (~600x faster than pyin at 2-cent resolution). **R2 remains
+> unbuilt**, so DT-100 is still blocked and `PitchShift` stays transposition-only.
+
 ---
 
 ## Stage 1 — Contour: `librosa.pyin` cannot reach correction precision
@@ -104,7 +109,7 @@ covered by the same argument.
 
 | stage | status | requirement |
 |---|---|---|
-| 1. contour | **blocked** | R1: continuous-valued f0 estimator; pyin is unusable at correction precision |
+| 1. contour | **BUILT** (F-19) | R1 delivered: `src/dsp_engine/pitch.py`, YIN + parabolic interpolation, continuous, 0.03x realtime, <5 cents on known tones |
 | 2. key/scale target | buildable now | pure arithmetic over a contour; needs no new component |
 | 3. correction curve | buildable now | retune amount, speed and a deadband, authored and bounded |
 | 4. resynthesis | **blocked** | R2: PSOLA or phase-locked vocoder; block-wise shifting is artifact-dominated |

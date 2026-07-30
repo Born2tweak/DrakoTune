@@ -577,3 +577,26 @@ Adding stereo doubling to Modern Rap broke `test_job_produces_a_loudness_matched
 Fix: `_match_layout` widens the narrower stimulus by duplication before matching, so the comparison is channel-fair, and fairness is not bought by discarding the stereo image under audition. Regression tests assert the RMS ratio stays within 0.9–1.1 for identical mono/stereo material, that widening (not narrowing) is the mechanism, and that two mono signals are untouched.
 
 The defect predates doubling — it would have fired for any stereo mode — but nothing in the product produced stereo until now, so it had never been reachable. **Process note:** it was caught by CI rather than locally, because the local check ran only the tests judged "affected" (graph, modes, engine, channels). A mode change reaches the product path; the affected set was drawn too narrowly, and the full suite is the only honest gate before pushing.
+
+## F-19 — R1 built: interpolation gives what enumeration could not (2026-07-30, DT-100)
+
+`src/dsp_engine/pitch.py`, `tests/test_pitch.py`, `scripts/v3_pitch_spike.py`.
+
+F-17 blocked DT-100 on R1: a continuous-valued f0 estimator, because `librosa.pyin` returns f0 on a candidate grid and buying a finer grid costs ~20× realtime at 2 cents and exhausts memory at 1 cent. R1 is now built — YIN with **parabolic interpolation** of the difference minimum, numpy-only and deterministic. Precision comes from interpolating between lags rather than enumerating candidates, which is why it is both finer and cheaper.
+
+Measured on the same three Tier A fixtures, like for like:
+
+| | `librosa.pyin` | R1 |
+|---|---|---|
+| resolution | 10-cent grid (default) | continuous — 609–796 distinct f0 values per 10 s |
+| lattice positions (deviation mod 10 c) | a handful — the F-17 artifact | **469–563** — no lattice |
+| median &#124;cents from ET&#124; | **20.8 on all three files** (the artifact) | 21.1 / 23.1 / 21.8 — **differs per recording** |
+| cost | 0.47–1.52× realtime at 10 c; ~20× at 2 c; `MemoryError` at 1 c | **0.027–0.035× realtime** |
+
+R1 is roughly **20–50× faster than pyin at its coarse default** and about **600× faster than pyin at 2-cent resolution**, while being continuous rather than quantized at any of them. The intonation statistic now varies by recording, which is the direct repair of F-17's artifact: three different singers can no longer produce three identical numbers.
+
+Accuracy is measured against synthetic tones whose f0 is known exactly: within **5 cents** at 82–880 Hz, amplitude-invariant, robust to moderate noise, no octave halving on an 8-harmonic tone, and — the property the whole requirement exists for — **two inputs 3 cents apart produce estimates 3 cents apart**, which a 10-cent grid collapses to one value.
+
+**Two implementation defects caught by the ground-truth tests, worth recording because neither was visible by inspection.** (1) The energy terms in YIN's difference function were wrong — comparing the energy of the *last* τ samples instead of the two windows actually being differenced — which biased every estimate by a systematic **−11 cents at 220 Hz**. A tracker biased by a fixed amount still looks entirely plausible on a plot; only a known-f0 test finds it. (2) A frame too short to hold the period implied by `fmin` silently narrowed the lag range instead of failing, so low pitches would have been undetectable while the contour still looked confident. It now refuses. Fail-closed applies to estimators too.
+
+**Still open for DT-100:** R2 (PSOLA or phase-locked resynthesis) remains unbuilt, so nothing here corrects anything, and `PitchShift` stays transposition-only. R1 is one of the two components the milestone needs.

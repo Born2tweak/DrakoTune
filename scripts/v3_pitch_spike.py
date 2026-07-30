@@ -188,6 +188,43 @@ def probe_resolution_cost(path: str, seconds: float = 2.0,
     return rows
 
 
+def probe_r1_estimator(path: str) -> dict:
+    """The DT-100 R1 estimator on the same fixture, for a like-for-like comparison.
+
+    Three things decide whether R1 answers F-17: is it continuous (no lattice),
+    is it accurate, and is it affordable. The lattice check is the direct repair
+    of the artifact that made pyin's intonation statistic meaningless — if the
+    deviations from equal temperament collapse onto a handful of values again,
+    the estimator has the same defect in a new coat.
+    """
+    from src.dsp_engine.pitch import estimate_f0
+
+    audio, sr = sf.read(path, dtype="float32")
+    mono = to_mono(normalize(audio))[:, 0]
+    duration = len(mono) / sr
+
+    t0 = time.perf_counter()
+    track = estimate_f0(mono, sr, fmin=FMIN, fmax=FMAX)
+    elapsed = time.perf_counter() - t0
+
+    voiced = track.f0_hz[track.voiced]
+    cents = _cents_from_equal_temperament(track.f0_hz)
+    # If estimates were grid-quantized, (deviation mod 10) would take very few
+    # distinct values, as pyin's did.
+    lattice_positions = int(np.unique(np.round(np.mod(cents, 10.0), 2)).size)
+
+    return {
+        "file": Path(path).name,
+        "duration_s": round(duration, 2),
+        "realtime_factor": round(elapsed / duration, 4),
+        "voiced_fraction": round(track.voiced_fraction, 4),
+        "unique_f0_values": int(np.unique(np.round(voiced, 3)).size),
+        "distinct_lattice_positions": lattice_positions,
+        "median_abs_cents_from_et": round(float(np.median(np.abs(cents))), 2)
+        if cents.size else 0.0,
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--outdir", default="output/v3_renders/dt98")
@@ -230,12 +267,22 @@ def main() -> int:
         else:
             print(f"  resolution={row['resolution']:<5} {row['error']}")
 
+    print("\nR1 estimator (DT-100) on the same fixtures — continuous by construction")
+    r1 = [probe_r1_estimator(path) for path in FIXTURES]
+    for row in r1:
+        print(f"  {row['file']:34s} voiced={row['voiced_fraction']:.0%}  "
+              f"{row['realtime_factor']:6.3f}x realtime  "
+              f"unique f0={row['unique_f0_values']:4d}  "
+              f"lattice positions={row['distinct_lattice_positions']:4d}  "
+              f"median|cents|={row['median_abs_cents_from_et']:5.2f}")
+
     report = {
         "milestone": "DT-98",
         "purpose": "feasibility probe for DT-100; design input, not a claim",
         "pyin": {"fmin": FMIN, "fmax": FMAX},
         "contour": contours,
         "resolution_cost": resolution,
+        "r1_estimator": r1,
         "naive_resynthesis": resynth,
     }
     (outdir / "pitch_spike.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
