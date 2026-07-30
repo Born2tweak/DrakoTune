@@ -616,3 +616,28 @@ F-17 blocked DT-100 on R2, a real time-varying resynthesis stage, because approx
 **Measured limit, enforced rather than hidden.** Grains span two analysis periods and synthesis advances by period/ratio, so grains stop overlapping at ratio ≤ 0.5 — where the method returns the *input* pitch (measured +1200 cents error at exactly −1200 cents requested, while every other point −900..+1200 was within ±0.4). The ratio is clamped to a validated range rather than silently returning the wrong pitch. Correction works in cents, so this costs nothing real, and octave transposition is what `PitchShift` is already for.
 
 **DT-100 status:** R1 (F-19) and R2 are both built. Stages 2, 3 and 6 of the pipeline — key/scale target, correction curve, and the Natural/Modern/Hard settings — are cheap and depend only on these. What remains genuinely open is not DSP: how much correction is *right* is a listening question, and it inherits Q-016's unresolved problem of what an automated process may optimise at all. `PitchShift` stays transposition-only and no surface may say tuning until that is settled.
+
+## F-21 — DT-100 stages 2/3/6: the correction curve, and the deadband that keeps it musical (2026-07-30)
+
+`src/dsp_engine/correction.py`, `tests/test_correction.py`.
+
+With R1 (F-19) and R2 (F-20) built, the remaining pipeline stages are the smallest and most inspectable of the three: contour → nearest in-scale target → correction curve. Everything is authored and bounded; nothing is searched and no automated objective selects anything, so **none of it depends on Q-016 being resolved** — that is exactly why it could be built now.
+
+Measured end to end on a tone 40 cents flat of A3, through contour → target → curve → PSOLA:
+
+| preset | deadband | correction applied | result vs A3 |
+|---|--:|--:|--:|
+| `natural` | 35 c | +2.5 c | **−38.1 c** — barely touched |
+| `modern` | 15 c | +20.0 c | **−20.2 c** — half corrected |
+| `hard` | 0 c | +40.0 c | **−0.1 c** — on the note |
+
+The three differ in **kind, not degree**: `natural` keeps a wide deadband and a 120 ms glide, `hard` removes the deadband and snaps in 1 ms. A test asserts they stay ordered and distinct, because presets that collapse to the same behaviour at different magnitudes are decoration.
+
+**The design commitments, each of which could have gone the other way and is defended by a test:**
+- **A deadband, with only the excess corrected.** Vibrato, scoops, slides and bent notes are all "wrong" against equal temperament; a corrector without a deadband flattens a performance into a test tone. Correcting only the excess also keeps the curve continuous at the boundary instead of jumping the full deadband width the moment it is crossed. A vibrato test asserts `natural` intervenes measurably less than `hard`.
+- **Retune speed in milliseconds, not a 0–1 knob**, so the parameter means something physical. Instant correction is the recognisable hard-tuned artifact; the glide is what makes correction inaudible.
+- **Unvoiced frames are never corrected** — there is no pitch in a consonant or a breath, and pulling one toward a note is pure damage.
+- **Correction is clamped** to a maximum cents value, so a tracking error cannot produce a large confident shift.
+- **Invalid scale or key is refused, not substituted** — the same rule DT-97 established for modes (F-16).
+
+**What remains open is not DSP.** All three DT-100 stages now exist and are measurable. How much correction is *right* is a listening question, and it inherits Q-016's unresolved problem of what an automated process may legitimately optimise. `PitchShift` stays transposition-only, none of this is wired into a mode, and no surface may say tuning, pitch correction or Auto-Tune until that is settled.

@@ -113,15 +113,20 @@ covered by the same argument.
 | stage | status | requirement |
 |---|---|---|
 | 1. contour | **BUILT** (F-19) | R1 delivered: `src/dsp_engine/pitch.py`, YIN + parabolic interpolation, continuous, 0.03x realtime, <5 cents on known tones |
-| 2. key/scale target | buildable now | pure arithmetic over a contour; needs no new component |
-| 3. correction curve | buildable now | retune amount, speed and a deadband, authored and bounded |
+| 2. key/scale target | **BUILT** (F-21) | `src/dsp_engine/correction.py`; snaps across octave boundaries, NaN preserved on unvoiced |
+| 3. correction curve | **BUILT** (F-21) | deadband (excess-only), glide in ms, bounded, unvoiced never touched |
 | 4. resynthesis | **BUILT** (F-20) | R2 delivered: `src/dsp_engine/psola.py`, TD-PSOLA, +/-0.4 cents accuracy, formants preserved better than the primitive, 0.03-0.05x realtime. Audio *quality* recorded as unmeasured |
-| 5. formants | unmeasured | measurable only after R2 |
-| 6. Natural/Modern/Hard | authored | three points on (retune speed × deadband × correction depth) |
+| 5. formants | **measured** (F-20) | PSOLA re-spaces rather than resamples: envelope moves 5.45/8.14/2.78 dB vs PitchShift's 12.62/14.35/4.30 |
+| 6. Natural/Modern/Hard | **BUILT** (F-21) | measured distinct in KIND: 40c error -> -38.1 / -20.2 / -0.1 cents |
 
-Stages 2, 3 and 6 are cheap and depend only on 1 and 4. **The milestone is
-gated on two new components, and it should be scheduled as such** rather than as
-a mode-authoring task.
+**All six stages now exist** (F-19, F-20, F-21). The prediction that stages 2, 3
+and 6 were cheap once 1 and 4 existed held: they were built in one pass, entirely
+authored and bounded, with no search and no automated objective — which is why
+none of them waited on Q-016.
+
+What remains is **not DSP**. How much correction is *right* is a listening
+question, and it inherits Q-016's unresolved problem of what an automated process
+may legitimately optimise.
 
 ## What this spike does not establish
 
