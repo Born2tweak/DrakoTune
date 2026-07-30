@@ -93,3 +93,67 @@ def test_matched_pair_peak_guard():
 def test_matched_pair_rejects_silence():
     with pytest.raises(LoudnessMatchError):
         loudness_matched_pair(np.zeros(SR * 3, dtype=np.float32), _tone(), SR)
+
+
+# ---------------------------------------------------------------------------
+# DT-98 regression: a stereo "after" must not be handed to the listener quieter
+# ---------------------------------------------------------------------------
+
+def test_matched_pair_is_channel_fair_between_mono_and_stereo(tmp_path):
+    """BS.1770 sums channels, so mono-vs-stereo matching biases the comparison.
+
+    Before this fix, adding stereo doubling to a mode made the processed preview
+    land ~3 dB quieter than the original in the A/B transport — a loudness bias
+    against the very thing under audition, which ADR 0004 forbids.
+    """
+    import numpy as np
+    import soundfile as sf
+
+    from src.evaluation.ab_export import export_matched_pair
+
+    sr = 44100
+    t = np.arange(sr * 3) / sr
+    tone = (0.2 * np.sin(2 * np.pi * 220.0 * t)).astype(np.float32)
+
+    mono_path = tmp_path / "mono.wav"
+    stereo_path = tmp_path / "stereo.wav"
+    sf.write(mono_path, tone, sr)
+    sf.write(stereo_path, np.stack([tone, tone], axis=1), sr)
+
+    out_a, out_b = tmp_path / "a.wav", tmp_path / "b.wav"
+    export_matched_pair(str(mono_path), str(stereo_path), str(out_a), str(out_b))
+
+    a, _ = sf.read(str(out_a), dtype="float32")
+    b, _ = sf.read(str(out_b), dtype="float32")
+
+    def rms(x):
+        return float(np.sqrt(np.mean(np.square(x.astype(np.float64)))))
+
+    # Same underlying material: after matching, neither side may be meaningfully
+    # louder. A 3 dB gap (ratio ~0.71) is the bug this test exists to catch.
+    ratio = rms(b) / rms(a)
+    assert 0.9 <= ratio <= 1.1, f"channel-count loudness bias: rms ratio {ratio:.3f}"
+
+
+def test_matched_pair_widens_the_narrower_stimulus_rather_than_narrowing():
+    """Fairness must not be bought by discarding the stereo image under test."""
+    import numpy as np
+
+    from src.evaluation.ab_export import _match_layout
+
+    mono = np.zeros(1000, dtype=np.float32)
+    stereo = np.zeros((1000, 2), dtype=np.float32)
+    a, b = _match_layout(mono, stereo)
+    assert a.ndim == 2 and a.shape[1] == 2
+    assert b.shape == stereo.shape
+
+
+def test_matched_layout_leaves_two_mono_signals_alone():
+    import numpy as np
+
+    from src.evaluation.ab_export import _match_layout
+
+    a_in = np.zeros(10, dtype=np.float32)
+    b_in = np.zeros(10, dtype=np.float32)
+    a, b = _match_layout(a_in, b_in)
+    assert a is a_in and b is b_in

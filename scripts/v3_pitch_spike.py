@@ -148,6 +148,46 @@ def probe_naive_resynthesis(path: str, shift_cents: float = 30.0) -> dict:
     }
 
 
+def probe_resolution_cost(path: str, seconds: float = 2.0,
+                          resolutions: tuple[float, ...] = (0.1, 0.05, 0.02),
+                          ) -> list[dict]:
+    """How fine can the contour get, and what does each step cost?
+
+    This is the stage that decides whether DT-100 is buildable on `pyin` at all.
+    Correction has to resolve a few cents; `pyin` searches a quantized candidate
+    grid, so precision is bought directly with time and memory. `resolution=0.01`
+    (1 cent) is deliberately NOT in the default list — it raised `MemoryError` on
+    a 2-second excerpt on the development machine, which is the finding.
+    """
+    import librosa
+
+    audio, sr = sf.read(path, dtype="float32")
+    mono = to_mono(normalize(audio))[:, 0].astype(np.float64)[: int(sr * seconds)]
+    duration = len(mono) / sr
+    rows: list[dict] = []
+    for res in resolutions:
+        row: dict = {"resolution": res, "excerpt_s": round(duration, 2)}
+        try:
+            t0 = time.perf_counter()
+            f0, _, _ = librosa.pyin(mono, fmin=FMIN, fmax=FMAX, sr=sr, resolution=res)
+            elapsed = time.perf_counter() - t0
+            voiced = f0[np.isfinite(f0) & (f0 > 0)]
+            unique = np.unique(voiced)
+            grid = (float(np.median(np.log2(unique[1:] / unique[:-1]) * 1200.0))
+                    if unique.size > 1 else 0.0)
+            cents = _cents_from_equal_temperament(f0)
+            row |= {
+                "ok": True,
+                "grid_cents": round(grid, 2),
+                "median_abs_cents": round(float(np.median(np.abs(cents))), 2),
+                "realtime_factor": round(elapsed / duration, 2),
+            }
+        except MemoryError as exc:                     # the finding, not a crash
+            row |= {"ok": False, "error": f"MemoryError: {exc}"}
+        rows.append(row)
+    return rows
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--outdir", default="output/v3_renders/dt98")
@@ -180,11 +220,22 @@ def main() -> int:
               f"SI-SDR vs uniform shift = {row['si_sdr_vs_uniform_shift_db']:7.2f} dB  "
               f"{row['realtime_factor']:.2f}x realtime")
 
+    print("\nContour resolution vs cost (the stage that decides DT-100's estimator)")
+    resolution = probe_resolution_cost(FIXTURES[0])
+    for row in resolution:
+        if row["ok"]:
+            print(f"  resolution={row['resolution']:<5} grid={row['grid_cents']:6.2f}c  "
+                  f"median|cents|={row['median_abs_cents']:5.2f}  "
+                  f"{row['realtime_factor']:6.2f}x realtime")
+        else:
+            print(f"  resolution={row['resolution']:<5} {row['error']}")
+
     report = {
         "milestone": "DT-98",
         "purpose": "feasibility probe for DT-100; design input, not a claim",
         "pyin": {"fmin": FMIN, "fmax": FMAX},
         "contour": contours,
+        "resolution_cost": resolution,
         "naive_resynthesis": resynth,
     }
     (outdir / "pitch_spike.json").write_text(json.dumps(report, indent=2), encoding="utf-8")

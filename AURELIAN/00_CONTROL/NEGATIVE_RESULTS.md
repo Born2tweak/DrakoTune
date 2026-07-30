@@ -553,3 +553,27 @@ Now `UnknownModeError` carries the available list and the API answers 400 with i
 Omitting `mode` remains a valid V2 request — absence is not an error, only an explicit
 unknown value is. Recorded because the failure was invisible by construction: every
 signal that something went wrong had been removed by the fallback that handled it.
+
+## F-17 — DT-100 is gated on two new components, and a measurement artifact nearly hid one (2026-07-30, DT-98)
+
+`scripts/v3_pitch_spike.py`; `output/v3_renders/dt98/pitch_spike.json`;
+`AURELIAN/02_RESEARCH/DT100_PITCH_CORRECTION_SPIKE.md`.
+
+DT-98 shipped transposition and doubling. Its second deliverable was a spike defining the DT-100 pitch-correction pipeline, and the spike's answer is that **DT-100 cannot be built from the current primitives**:
+
+- **Contour.** `librosa.pyin` tracks a sung line cleanly (voiced 68–86%, zero octave jumps across three Tier A fixtures) but returns f0 on a quantized grid. At the default `resolution=0.1` that grid is **10 cents**, which is coarser than the error correction must resolve. Buying precision does not work: 2-cent resolution costs **≈20× realtime** (≈1 hour of CPU for a 3-minute vocal), and 1-cent resolution raises **`MemoryError` on a 2-second excerpt** — the N-012 memory constraint arriving in practice rather than in principle.
+- **Resynthesis.** `PitchShift` applies one fixed interval to a whole buffer; correction needs a per-frame curve. Approximating it by slicing, shifting and concatenating measures **SI-SDR −23.7 to −33.7 dB against a single-call shift of the same size** — artifact-dominated, not merely imperfect.
+
+So DT-100 needs (R1) a continuous-valued f0 estimator whose precision comes from interpolation rather than candidate enumeration, and (R2) a real PSOLA/phase-locked-vocoder resynthesis stage. Stages 2, 3 and 6 of the proposed pipeline (key/scale target, correction curve, Natural/Modern/Hard) are cheap and depend entirely on those two. The milestone should be scheduled as two component builds, not as mode authoring.
+
+**The measurement artifact worth recording.** The spike's first run reported "distance from equal temperament" as **median 20.8 cents, p90 40.8 cents — identical across three different recordings**. That implausible coincidence is what exposed it: every deviation lay on a lattice ≡ 0.79 cents (mod 10), i.e. the statistic was measuring pyin's own quantization grid, not any singer's intonation. Had the three files differed slightly, the number would have looked like a finding and gone into a design. **Identical results across genuinely different inputs are evidence of an instrument artifact, not of a robust effect** — the same lesson as N-016/N-017/N-018 arriving through a different door.
+
+## F-18 — stereo output silently biased the A/B audition against the processed version (2026-07-30, DT-98)
+
+Adding stereo doubling to Modern Rap broke `test_job_produces_a_loudness_matched_ab_pair`, and the cause was not the doubler.
+
+`export_matched_pair` matches **integrated LUFS**. BS.1770 sums channels, so identical material measures ~3 LU louder as a correlated stereo pair than as mono. Matching a mono "before" against a stereo "after" therefore attenuated the processed preview by ~3 dB: measured RMS 0.0534 vs 0.0774, a ratio of 0.69 ≈ 1/√2. The listener would have auditioned the processed version **quieter than the original** — a loudness bias against the thing under test, which is exactly what ADR 0004 exists to prevent.
+
+Fix: `_match_layout` widens the narrower stimulus by duplication before matching, so the comparison is channel-fair, and fairness is not bought by discarding the stereo image under audition. Regression tests assert the RMS ratio stays within 0.9–1.1 for identical mono/stereo material, that widening (not narrowing) is the mechanism, and that two mono signals are untouched.
+
+The defect predates doubling — it would have fired for any stereo mode — but nothing in the product produced stereo until now, so it had never been reachable. **Process note:** it was caught by CI rather than locally, because the local check ran only the tests judged "affected" (graph, modes, engine, channels). A mode change reaches the product path; the affected set was drawn too narrowly, and the full suite is the only honest gate before pushing.

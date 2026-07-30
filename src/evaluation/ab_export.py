@@ -77,6 +77,35 @@ def loudness_matched_pair(
     return MatchedPair(a_out, b_out, sample_rate, a_gain, b_gain, a_lufs, b_lufs)
 
 
+def _channels(audio: np.ndarray) -> int:
+    return 1 if audio.ndim == 1 else int(audio.shape[1])
+
+
+def _match_layout(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Put both stimuli in the same channel layout before loudness matching.
+
+    BS.1770 integrated loudness sums the channels, so the same material measures
+    about 3 LU louder as a correlated stereo pair than as mono. Matching a mono
+    "before" against a stereo "after" therefore attenuates the stereo one by ~3 dB
+    and hands the listener a quieter processed version — a loudness bias against
+    exactly the thing under test, which is what ADR 0004 exists to prevent.
+
+    Widening the narrower stimulus by duplication keeps the comparison fair
+    without altering what either one sounds like.
+    """
+    width = max(_channels(a), _channels(b))
+    if width == 1:
+        return a, b
+
+    def widen(audio: np.ndarray) -> np.ndarray:
+        if _channels(audio) == width:
+            return audio
+        mono = audio if audio.ndim == 1 else audio[:, 0]
+        return np.repeat(mono.reshape(-1, 1), width, axis=1).astype(np.float32)
+
+    return widen(a), widen(b)
+
+
 def export_matched_pair(
     a_path: str, b_path: str, out_a_path: str, out_b_path: str
 ) -> MatchedPair:
@@ -85,6 +114,7 @@ def export_matched_pair(
     b, sr_b = sf.read(b_path, dtype="float32")
     if sr_a != sr_b:
         raise LoudnessMatchError(f"sample-rate mismatch: {sr_a} vs {sr_b}")
+    a, b = _match_layout(a, b)
     pair = loudness_matched_pair(a, b, int(sr_a))
     sf.write(out_a_path, pair.a, pair.sample_rate, subtype="PCM_16")
     sf.write(out_b_path, pair.b, pair.sample_rate, subtype="PCM_16")
