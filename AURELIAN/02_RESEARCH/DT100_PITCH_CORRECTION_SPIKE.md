@@ -11,10 +11,13 @@ today's dependencies and measured them, rather than assuming they compose.
 **Headline: DT-100 cannot be built from the current primitives.** Two stages fail
 on measurement, not on taste. Both need new components with their own gates.
 
-> **Update 2026-07-30 — R1 is built (F-19).** `src/dsp_engine/pitch.py` delivers the
-> continuous-valued estimator this report specified: no lattice, <5 cents on known
-> tones, 0.03x realtime (~600x faster than pyin at 2-cent resolution). **R2 remains
-> unbuilt**, so DT-100 is still blocked and `PitchShift` stays transposition-only.
+> **Update 2026-07-30 — both components are built (F-19, F-20).** R1
+> (`src/dsp_engine/pitch.py`): continuous, no lattice, <5 cents on known tones,
+> 0.03x realtime. R2 (`src/dsp_engine/psola.py`): TD-PSOLA, +/-0.4 cents across
+> -900..+1200 cents, formants preserved better than `PitchShift` on all three
+> fixtures. **Both were blockers; neither is now.** What remains open is not DSP:
+> how much correction is right is a listening question inheriting Q-016.
+> `PitchShift` stays transposition-only until that is settled.
 
 ---
 
@@ -112,7 +115,7 @@ covered by the same argument.
 | 1. contour | **BUILT** (F-19) | R1 delivered: `src/dsp_engine/pitch.py`, YIN + parabolic interpolation, continuous, 0.03x realtime, <5 cents on known tones |
 | 2. key/scale target | buildable now | pure arithmetic over a contour; needs no new component |
 | 3. correction curve | buildable now | retune amount, speed and a deadband, authored and bounded |
-| 4. resynthesis | **blocked** | R2: PSOLA or phase-locked vocoder; block-wise shifting is artifact-dominated |
+| 4. resynthesis | **BUILT** (F-20) | R2 delivered: `src/dsp_engine/psola.py`, TD-PSOLA, +/-0.4 cents accuracy, formants preserved better than the primitive, 0.03-0.05x realtime. Audio *quality* recorded as unmeasured |
 | 5. formants | unmeasured | measurable only after R2 |
 | 6. Natural/Modern/Hard | authored | three points on (retune speed × deadband × correction depth) |
 
