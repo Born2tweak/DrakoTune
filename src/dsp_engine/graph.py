@@ -31,7 +31,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from pedalboard import Pedalboard
 
-from src.dsp_engine.channels import align_for_mix, normalize, to_mono
+from src.dsp_engine.channels import align_for_mix, normalize, pan, to_mono
 from src.dsp_engine.processors import PROCESSORS, clamp_params
 
 # Ducking envelope resolution. 10 ms is short enough to follow syllables and long
@@ -157,6 +157,88 @@ class Send(GraphNode):
     def describe(self) -> str:
         duck = f", duck {self.duck:.2f}" if self.duck > 0 else ""
         return f"{self.label}[{self.branch.describe()} @ {self.level:.2f}{duck}]"
+
+
+@dataclass(frozen=True)
+class DoubleVoice:
+    """One artificial double: how far detuned, how late, and where it sits.
+
+    `detune_cents` is deliberately small. A real double is a second *take*: the
+    same words with human variation in pitch and timing. We cannot synthesise a
+    second performance, so we approximate the two cues that survive summing —
+    a few cents of pitch offset and 10-30 ms of timing offset. Being honest
+    about that is the point of `Doubler.describe()`.
+    """
+
+    detune_cents: float = 0.0
+    delay_ms: float = 0.0
+    pan: float = 0.0
+
+
+# Doubles below this delay comb-filter against the dry instead of reading as a
+# separate voice; above ~40 ms they read as a slap echo rather than a double.
+_DOUBLE_MIN_DELAY_MS = 8.0
+_DOUBLE_MAX_DELAY_MS = 40.0
+
+
+@dataclass
+class Doubler(GraphNode):
+    """Detuned, time-offset, panned copies placed under the dry vocal (DT-98).
+
+    This is width, not tuning. Each voice is the same performance shifted by a
+    fixed interval — `PitchShift` used as detune, exactly the transposition-only
+    role the registry declares. Nothing here detects pitch or corrects a note;
+    that is DT-100.
+
+    The dry signal stays centred at full level, which is what keeps the result
+    mono-compatible: the correlated centre dominates the sum, so the panned
+    voices add width in stereo without cancelling when a phone or club system
+    collapses it. `channels.mono_compatibility()` is the check, and the safety
+    suite asserts it.
+    """
+
+    voices: tuple[DoubleVoice, ...] = ()
+    level: float = 0.4
+    label: str = "double"
+
+    def render(self, audio: np.ndarray, sample_rate: int) -> np.ndarray:
+        dry = normalize(audio)
+        if not self.voices or self.level <= 0.0:
+            return dry
+
+        source = to_mono(dry)
+        rendered: list[np.ndarray] = []
+        for voice in self.voices:
+            wet = source
+            if voice.detune_cents:
+                params, _ = clamp_params(
+                    "PitchShift", {"semitones": voice.detune_cents / 100.0})
+                board = Pedalboard([PROCESSORS["PitchShift"].factory(params)])
+                wet = normalize(board(wet.T, sample_rate).T)
+            # A nonzero offset is pulled up to the comb-filter floor: an authored
+            # 2 ms "double" would thin the dry signal rather than widen it.
+            delay_ms = float(np.clip(voice.delay_ms, 0.0, _DOUBLE_MAX_DELAY_MS))
+            if 0.0 < delay_ms < _DOUBLE_MIN_DELAY_MS:
+                delay_ms = _DOUBLE_MIN_DELAY_MS
+            offset = int(round(sample_rate * delay_ms / 1000.0))
+            if offset > 0:
+                wet = np.pad(wet, ((offset, 0), (0, 0)))
+            rendered.append(pan(wet, voice.pan))
+
+        level = float(np.clip(self.level, 0.0, 1.0))
+        aligned = align_for_mix(dry, *rendered)
+        dry_a, wets = aligned[0], aligned[1:]
+        # Average the voices before applying `level`, so adding a third double
+        # widens the image instead of making the doubles louder.
+        wet_sum = np.sum(wets, axis=0) / len(wets)
+        return (dry_a + wet_sum * level).astype(np.float32)
+
+    def describe(self) -> str:
+        parts = ", ".join(
+            f"{v.detune_cents:+.0f}c/{v.delay_ms:.0f}ms/pan{v.pan:+.1f}"
+            for v in self.voices
+        )
+        return f"{self.label}[{parts} @ {self.level:.2f}]"
 
 
 def _ducking_gain(dry: np.ndarray, sample_rate: int, amount: float) -> np.ndarray:

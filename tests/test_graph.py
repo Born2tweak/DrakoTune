@@ -217,3 +217,101 @@ def test_every_new_primitive_renders_and_changes_signal(name):
     dry = normalize(audio)
     n = min(out.shape[0], dry.shape[0])
     assert _rms(out[:n] - dry[:n]) > 1e-4, f"{name} rendered but changed nothing"
+
+
+# ---------------------------------------------------------------------------
+# DT-98 — artificial doubling
+# ---------------------------------------------------------------------------
+
+def _voiced(sr=44100, seconds=1.5, f0=170.0):
+    """A crude voiced signal: harmonics with vibrato and an amplitude envelope."""
+    t = np.arange(int(sr * seconds)) / sr
+    vib = 1.0 + 0.004 * np.sin(2 * np.pi * 5.0 * t)
+    sig = sum(a * np.sin(2 * np.pi * f0 * k * t * vib)
+              for k, a in ((1, 0.6), (2, 0.3), (3, 0.15), (4, 0.08)))
+    env = 0.5 * (1 + np.sin(2 * np.pi * 2.0 * t - np.pi / 2))
+    return (0.3 * sig * env).astype(np.float32)
+
+
+def test_doubler_widens_mono_to_stereo():
+    from src.dsp_engine.graph import DoubleVoice, Doubler
+    sr = 44100
+    node = Doubler(voices=(DoubleVoice(-9.0, 17.0, -0.7), DoubleVoice(11.0, 25.0, 0.7)),
+                   level=0.4)
+    out = render_graph(_voiced(sr), sr, node)
+    assert out.shape[1] == 2, "doubling must produce a stereo image"
+    assert not np.allclose(out[:, 0], out[:, 1]), "channels are identical — no width"
+
+
+def test_doubler_stays_mono_compatible():
+    """A double that cancels when summed to mono is a bug, not a feature."""
+    from src.dsp_engine.channels import mono_compatibility
+    from src.dsp_engine.graph import DoubleVoice, Doubler
+    sr = 44100
+    node = Doubler(voices=(DoubleVoice(-9.0, 17.0, -0.7), DoubleVoice(11.0, 25.0, 0.7)),
+                   level=0.4)
+    compat = mono_compatibility(render_graph(_voiced(sr), sr, node))
+    assert not compat.collapses, compat.to_dict()
+    assert compat.correlation > 0.0
+
+
+def test_doubler_with_no_voices_is_a_passthrough():
+    from src.dsp_engine.graph import Doubler
+    sr = 44100
+    x = _voiced(sr)
+    out = render_graph(x, sr, Doubler(voices=(), level=0.5))
+    assert np.array_equal(out, normalize(x))
+
+
+def test_doubler_level_zero_is_a_passthrough():
+    from src.dsp_engine.graph import DoubleVoice, Doubler
+    sr = 44100
+    x = _voiced(sr)
+    node = Doubler(voices=(DoubleVoice(-9.0, 17.0, -0.7),), level=0.0)
+    assert np.array_equal(render_graph(x, sr, node), normalize(x))
+
+
+def test_doubler_pulls_a_comb_filtering_delay_up_to_the_floor():
+    """An authored 2 ms 'double' would thin the dry signal, so it is raised."""
+    from src.dsp_engine.graph import _DOUBLE_MIN_DELAY_MS, DoubleVoice, Doubler
+    sr = 44100
+    x = _voiced(sr)
+    tiny = render_graph(x, sr, Doubler(voices=(DoubleVoice(0.0, 2.0, 0.0),), level=0.5))
+    floored = render_graph(
+        x, sr, Doubler(voices=(DoubleVoice(0.0, _DOUBLE_MIN_DELAY_MS, 0.0),), level=0.5))
+    assert np.allclose(tiny, floored)
+
+
+def test_doubler_adding_a_voice_does_not_raise_the_double_level():
+    """Voices are averaged, so a third double widens rather than getting louder."""
+    from src.dsp_engine.graph import DoubleVoice, Doubler
+    sr = 44100
+    x = _voiced(sr)
+    two = render_graph(x, sr, Doubler(
+        voices=(DoubleVoice(-9.0, 17.0, -0.7), DoubleVoice(11.0, 25.0, 0.7)), level=0.4))
+    three = render_graph(x, sr, Doubler(
+        voices=(DoubleVoice(-9.0, 17.0, -0.7), DoubleVoice(11.0, 25.0, 0.7),
+                DoubleVoice(5.0, 31.0, 0.0)), level=0.4))
+    peak_two = float(np.max(np.abs(two)))
+    peak_three = float(np.max(np.abs(three)))
+    assert peak_three <= peak_two * 1.25, (peak_two, peak_three)
+
+
+def test_doubler_describe_names_detune_not_tuning():
+    """DT-98 ships transposition only; the description must not imply correction."""
+    from src.dsp_engine.graph import DoubleVoice, Doubler
+    text = Doubler(voices=(DoubleVoice(-9.0, 17.0, -0.7),), level=0.4).describe().lower()
+    assert "-9c" in text
+    for forbidden in ("tune", "tuning", "correct", "pitch correction"):
+        assert forbidden not in text
+
+
+def test_modern_rap_bold_includes_doubling_and_declares_it_honestly():
+    from src.modes.contracts import MODES, build_graph
+    description = build_graph("modern_rap", "bold").describe()
+    assert "rap_double" in description
+    assert "rap_double" not in build_graph("modern_rap", "subtle").describe()
+    caps = " ".join(MODES["modern_rap"].capabilities).lower()
+    assert "doubling" in caps
+    assert "not a second take" in caps       # the honest qualifier must survive
+    assert "auto-tune" not in caps and "pitch correction" not in caps

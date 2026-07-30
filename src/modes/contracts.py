@@ -22,7 +22,15 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Callable
 
-from src.dsp_engine.graph import GraphNode, Parallel, Processor, Send, Serial
+from src.dsp_engine.graph import (
+    DoubleVoice,
+    Doubler,
+    GraphNode,
+    Parallel,
+    Processor,
+    Send,
+    Serial,
+)
 
 MODE_CONTRACT_VERSION = "1.0.0"
 
@@ -223,6 +231,15 @@ def _modern_rap(intensity: Intensity) -> GraphNode:
             level=0.16, duck=0.8, label="rap_room",
         ))
 
+        # DT-98: artificial doubling. Two detuned, time-offset copies panned
+        # opposite, under the dry. This is width, not tuning — the same take
+        # shifted, never a second performance and never note correction.
+        nodes.append(Doubler(
+            voices=(DoubleVoice(detune_cents=-9.0, delay_ms=17.0, pan=-0.7),
+                    DoubleVoice(detune_cents=+11.0, delay_ms=25.0, pan=+0.7)),
+            level=0.32, label="rap_double",
+        ))
+
     if intensity is Intensity.EXTREME:
         nodes.append(Processor("Clipping", {"threshold_db": -3.0}))
         nodes.append(Send(
@@ -279,6 +296,7 @@ MODES: dict[str, ModeSpec] = {
             "presence and air",
             "ducked slap delay",
             "ducked short room",
+            "artificial doubling (detuned copies, not a second take)",
         ),
         build=_modern_rap,
     ),
