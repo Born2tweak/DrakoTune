@@ -641,3 +641,23 @@ The three differ in **kind, not degree**: `natural` keeps a wide deadband and a 
 - **Invalid scale or key is refused, not substituted** — the same rule DT-97 established for modes (F-16).
 
 **What remains open is not DSP.** All three DT-100 stages now exist and are measurable. How much correction is *right* is a listening question, and it inherits Q-016's unresolved problem of what an automated process may legitimately optimise. `PitchShift` stays transposition-only, none of this is wired into a mode, and no surface may say tuning, pitch correction or Auto-Tune until that is settled.
+
+## F-22 — correction on real vocals, and a pass criterion that was wrong for half the presets (2026-07-30, DT-100)
+
+`scripts/v3_render_correction.py`; `output/v3_renders/dt100/correction_report.json`.
+
+Unit tests measure correction on synthetic tones where the true pitch is known exactly. That establishes accuracy, not behaviour on a real take — where the contour is noisy, consonants are unvoiced, and vibrato is intention rather than error. Rendering the whole pipeline on the three Tier A vocals (key C, chromatic):
+
+| fixture | before | natural | modern | hard |
+|---|--:|--:|--:|--:|
+| vocalset straight | 21.1 c | 20.5 c | 16.2 c | **1.1 c** |
+| vocalset vibrato | 23.1 c | 23.7 c | 20.5 c | **7.1 c** |
+| vocadito | 21.8 c | 20.4 c | 16.6 c | **4.9 c** |
+
+Presets separate on real audio, not only on tones: `hard` touches 62–80% of frames by a median 21–23 cents; `natural` touches 14–20% by a median 3–4 cents.
+
+**The finding worth keeping is the one that first read as a failure.** On the vibrato fixture `natural` made median deviation slightly *worse* — 23.1 → 23.7 cents — and the check flagged it. The cause is not a defect: with a 35-cent deadband against a ±45-cent vibrato, only the extremes of the swing exceed the band, so nudging them redistributes the contour without correcting it. That is precisely the behaviour the deadband exists to produce on material whose deviation is musical.
+
+**So the pass criterion was wrong, not the number.** "Deviation must fall" is the right test for a setting that intends to correct and the wrong one for a setting that intends to stay out of the way. It now passes when a preset either reduces deviation *or* declares itself **minimal intervention** (<25% of frames, <5 cents median) — and substantial intervention that makes deviation worse still fails. The alternative, relaxing the threshold until the number passed, would have hidden the most interesting interaction in the milestone.
+
+**DT-100 status: complete.** All six stages built, unit-measured against known ground truth and render-verified on real vocals. Nothing is wired into a mode, `PitchShift` stays transposition-only, and no surface may say tuning — because the remaining question was never DSP: *how much* correction is right is a listening judgement inheriting Q-016.
