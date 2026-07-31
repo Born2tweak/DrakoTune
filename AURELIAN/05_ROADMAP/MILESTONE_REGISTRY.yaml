@@ -84,7 +84,7 @@ milestones:
   - {id: DT-102, title: Production-Fingerprint Extraction, horizon: V3B, status: blocked, depends_on: [DT-99], detail: MILESTONES/DT_93_106.md}
   - {id: DT-103, title: Corpus-Informed Candidate Initialization, horizon: V3B, status: blocked, depends_on: [DT-102], detail: MILESTONES/DT_93_106.md}
   - {id: DT-104, title: Melodic Aggressive and Intimate Modes, horizon: V3B, status: blocked, depends_on: [DT-96, DT-99], detail: MILESTONES/DT_93_106.md}
-  - {id: DT-105, title: Audio-Reactive Visual System and 3D Centerpiece, horizon: V3B, status: blocked, depends_on: [DT-97], detail: MILESTONES/DT_93_106.md}
+  - {id: DT-105, title: Audio-Reactive Visual System and 3D Centerpiece, horizon: V3B, status: ready, depends_on: [DT-97], note: 'unblocked by DT-97; the only remaining autonomous milestone, but it is a visual system and does not reduce the measured audio gap -- see F-23', detail: MILESTONES/DT_93_106.md}
   - {id: DT-106, title: V3 Beta Integration and Release, horizon: V3B, status: blocked, depends_on: [DT-100, DT-101, DT-103, DT-104, DT-105], detail: MILESTONES/DT_93_106.md}
 execution_profiles:
   automatic_internal:

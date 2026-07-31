@@ -661,3 +661,25 @@ Presets separate on real audio, not only on tones: `hard` touches 62–80% of fr
 **So the pass criterion was wrong, not the number.** "Deviation must fall" is the right test for a setting that intends to correct and the wrong one for a setting that intends to stay out of the way. It now passes when a preset either reduces deviation *or* declares itself **minimal intervention** (<25% of frames, <5 cents median) — and substantial intervention that makes deviation worse still fails. The alternative, relaxing the threshold until the number passed, would have hidden the most interesting interaction in the milestone.
 
 **DT-100 status: complete.** All six stages built, unit-measured against known ground truth and render-verified on real vocals. Nothing is wired into a mode, `PitchShift` stays transposition-only, and no surface may say tuning — because the remaining question was never DSP: *how much* correction is right is a listening judgement inheriting Q-016.
+
+## F-23 — the autonomous audio frontier is exhausted; what remains needs owner decisions (2026-07-31)
+
+Dependency state after DT-98 and DT-100 completed, checked against `MILESTONE_REGISTRY.yaml` rather than assumed:
+
+| milestone | profile | blocked by | reduces the audio gap? |
+|---|---|---|---|
+| DT-99 Deployable V3 Alpha | `product_scope` | — (ready) | no — it is a deployment |
+| DT-101 Denoising / room reduction | `rights_spend` | — | **yes, directly** |
+| DT-102 Production fingerprints | `automatic_internal` | DT-99 | yes |
+| DT-103 Corpus-informed init | `automatic_internal` | DT-102 → DT-99 | yes |
+| DT-104 Melodic/Aggressive/Intimate | `automatic_internal` | DT-99 | partly |
+| DT-105 Audio-reactive visuals | `automatic_internal` | — (status was stale; DT-97 is complete) | **no** |
+| DT-106 V3 Beta release | `product_scope` | everything above | no |
+
+**DT-105 is the only milestone that is both unblocked and autonomous, and it is a visual system.** It does not touch the measured gap. Every remaining milestone that *would* — denoising and room reduction most of all, which is the actual capability behind the weak-mic/room defect in E-OWN-001 — is gated on an owner decision: DT-101 on rights and spend, DT-102/103/104 transitively on DT-99's public surface.
+
+So the honest position is that **autonomous work on audio quality is exhausted for now**, not that quality is finished. Building DT-105 would be activity rather than progress against the objective, and Rescue's own capability list already says in plain terms that it has no broadband denoiser and no dereverberation — the gap is declared, not hidden.
+
+Two things worth stating alongside that:
+- **Q-016 remains the deeper constraint.** Everything built in DT-98/DT-100 is authored and bounded, which is exactly why it could proceed without a validated optimisation target. Anything that *searches* for parameters still cannot, and N-016..N-018 continue to bar objective-driven promotion claims.
+- **The stale `blocked` status on DT-105 was itself a small instance of the recurring lesson**: its dependency had been satisfied for two milestones and the registry still said otherwise. A status field is a claim like any other, and it was wrong until checked.
