@@ -23,24 +23,30 @@ listen to the result.
 
 from src.modes.macros import MACRO_NAMES, apply_macros, parse_macros
 from src.modes.contracts import (
+    EXPERIMENTAL_MODES,
     INTENSITY_ORDER,
     Intensity,
     ModeSpec,
     build_graph,
     describe_mode,
     get_mode,
+    is_experimental,
     list_modes,
+    production_modes,
 )
 
 __all__ = [
     "MACRO_NAMES",
     "apply_macros",
     "parse_macros",
+    "EXPERIMENTAL_MODES",
     "INTENSITY_ORDER",
     "Intensity",
     "ModeSpec",
     "build_graph",
     "describe_mode",
     "get_mode",
+    "is_experimental",
     "list_modes",
+    "production_modes",
 ]

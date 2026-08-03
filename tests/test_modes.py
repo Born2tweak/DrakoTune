@@ -11,12 +11,14 @@ import pytest
 from src.dsp_engine.channels import normalize
 from src.dsp_engine.graph import Parallel, Send, Serial, render_graph
 from src.modes import (
+    EXPERIMENTAL_MODES,
     INTENSITY_ORDER,
     Intensity,
     build_graph,
     describe_mode,
     get_mode,
     list_modes,
+    production_modes,
 )
 from src.modes.distinctness import (
     AUDIBLE_DELTA_FLOOR_DB,
@@ -45,8 +47,20 @@ def _rms(a):
     return float(np.sqrt(np.mean(np.square(a, dtype=np.float64)))) if a.size else 0.0
 
 
-def test_expected_modes_exist():
-    assert set(list_modes()) == {"natural", "rescue", "modern_rap"}
+def test_expected_production_modes_exist():
+    """The shipped chains are exactly these three. Adding a fourth is a product
+    decision, so it must break this test rather than slip in silently."""
+    assert set(production_modes()) == {"natural", "rescue", "modern_rap"}
+
+
+def test_experimental_modes_are_registered_but_not_production():
+    """DT-108 challengers are reachable for A/B work but are not shipped chains.
+    They must stay outside `production_modes()` until listening promotes one."""
+    assert EXPERIMENTAL_MODES <= set(list_modes())
+    assert not (EXPERIMENTAL_MODES & set(production_modes()))
+    for name in EXPERIMENTAL_MODES:
+        assert "experimental" in get_mode(name).title.lower(), (
+            f"{name} must announce itself as experimental in its title")
 
 
 @pytest.mark.parametrize("mode", list(list_modes()))

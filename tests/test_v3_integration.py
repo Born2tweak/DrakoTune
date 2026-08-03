@@ -18,6 +18,7 @@ from fastapi.testclient import TestClient
 
 from src.application.service import ApplicationService
 from src.dsp.preprocess import preprocess
+from src.modes import EXPERIMENTAL_MODES, list_modes
 from src.dsp_engine.channels import mono_compatibility
 from src.dsp_engine.executor import execute_plan, render_mode
 from src.dsp_engine.gain_staging import (
@@ -185,8 +186,19 @@ class TestWebRoute:
 
     def test_modes_endpoint_distinguishes_modes_from_intensities(self, client):
         body = client.get("/api/modes").json()
-        assert body["counts"]["modes"] == 3
+        # 3 production chains + 3 DT-108 experimental challengers. The point of
+        # this test is that intensities are not counted as modes, not the total.
+        assert body["counts"]["modes"] == len(list_modes())
         assert body["counts"]["intensities_per_mode"] == 4
+
+    def test_modes_endpoint_marks_experimental_chains(self, client):
+        """A challenger must be visibly experimental wherever it is offered, so a
+        user cannot mistake an unvalidated reconstruction for a shipped chain."""
+        body = client.get("/api/modes").json()
+        by_name = {m["name"]: m for m in body["modes"]}
+        for name in EXPERIMENTAL_MODES:
+            assert name in by_name, f"{name} missing from /api/modes"
+            assert "experimental" in by_name[name]["title"].lower()
 
     def test_api_rejects_an_unknown_mode_with_the_available_list(self, client):
         with open(FIXTURE, "rb") as fh:
