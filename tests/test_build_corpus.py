@@ -41,7 +41,12 @@ needs_local_data = pytest.mark.skipif(
 
 def test_ci_fixtures_are_valid_and_small():
     wavs = sorted(FIXTURE_DIR.glob("*.wav"))
-    assert len(wavs) == 3, "expected 3 real-vocal CI fixtures"
+    assert len(wavs) == 5, "expected 5 real-vocal CI fixtures"
+    # Voice coverage is part of the contract, not incidental: a female-only set
+    # silently excluded the voice type Modern Rap targets.
+    names = {w.stem for w in wavs}
+    assert any(n.startswith("vocalset_male") for n in names), "male fixture required"
+    assert any(n.startswith("vocalset_female") for n in names), "female fixture required"
     for wav in wavs:
         assert wav.stat().st_size <= 1_000_000, f"{wav.name} exceeds 1 MB"
         info = sf.info(wav)

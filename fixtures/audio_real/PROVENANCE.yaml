@@ -46,3 +46,31 @@ files:
     sha256: c4e0e3909bdc47b82aaefecd05b7ae053d395264dee404fce0975727f2f980da
     derivation: short clean clip via scripts/build_corpus.py --ci-fixtures
     commercially_usable: true
+
+  # Added 2026-08-03. Until this date the real-vocal fixture set was female-only
+  # by accident of selection order in _write_ci_fixtures, so no real-vocal result
+  # had ever been measured on the voice type Modern Rap targets. `spoken` is the
+  # closest proxy for rap delivery available in VocalSet.
+  - path: fixtures/audio_real/vocalset_male1_spoken.wav
+    source_dataset: VocalSet
+    source_url: https://doi.org/10.5281/zenodo.1193957
+    license: CC BY 4.0
+    attribution: >
+      Julia Wilkins, Prem Seetharaman, Alison Wahl, Bryan Pardo, "VocalSet: A
+      Singing Voice Dataset," ISMIR 2018.
+    acquisition_date: 2026-07-11
+    sha256: a00970fa3f2dcbb2b0b08cc22af24a46359f04f9f9777362fa205cdc8db5c222
+    derivation: short clean clip via scripts/build_corpus.py --ci-fixtures
+    commercially_usable: true
+
+  - path: fixtures/audio_real/vocalset_male1_vibrato.wav
+    source_dataset: VocalSet
+    source_url: https://doi.org/10.5281/zenodo.1193957
+    license: CC BY 4.0
+    attribution: >
+      Julia Wilkins, Prem Seetharaman, Alison Wahl, Bryan Pardo, "VocalSet: A
+      Singing Voice Dataset," ISMIR 2018.
+    acquisition_date: 2026-07-11
+    sha256: 2f3b2b93024620744c8f9ece25cceaff60c55513f7553aa9d61af989a60992b1
+    derivation: short clean clip via scripts/build_corpus.py --ci-fixtures
+    commercially_usable: true

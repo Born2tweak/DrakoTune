@@ -200,10 +200,34 @@ def build(version: str, full_grid: bool, ci_fixtures: bool) -> dict:
 
 
 def _write_ci_fixtures(repo: Path, records: list[dict], clean_dir: Path) -> None:
-    """Copy 3 short Tier A clean clips (≤1 MB each) into fixtures/audio_real/."""
+    """Copy 5 short Tier A clean clips (≤1 MB each) into fixtures/audio_real/.
+
+    Voice coverage is explicit. Taking the first two vocalset records sorted by
+    singer directory silently yielded female1 twice, so every real-vocal result
+    in the project was measured on female singing only -- including Modern Rap,
+    whose target voice is male rap delivery. Male singers are now selected by
+    name, and a `spoken` excerpt is preferred where one exists because it is the
+    closest thing VocalSet has to rap delivery.
+    """
     fixture_dir = repo / "fixtures" / "audio_real"
     fixture_dir.mkdir(exist_ok=True)
-    vocalset = [r for r in records if r["source_dataset"] == "vocalset"][:2]
+
+    vocalset_records = [r for r in records if r["source_dataset"] == "vocalset"]
+
+    def _pool(prefix: str) -> list[dict]:
+        return [r for r in vocalset_records if r["singer"].startswith(prefix)]
+
+    # Female selection is unchanged: other tests and spike scripts reference these
+    # two fixtures by name, so shifting them would be a silent breaking change.
+    female = _pool("female")[:2]
+
+    # Male selection takes one spoken and one sung excerpt, so the added coverage
+    # spans both rap-adjacent delivery and sustained pitch.
+    male_pool = _pool("male")
+    male_spoken = [r for r in male_pool if r["technique"] == "spoken"][:1]
+    male_sung = [r for r in male_pool if r["technique"] != "spoken"][:1]
+
+    vocalset = female + male_spoken + male_sung
     vocadito = [r for r in records if r["source_dataset"] == "vocadito"][:1]
     for record in vocalset + vocadito:
         audio, _ = sf.read(clean_dir / f"{record['clip_id']}.wav", dtype="float32")
@@ -212,7 +236,13 @@ def _write_ci_fixtures(repo: Path, records: list[dict], clean_dir: Path) -> None
         "# Real-vocal CI fixtures (Tier A)\n\n"
         "Short clean clips derived from CC BY 4.0 datasets for CI use\n"
         "(governance: docs/data/DATASET_GOVERNANCE.md §5; credits:\n"
-        "data/licenses/ATTRIBUTIONS.md — VocalSet, vocadito).\n"
+        "data/licenses/ATTRIBUTIONS.md — VocalSet, vocadito).\n\n"
+        "Voice coverage is deliberate: two female and two male VocalSet singers\n"
+        "plus one vocadito clip. Male fixtures were added 2026-08-03 — before that\n"
+        "the set was female-only by accident of selection order, which meant no\n"
+        "real-vocal result had ever been measured on the voice type Modern Rap\n"
+        "targets. `spoken` excerpts are preferred where available as the closest\n"
+        "available proxy for rap delivery.\n\n"
         "Regenerate: python scripts/build_corpus.py --ci-fixtures\n",
         encoding="utf-8",
     )
