@@ -1,0 +1,70 @@
+{
+  "schema_version": "0.1.0",
+  "corpus_id": "owner_rap_vocals_2026_08_03",
+  "characterized": "2026-08-03",
+  "posture": "authorized_non_private (D-026: owner-recorded audio permitted)",
+  "rights_note": "Owner-supplied performances, assumed self-recorded and owner-held. ASSUMPTION NOT VERIFIED — if any take involves a featured artist, session vocalist, or third-party writer, it becomes Tier P and needs consent scope before any evaluation use. Audio is NOT committed: it currently sits outside the repo and belongs under data/local/ (gitignored) with a fixtures/audio_real-style PROVENANCE record.",
+  "significance": "First male rap-delivery vocal material available to the project. Every prior real-vocal result used three solo-singing fixtures, two explicitly female, none rap.",
+
+  "critical_finding": "The 'RawTune' filename is not reliable. These are neither uniformly raw nor uniformly tuned. All five are loudness-normalized, and pitch correction is baked into three of them to materially different degrees. Treat each take individually; do not batch them as 'raw'.",
+
+  "common_properties": {
+    "format": "PCM 32-bit float, 44.1 kHz, stereo container",
+    "effectively_mono": true,
+    "mono_evidence": "L/R correlation = 1.000000 on all five; MoveWrong is bit-identical between channels, the rest differ by 4e-13 to 8e-3. Mono content in a stereo container.",
+    "loudness_normalized": true,
+    "normalization_evidence": "Integrated loudness -11.22 to -12.15 LUFS with peaks parked at -0.32 to -0.54 dBFS across five separately-produced files. That ceiling consistency is normalization or limiting, not a raw capture.",
+    "consequence": "These cannot serve as loudness references — the same trap as the social-media clips. They are usable as processing inputs provided A/B renders are loudness-matched."
+  },
+
+  "takes": [
+    {
+      "file": "Gwapped Up (RawTune1).wav", "duration_s": 137.7,
+      "input_lufs": -12.02, "peak_dbfs": -0.34, "crest_db": 14.91, "noise_floor_db": -36.9,
+      "voiced_pct": 16.0, "median_cents_off_grid": 19.2, "within_5_cents_pct": 13.3,
+      "tuning_verdict": "untuned — indistinguishable from the Tier A untuned reference",
+      "notes": "Strong sub-60 Hz content (+9.8 dB rel.), no high-pass applied. Lowest voiced fraction: percussive, speech-like delivery.",
+      "best_used_for": "pitch-correction testing (DT-100), high-pass behaviour, rumble handling"
+    },
+    {
+      "file": "MoveWrong (RawTune).wav", "duration_s": 110.1,
+      "input_lufs": -12.15, "peak_dbfs": -0.34, "crest_db": 14.78, "noise_floor_db": -32.7,
+      "voiced_pct": 41.1, "median_cents_off_grid": 19.2, "within_5_cents_pct": 16.8,
+      "tuning_verdict": "untuned — indistinguishable from the Tier A untuned reference",
+      "notes": "Already high-passed: sub_20_60 at -2.9 dB and 60-120 Hz at -8.8 dB, far below the other takes. Channels bit-identical.",
+      "best_used_for": "pitch-correction testing (DT-100); NOT for high-pass experiments, its low end is already removed"
+    },
+    {
+      "file": "Just_Vibe (RawTune).wav", "duration_s": 125.1,
+      "input_lufs": -11.77, "peak_dbfs": -0.54, "crest_db": 14.84, "noise_floor_db": -241.2,
+      "voiced_pct": 29.0, "median_cents_off_grid": 10.8, "within_5_cents_pct": 23.0,
+      "tuning_verdict": "moderately tuned",
+      "notes": "Noise floor is -241 dB — digital silence between phrases. Gated or edited, so it cannot test gate or noise behaviour.",
+      "best_used_for": "EQ and compression experiments only"
+    },
+    {
+      "file": "NotWorthIt_Stressing (RawTune1).wav", "duration_s": 198.5,
+      "input_lufs": -11.74, "peak_dbfs": -0.32, "crest_db": 14.57, "noise_floor_db": -30.9,
+      "voiced_pct": 14.4, "median_cents_off_grid": 10.8, "within_5_cents_pct": 27.8,
+      "tuning_verdict": "moderately tuned",
+      "notes": "Longest take. Lowest voiced fraction alongside Gwapped Up.",
+      "best_used_for": "EQ, compression, doubler experiments"
+    },
+    {
+      "file": "LiveLeak (RawTuneDeep).wav", "duration_s": 119.7,
+      "input_lufs": -11.22, "peak_dbfs": -0.51, "crest_db": 13.87, "noise_floor_db": -29.9,
+      "voiced_pct": 27.5, "median_cents_off_grid": 0.8, "within_5_cents_pct": 52.0,
+      "tuning_verdict": "heavily tuned — hard-snapped",
+      "notes": "Median f0 sits 0.8 cents from the equal-tempered grid with 52% of voiced frames inside 5 cents. The untuned reference sits at 19-21 cents with 10-14%. Unambiguous hard retune.",
+      "best_used_for": "reference for what a tuned target sounds like; USELESS for testing DrakoTune's own pitch correction"
+    }
+  ],
+
+  "reference_baseline_untuned": {
+    "source": "fixtures/audio_real (Tier A, CC BY 4.0)",
+    "vocadito_1": {"median_cents": 20.8, "within_5_cents_pct": 13.2},
+    "vocalset_female1_straight": {"median_cents": 19.2, "within_5_cents_pct": 13.9},
+    "vocalset_female1_vibrato": {"median_cents": 20.8, "within_5_cents_pct": 10.3},
+    "method": "librosa.pyin f0 over the first 60 s, voiced frames at prob > 0.5, deviation in cents from the nearest equal-tempered semitone"
+  }
+}

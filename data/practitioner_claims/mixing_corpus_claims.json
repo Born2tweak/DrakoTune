@@ -1,0 +1,418 @@
+{
+  "schema_version": "0.1.0",
+  "corpus_id": "mixing_practitioner_clips_2026_07_31",
+  "extracted": "2026-08-03",
+  "evidence_class": "prior",
+  "evidence_class_note": "Nine short social-media instructional clips. This is practitioner opinion, not measurement and not a study. Every row is a PRIOR or HYPOTHESIS that may inform an engineering default. No row may support a product claim, and no row is evidence of perceptual improvement. Corroboration counts below are counts of creators who said a thing, nothing more.",
+  "extraction_method": "Transcribed locally for numeric values, then paraphrased. Transcripts and frames were working artifacts only and are not retained. Knob readouts are not legible at 720p, so stated numbers are the source and frames were corroboration only.",
+  "rights_note": "Source video is Tier D under docs/data/DATASET_GOVERNANCE.md (social-platform capture, no license): allowed nothing. No source audio, video, frame, or verbatim transcript is stored here or anywhere in the repository. This file records only paraphrased technical assertions -- parameter values and process steps, which are facts rather than protected expression -- with clip id, timecode and creator attribution retained for traceability. Verbatim quotation was removed 2026-08-03; see docs/decisions/ for the recorded decision.",
+  "sources": [
+    {
+      "clip": "20260731_170352000",
+      "creator": "@angelomota",
+      "kind": "instructional",
+      "duration_s": 114.8,
+      "topic": "full rap vocal chain with numeric values"
+    },
+    {
+      "clip": "20260731_171211000",
+      "creator": null,
+      "kind": "instructional",
+      "duration_s": 34.8,
+      "topic": "multiband low-mid technique (Cardi reference)"
+    },
+    {
+      "clip": "20260731_170235000",
+      "creator": null,
+      "kind": "instructional",
+      "duration_s": 30.0,
+      "topic": "plugin chain order"
+    },
+    {
+      "clip": "20260731_170527000",
+      "creator": null,
+      "kind": "instructional",
+      "duration_s": 72.6,
+      "topic": "eight-step mix process"
+    },
+    {
+      "clip": "20260731_170107000",
+      "creator": null,
+      "kind": "instructional",
+      "duration_s": 88.3,
+      "topic": "parallel compression"
+    },
+    {
+      "clip": "20260731_170750000",
+      "creator": null,
+      "kind": "instructional",
+      "duration_s": 48.6,
+      "topic": "two-stage compression chain"
+    },
+    {
+      "clip": "20260731_170615000",
+      "creator": null,
+      "kind": "instructional",
+      "duration_s": 49.2,
+      "topic": "underground autotune sound"
+    },
+    {
+      "clip": "20260731_170828000",
+      "creator": "mixed by Trey",
+      "kind": "instructional",
+      "duration_s": 71.5,
+      "topic": "YNW Melly 772 lead vocal chain"
+    },
+    {
+      "clip": "20260731_170556000",
+      "creator": null,
+      "kind": "instructional",
+      "duration_s": 78.7,
+      "topic": "free plugin recommendations (product, not technique)"
+    }
+  ],
+  "claims": [
+    {
+      "id": "PC-001",
+      "stage": "highpass",
+      "parameter": "cutoff_hz",
+      "value": {
+        "low": 80.0,
+        "high": 100.0,
+        "central": 85.0
+      },
+      "n_sources": 4,
+      "cited": [
+        {
+          "clip": "20260731_170352000",
+          "t": 13.4,
+          "paraphrase": "Places the low cut below 80 Hz, conditioning the choice on having a low voice."
+        },
+        {
+          "clip": "20260731_171211000",
+          "t": 14.6,
+          "paraphrase": "Treats an 80 Hz low cut as the routine default."
+        },
+        {
+          "clip": "20260731_170615000",
+          "t": 13.4,
+          "paraphrase": "Places the low cut nearer 90 Hz."
+        },
+        {
+          "clip": "20260731_170828000",
+          "t": 27.6,
+          "paraphrase": "Describes removing problem frequencies as the first corrective step."
+        }
+      ],
+      "caveat": "One source explicitly conditions the value on their own low voice, so this is voice-dependent, not universal."
+    },
+    {
+      "id": "PC-002",
+      "stage": "highpass",
+      "parameter": "risk_of_high_cutoff",
+      "value": "A low cut placed too high removes body and leaves the vocal sounding thin and over-bright.",
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_171211000",
+          "t": 4.4,
+          "paraphrase": "Warns that a low cut removes vocal body and leaves the result too bright."
+        }
+      ],
+      "caveat": "Stated as motivation for the multiband technique in PC-003."
+    },
+    {
+      "id": "PC-003",
+      "stage": "low_mid",
+      "parameter": "technique",
+      "value": "Rather than only cutting, compress the 120-200 Hz band and restore its level afterwards, to keep body while staying clear.",
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_171211000",
+          "t": 17.2,
+          "paraphrase": "Compresses roughly 120-200 Hz, then restores that band's level afterwards."
+        }
+      ],
+      "caveat": "Single source. Attributed to a commercial record but unverified."
+    },
+    {
+      "id": "PC-004",
+      "stage": "low_mid",
+      "parameter": "mud_cut_hz",
+      "value": {
+        "low": 200.0,
+        "high": 500.0
+      },
+      "n_sources": 2,
+      "cited": [
+        {
+          "clip": "20260731_170352000",
+          "t": 13.4,
+          "paraphrase": "Cuts somewhere between 200 and 500 Hz to remove muddiness."
+        },
+        {
+          "clip": "20260731_170828000",
+          "t": 27.6,
+          "paraphrase": "Describes removing muddiness as part of the corrective stage."
+        }
+      ],
+      "caveat": null
+    },
+    {
+      "id": "PC-005",
+      "stage": "low_mid",
+      "parameter": "second_mud_cut_hz",
+      "value": 1000.0,
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170352000",
+          "t": 21.7,
+          "paraphrase": "Adds a dip at 1 kHz to remove further muddiness."
+        }
+      ],
+      "caveat": "Single source."
+    },
+    {
+      "id": "PC-006",
+      "stage": "harshness",
+      "parameter": "cut_band_hz",
+      "value": {
+        "low": 2500.0,
+        "high": 5000.0
+      },
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170352000",
+          "t": 21.7,
+          "paraphrase": "Reduces some energy between roughly 2.5 and 5 kHz."
+        }
+      ],
+      "caveat": "Single source, but see CONFLICT-001 in the diff report: this band is where the current Modern Rap chain applies a static boost."
+    },
+    {
+      "id": "PC-007",
+      "stage": "compression",
+      "parameter": "staged_not_single",
+      "value": "Use two or more gentle compression stages rather than one heavy stage; each stage does little work.",
+      "n_sources": 3,
+      "cited": [
+        {
+          "clip": "20260731_170352000",
+          "t": 45.4,
+          "paraphrase": "Compresses in stages, describing the result as thicker."
+        },
+        {
+          "clip": "20260731_170750000",
+          "t": 6.2,
+          "paraphrase": "First compressor reacts fast to catch peaks so the second has less to do; the second smooths the result."
+        },
+        {
+          "clip": "20260731_170828000",
+          "t": 37.0,
+          "paraphrase": "Reports taking only a small amount of gain reduction from the compressor."
+        }
+      ],
+      "caveat": null
+    },
+    {
+      "id": "PC-008",
+      "stage": "compression",
+      "parameter": "stage1",
+      "value": {
+        "attack_ms": 2.0,
+        "release_ms": 80.0,
+        "ratio": 4.0,
+        "gain_reduction_db": -6.0
+      },
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170352000",
+          "t": 29.0,
+          "paraphrase": "Fast attack and release, about 2 ms attack and 80 ms release, 4:1 ratio, around 6 dB of gain reduction."
+        }
+      ],
+      "caveat": "Transcript reads '41 ratio' and '60 bees game reduction'; read as 4:1 and 6 dB from context. Flagged as a transcription inference, not a clean reading."
+    },
+    {
+      "id": "PC-009",
+      "stage": "compression",
+      "parameter": "stage2",
+      "value": {
+        "ratio": 6.0,
+        "attack": "fast",
+        "gain_reduction_db": -6.0,
+        "unit": "API 2500"
+      },
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170352000",
+          "t": 41.9,
+          "paraphrase": "Second stage at 6:1 with a fast attack, again targeting about 6 dB of gain reduction."
+        }
+      ],
+      "caveat": "Second stage uses a HIGHER ratio than the first. The current engine does the opposite."
+    },
+    {
+      "id": "PC-010",
+      "stage": "parallel",
+      "parameter": "ratio",
+      "value": {
+        "ratio": 10.0,
+        "description": "heavily compressed copy blended under the dry"
+      },
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170107000",
+          "t": 13.9,
+          "paraphrase": "Uses roughly 10:1 with a threshold set to catch more than peaks, for added punch and detail."
+        }
+      ],
+      "caveat": "Purpose stated as added harmonics and consistency, with the parallel signal turned down and blended under the original."
+    },
+    {
+      "id": "PC-011",
+      "stage": "additive_eq",
+      "parameter": "boost_hz",
+      "value": [
+        1200.0,
+        1700.0,
+        8000.0
+      ],
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170352000",
+          "t": 50.9,
+          "paraphrase": "Boosts near 1.7 kHz, 8 kHz and 1.2 kHz to add bite."
+        }
+      ],
+      "caveat": "Single source. Note all three boosts sit OUTSIDE the 2.5-5 kHz band the same source cuts."
+    },
+    {
+      "id": "PC-012",
+      "stage": "air",
+      "parameter": "high_band_treatment",
+      "value": "Clean up 10-15 kHz rather than boosting it; apply air as a high shelf.",
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170615000",
+          "t": 23.9,
+          "paraphrase": "Cleans up the 10-15 kHz region, then applies a high shelf."
+        }
+      ],
+      "caveat": "Directionally opposite to a plain air boost. Single source."
+    },
+    {
+      "id": "PC-013",
+      "stage": "width",
+      "parameter": "amount",
+      "value": {
+        "percent": 10.0
+      },
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170352000",
+          "t": 94.4,
+          "paraphrase": "Uses about 10% width on a mono source, explicitly avoiding very wide settings."
+        }
+      ],
+      "caveat": "The only numeric width statement in the corpus. Explicitly cautions against large width."
+    },
+    {
+      "id": "PC-014",
+      "stage": "de_ess",
+      "parameter": "placement_and_mix",
+      "value": {
+        "type": "wideband",
+        "mix_percent": 60.0
+      },
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170615000",
+          "t": 21.0,
+          "paraphrase": "Uses a wideband de-esser mixed around 60%."
+        }
+      ],
+      "caveat": "Single source."
+    },
+    {
+      "id": "PC-015",
+      "stage": "chain_order",
+      "parameter": "order",
+      "value": [
+        "gate",
+        "subtractive_eq",
+        "pitch_correction",
+        "compression",
+        "additive_eq",
+        "saturation",
+        "delay",
+        "reverb_on_return"
+      ],
+      "n_sources": 4,
+      "cited": [
+        {
+          "clip": "20260731_170235000",
+          "t": 6.6,
+          "paraphrase": "EQ to remove problem frequencies, then pitch correction, then compression, then EQ to boost, then optional saturation, with reverb last and best placed on a return."
+        },
+        {
+          "clip": "20260731_170352000",
+          "t": 6.0,
+          "paraphrase": "Places a gate first in the chain."
+        },
+        {
+          "clip": "20260731_170527000",
+          "t": 23.6,
+          "paraphrase": "States the general rule of cutting before boosting."
+        },
+        {
+          "clip": "20260731_170750000",
+          "t": 24.1,
+          "paraphrase": "Adds EQ for frequency balance and saturation for colour, then only delay and reverb."
+        }
+      ],
+      "caveat": "Strongest agreement in the corpus. One source places pitch correction after subtractive EQ; another places compression before pitch correction."
+    },
+    {
+      "id": "PC-016",
+      "stage": "process",
+      "parameter": "reverb_is_not_repair",
+      "value": "Reverb used to disguise a bad recording is a signal to go back and fix the cleanup stage instead.",
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170527000",
+          "t": 48.7,
+          "paraphrase": "Says that using reverb to cover a bad recording means returning to the cleanup stage."
+        }
+      ],
+      "caveat": "Relevant to Rescue mode's stated scope limits."
+    },
+    {
+      "id": "PC-017",
+      "stage": "process",
+      "parameter": "mono_and_reference_check",
+      "value": "Check the mix on multiple systems including mono; if it falls apart anywhere, return to level balance.",
+      "n_sources": 1,
+      "cited": [
+        {
+          "clip": "20260731_170527000",
+          "t": 57.0,
+          "paraphrase": "References on many systems including mono; if the mix fails anywhere, return to level balance."
+        }
+      ],
+      "caveat": "Supports the existing mono fold-down check as a product-level gate, not just a test."
+    }
+  ],
+  "derights_applied": "2026-08-03"
+}
