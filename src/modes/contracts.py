@@ -32,7 +32,9 @@ from src.dsp_engine.graph import (
     Serial,
 )
 
-MODE_CONTRACT_VERSION = "1.0.0"
+# 1.1.0 — DT-107 retuned Modern Rap's presence/harshness stages. Chains changed,
+# so rendered output changes; the mode set and contract shape did not.
+MODE_CONTRACT_VERSION = "1.1.0"
 
 
 class Intensity(Enum):
@@ -194,12 +196,19 @@ def _modern_rap(intensity: Intensity) -> GraphNode:
             # Serial stage two: slower levelling, so neither compressor works hard.
             Processor("Compressor", {"threshold_db": -26.0, "ratio": 2.5,
                                      "attack_ms": 25.0, "release_ms": 220.0}),
-            # DT-96: dynamic harshness control. A static cut here would dull the
-            # whole vocal; this only acts when the upper mids actually stab.
-            Processor("DynamicEQ", {"band_lo_hz": 2000.0, "band_hi_hz": 4500.0,
-                                    "threshold_ratio": 1.35, "max_reduction_db": 5.0,
+            # DT-107: dynamic harshness control, retuned to 2.5-5 kHz. The band was
+            # 2-4.5 kHz, which straddled the static presence boost below and left
+            # the top of the harsh region uncovered.
+            Processor("DynamicEQ", {"band_lo_hz": 2500.0, "band_hi_hz": 5000.0,
+                                    "threshold_ratio": 1.25, "max_reduction_db": 6.0,
                                     "smoothing_ms": 40.0}),
-            Processor("PeakFilter", {"cutoff_frequency_hz": 3200.0, "gain_db": 2.5, "q": 1.1}),
+            # DT-107: presence moved 3200 -> 1700 Hz at the same +2.5 dB.
+            # The chain previously boosted 3.2 kHz statically while dynamically
+            # cutting 2-4.5 kHz -- lifting and taming the same band. Moving the
+            # lift below the harsh region lets the dynamic stage do its job, and
+            # measured lower harsh-band energy with higher presence on every
+            # fixture. Gain is unchanged, so this is placement, not more boost.
+            Processor("PeakFilter", {"cutoff_frequency_hz": 1700.0, "gain_db": 2.5, "q": 1.1}),
             Processor("HighShelfFilter", {"cutoff_frequency_hz": 9500.0,
                                           "gain_db": 3.5, "q": 0.7}),
         ]
