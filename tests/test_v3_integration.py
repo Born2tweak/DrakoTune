@@ -11,6 +11,8 @@ They also pin the guarantee that makes V3 safe to ship: a V2 request is
 unaffected by any of it.
 """
 
+import pathlib
+
 import numpy as np
 import pytest
 import soundfile as sf
@@ -337,3 +339,38 @@ class TestOversizedInputIsRefusedNotFatal:
         with open(FIXTURE, "rb") as fh:
             job = jobs_mod.process_upload("vocal.wav", fh.read(), mode="modern_rap")
         assert job.status != jobs_mod.STATUS_FAILED, job.message
+
+
+class TestUploadLimitIsSingleSourced:
+    """Regression for the 2026-08-04 config drift.
+
+    `MAX_UPLOAD_MB` was raised in Python, but the Dockerfile still pinned
+    DRAKOTUNE_MAX_UPLOAD_MB=50 as an ENV, which silently won in production. A
+    66.8 MB take kept being rejected with 413 after a full multi-minute upload,
+    while the source said the limit was 160.
+    """
+
+    def test_dockerfile_env_matches_the_code_default(self):
+        import re
+        from src.webapp.app import MAX_UPLOAD_MB
+
+        dockerfile = pathlib.Path("Dockerfile").read_text(encoding="utf-8")
+        match = re.search(r"DRAKOTUNE_MAX_UPLOAD_MB=(\d+)", dockerfile)
+        assert match, "Dockerfile no longer pins DRAKOTUNE_MAX_UPLOAD_MB"
+        assert int(match.group(1)) == MAX_UPLOAD_MB, (
+            f"Dockerfile pins {match.group(1)} MB but the code default is "
+            f"{MAX_UPLOAD_MB} MB; the image value wins at runtime")
+
+    def test_limits_are_published_so_the_client_need_not_hardcode_them(self):
+        client = TestClient(app)
+        limits = client.get("/api/modes").json()["limits"]
+        from src.webapp.app import MAX_UPLOAD_MB
+        from src.webapp.jobs import MAX_AUDIO_SECONDS
+
+        assert limits["max_upload_mb"] == MAX_UPLOAD_MB
+        assert limits["max_audio_seconds"] == MAX_AUDIO_SECONDS
+
+    def test_client_does_not_hardcode_an_upload_limit(self):
+        """The browser must learn the limit, not carry its own copy."""
+        js = pathlib.Path("src/webapp/static/app.js").read_text(encoding="utf-8")
+        assert "data.limits" in js, "client no longer reads limits from /api/modes"

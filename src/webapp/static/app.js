@@ -21,11 +21,13 @@ const $ = (id) => document.getElementById(id);
  * finite, so a dead server surfaces as an error instead of an endless spinner. */
 const UPLOAD_TIMEOUT_MS = 15 * 60 * 1000;
 
-/* Kept in step with MAX_UPLOAD_MB in src/webapp/app.py. Checking locally turns a
+/* Learned from /api/modes, never hardcoded. Checking locally turns a
  * four-minute upload that ends in 413 into an instant, explainable refusal --
  * the server cannot answer until the whole body has arrived, even though it
- * knows the size from the first header. */
-const MAX_UPLOAD_MB = 160;
+ * knows the size from the first header. A previous hardcoded copy disagreed
+ * with the deployed value and the mismatch was invisible from the browser.
+ * The fallback only applies if discovery failed. */
+let maxUploadMb = 50;
 const api = {
   modes: () => fetch("/api/modes").then((r) => r.json()),
   /* XMLHttpRequest rather than fetch, because fetch cannot report upload
@@ -368,6 +370,7 @@ $("about-toggle").addEventListener("click", (e) => {
 async function loadModes() {
   try {
     const data = await api.modes();
+    if (data.limits && data.limits.max_upload_mb) maxUploadMb = data.limits.max_upload_mb;
     state.modes = data.modes;
     state.intensities = data.intensities;
     state.mode = data.default_mode || data.modes[0].name;
@@ -461,9 +464,9 @@ async function process() {
   // once the entire body has arrived, so without this the user waits minutes to
   // be told the file was never acceptable.
   const sizeMb = state.file.size / (1024 * 1024);
-  if (sizeMb > MAX_UPLOAD_MB) {
+  if (sizeMb > maxUploadMb) {
     return showError(
-      `That file is ${sizeMb.toFixed(0)} MB and the limit is ${MAX_UPLOAD_MB} MB. ` +
+      `That file is ${sizeMb.toFixed(0)} MB and the limit is ${maxUploadMb} MB. ` +
       "Exporting as 24-bit instead of 32-bit float roughly halves the size.");
   }
 

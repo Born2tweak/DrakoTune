@@ -18,6 +18,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 from src.webapp.feedback import record_feedback
 from src.modes import INTENSITY_ORDER, get_mode, list_modes
 from src.webapp.jobs import (
+    MAX_AUDIO_SECONDS,
     UnknownModeError,
     audio_path,
     delete_job,
@@ -134,6 +135,14 @@ def api_modes() -> JSONResponse:
     so rather than leaving the arithmetic to the reader.
     """
     return JSONResponse({
+        # Served so the client can refuse an oversized file locally instead of
+        # discovering the limit after a multi-minute upload. It is published
+        # here because a hardcoded copy in the client silently disagreed with
+        # the server's value once already.
+        "limits": {
+            "max_upload_mb": MAX_UPLOAD_MB,
+            "max_audio_seconds": MAX_AUDIO_SECONDS,
+        },
         "counts": {
             "modes": len(list_modes()),
             "intensities_per_mode": len(INTENSITY_ORDER),

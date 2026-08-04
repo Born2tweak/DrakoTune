@@ -36,9 +36,15 @@ COPY src ./src
 #   DRAKOTUNE_MAX_UPLOAD_MB — reject uploads larger than this (memory guard).
 #   DRAKOTUNE_SECRET        — HMAC key for signed audio URLs (set in prod so
 #                             playback links survive a restart).
+#
+# KEEP IN STEP with app.MAX_UPLOAD_MB and MAX_UPLOAD_MB in static/app.js. This
+# value silently won over the Python default on 2026-08-04: the code default was
+# raised to 160 but production kept rejecting a 66.8 MB take at 413, because the
+# image still pinned 50 here. Three places is two too many, but until the client
+# learns the limit from /api/modes, all three must be changed together.
 ENV PYTHONPATH=/app \
     PYTHONUNBUFFERED=1 \
-    DRAKOTUNE_MAX_UPLOAD_MB=50
+    DRAKOTUNE_MAX_UPLOAD_MB=160
 
 EXPOSE 8080
 
