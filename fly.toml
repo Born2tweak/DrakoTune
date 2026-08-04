@@ -16,9 +16,20 @@ primary_region = "iad"   # change to your nearest region (e.g. "lhr", "fra", "sj
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = "stop"     # scale to zero when idle (cheap); wakes on request
+  auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 0        # set to 1 if you want it always warm (no cold start)
+  # Must stay 1. Scaling to zero is incompatible with this app's upload size and
+  # boot time: importing librosa/numba takes ~10 s, the Fly proxy gives up
+  # waiting after ~8.5 s, and a multi-megabyte upload cannot be replayed --
+  #
+  #   failed to connect to machine: gave up after 15 attempts (in 8.456s)
+  #   cannot retry/replay request because request body has been read past
+  #   what we're willing to buffer
+  #
+  # so a cold start during a real upload always aborts the connection. Keeping
+  # one machine warm costs continuously; the alternative is deferring the heavy
+  # imports so boot fits inside the proxy's window, which is real work.
+  min_machines_running = 1
 
   # Cost protection (M44): caps concurrent in-flight requests at the Fly proxy
   # itself, on top of the app-level rate limiter + job-slot semaphore in
