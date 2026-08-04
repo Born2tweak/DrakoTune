@@ -40,7 +40,11 @@ app = FastAPI(title="DrakoTune", version="0.1.0")
 # Operational safety for a public deployment (NOT access control): the pipeline
 # holds whole files in memory (~180 MB per audio-minute, M36 benchmark), so an
 # unbounded upload would OOM the container. Reject oversized bodies up front.
-MAX_UPLOAD_MB = int(os.environ.get("DRAKOTUNE_MAX_UPLOAD_MB", "50"))
+# 50 MB was too small for the material this is for: a full-length vocal exported
+# as 32-bit float WAV runs 40-70 MB, so real takes were rejected. The duration
+# cap (jobs.MAX_AUDIO_SECONDS) is the meaningful guard on work and memory; this
+# one only bounds what may be buffered in RAM during the upload itself.
+MAX_UPLOAD_MB = int(os.environ.get("DRAKOTUNE_MAX_UPLOAD_MB", "160"))
 _MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 
 # Endpoints that trigger a DSP run (expensive; get the tight rate limit).

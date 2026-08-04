@@ -15,42 +15,61 @@
 
 const $ = (id) => document.getElementById(id);
 
-/* Ceiling on a single render request. Long enough for a full-length vocal on a
- * small machine (a 3.3-minute take measured ~80 s locally), short enough that a
- * dead server surfaces as an error instead of an endless spinner. */
-const UPLOAD_TIMEOUT_MS = 8 * 60 * 1000;
+/* Ceiling on a single request. It must cover BOTH the upload and the render:
+ * a 67 MB take took 225 s to transfer alone on a ~3 Mbps connection, and a
+ * full-length vocal then renders for a couple of minutes on top. Generous, but
+ * finite, so a dead server surfaces as an error instead of an endless spinner. */
+const UPLOAD_TIMEOUT_MS = 15 * 60 * 1000;
+
+/* Kept in step with MAX_UPLOAD_MB in src/webapp/app.py. Checking locally turns a
+ * four-minute upload that ends in 413 into an instant, explainable refusal --
+ * the server cannot answer until the whole body has arrived, even though it
+ * knows the size from the first header. */
+const MAX_UPLOAD_MB = 160;
 const api = {
   modes: () => fetch("/api/modes").then((r) => r.json()),
-  /* A render is synchronous and can legitimately take a minute or more on a
-   * long file, so the timeout is generous. But it must exist: if the server
-   * dies mid-render (it was OOM-killed on 2026-08-04) the connection can hang
-   * open forever, and the page then shows "Processing…" indefinitely with no
-   * way to tell that nothing is coming back. */
-  upload: (form) => {
-    const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), UPLOAD_TIMEOUT_MS);
-    return fetch("/api/audio/upload", { method: "POST", body: form, signal: ctl.signal })
-      .then(async (r) => {
-        const body = await r.json().catch(() => ({}));
-        if (r.status === 413) {
-          throw new Error(`That file is too large (limit ${body.max_mb || "?"} MB).`);
-        }
-        if (r.status === 429) {
-          throw new Error("Too many requests just now. Wait a moment and try again.");
-        }
-        if (!r.ok) throw new Error(body.detail || body.error || `Upload failed (${r.status})`);
-        return body;
-      })
-      .catch((err) => {
-        if (err.name === "AbortError") {
-          throw new Error(
-            "The server stopped responding. This usually means the file was too " +
-            "long for it to finish. Try a shorter section.");
-        }
-        throw err;
-      })
-      .finally(() => clearTimeout(timer));
-  },
+  /* XMLHttpRequest rather than fetch, because fetch cannot report upload
+   * progress and on this material most of the wait IS the upload: a 67 MB take
+   * measured 225 s on a ~3 Mbps connection. Showing "Processing…" for those
+   * four minutes is why the app looked hung when it was working correctly.
+   *
+   * `onProgress` receives the fraction of the body sent, then null once the
+   * server has it and is actually rendering. */
+  upload: (form, onProgress) => new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/audio/upload");
+    xhr.timeout = UPLOAD_TIMEOUT_MS;
+    xhr.responseType = "text";
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+    };
+    // Body fully sent: everything after this is server-side work.
+    xhr.upload.onload = () => onProgress && onProgress(null);
+
+    xhr.onload = () => {
+      let body = {};
+      try { body = JSON.parse(xhr.responseText); } catch { /* non-JSON error page */ }
+      if (xhr.status === 413) {
+        return reject(new Error(
+          `That file is too large. The limit is ${body.max_mb || "?"} MB.`));
+      }
+      if (xhr.status === 429) {
+        return reject(new Error("Too many requests just now. Wait a moment and try again."));
+      }
+      if (xhr.status < 200 || xhr.status >= 300) {
+        return reject(new Error(
+          body.detail || body.error || `Upload failed (${xhr.status})`));
+      }
+      resolve(body);
+    };
+    xhr.onerror = () => reject(new Error(
+      "The connection dropped before the server answered. Check your network and retry."));
+    xhr.ontimeout = () => reject(new Error(
+      "The server stopped responding. This usually means the file was too long " +
+      "for it to finish. Try a shorter section."));
+    xhr.send(form);
+  }),
 };
 
 const state = {
@@ -437,10 +456,21 @@ $("reset-macros").addEventListener("click", () => {
 /* ---------- processing ---------- */
 async function process() {
   if (!state.file) return showError("Choose a vocal first.");
+
+  // Refuse locally rather than after a long upload. The server returns 413 only
+  // once the entire body has arrived, so without this the user waits minutes to
+  // be told the file was never acceptable.
+  const sizeMb = state.file.size / (1024 * 1024);
+  if (sizeMb > MAX_UPLOAD_MB) {
+    return showError(
+      `That file is ${sizeMb.toFixed(0)} MB and the limit is ${MAX_UPLOAD_MB} MB. ` +
+      "Exporting as 24-bit instead of 32-bit float roughly halves the size.");
+  }
+
   stage("mode");
   $("stage-mode").hidden = true;
   $("busy").hidden = false;
-  $("busy-text").textContent = "Processing…";
+  $("busy-text").textContent = sizeMb > 8 ? "Uploading… 0%" : "Processing…";
 
   const form = new FormData();
   form.append("file", state.file);
@@ -450,7 +480,12 @@ async function process() {
   form.append("macros", JSON.stringify(state.macros));
 
   try {
-    const job = await api.upload(form);
+    const job = await api.upload(form, (fraction) => {
+      // null means the body is fully sent and the server is now rendering.
+      $("busy-text").textContent = fraction === null
+        ? "Processing… this takes a couple of minutes on a full song."
+        : `Uploading… ${Math.round(fraction * 100)}%`;
+    });
     if (job.status !== "completed") {
       throw new Error(job.message || "Processing did not complete.");
     }
