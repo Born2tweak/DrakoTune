@@ -6,10 +6,13 @@ this project (N-016..N-022, DEF-003), so a threshold here would be an
 unsupported quality claim wearing a test's clothing.
 """
 
+import pathlib
+
 import numpy as np
 import pytest
 import soundfile as sf
 
+from src.evaluation import delivery_metrics
 from src.evaluation.delivery_metrics import (
     DELIVERY_METRICS_VERSION,
     measure_array,
@@ -143,3 +146,70 @@ class TestContract:
         forbidden = ("score", "quality", "grade", "rating", "pass", "verdict", "ok")
         assert not [k for k in payload if any(f in k.lower() for f in forbidden)]
         assert payload["version"] == DELIVERY_METRICS_VERSION
+
+
+class TestTruePeakIsBlockedNotWholeFile:
+    """Regression for the 2026-08-04 production OOM.
+
+    `_oversample` was called once on the entire file. For a 138-second stereo
+    render that is a 24.3-million-point complex spectrum plus the irfft output
+    and several full-length copies, per channel, at a length with no small prime
+    factors. It measured 3.87 GB for a single call and OOM-killed the container.
+
+    The fix processes fixed-size blocks with real context at each edge. These
+    tests pin both halves of that: the memory bound, and that the number it
+    reports did not change.
+    """
+
+    def test_no_single_oversample_call_sees_the_whole_file(self, monkeypatch):
+        """The memory bound, stated as a property rather than a byte count."""
+        seen = []
+        original = delivery_metrics._oversample
+
+        def spy(column, factor):
+            seen.append(column.shape[0])
+            return original(column, factor)
+
+        monkeypatch.setattr(delivery_metrics, "_oversample", spy)
+
+        sr = 44100
+        long_signal = np.zeros(int(sr * 60), dtype=np.float32)  # 60 s
+        long_signal[::1000] = 0.5
+        delivery_metrics._true_peak(long_signal)
+
+        assert seen, "oversampling never ran"
+        ceiling = delivery_metrics._TRUE_PEAK_BLOCK + 2 * delivery_metrics._TRUE_PEAK_MARGIN
+        assert max(seen) <= ceiling, (
+            f"a single oversample call saw {max(seen)} samples, above the "
+            f"{ceiling}-sample block ceiling -- whole-file behaviour is back")
+        assert max(seen) < long_signal.shape[0], "the whole file was oversampled at once"
+
+    def test_blocked_result_matches_whole_file_on_real_audio(self):
+        """Correctness: blocking must not move the reported number.
+
+        Real program material only. A sustained near-full-scale pure tone is
+        pathological for both implementations -- the whole-file version imposes
+        circular periodicity and under-reports it -- so it is not a valid oracle.
+        """
+        def whole_file(audio, factor=4):
+            work = audio.reshape(-1, 1) if audio.ndim == 1 else audio
+            return max(
+                float(np.max(np.abs(delivery_metrics._oversample(
+                    work[:, ch].astype(np.float64), factor))))
+                for ch in range(work.shape[1]))
+
+        fixtures = sorted(pathlib.Path("fixtures/audio_real").glob("*.wav"))
+        assert fixtures, "no real fixtures to check against"
+        for wav in fixtures:
+            audio, _ = sf.read(str(wav), dtype="float32")
+            blocked, oracle = delivery_metrics._true_peak(audio), whole_file(audio)
+            delta_db = 20 * np.log10(max(blocked, 1e-12) / max(oracle, 1e-12))
+            assert abs(delta_db) < 0.001, f"{wav.name}: {delta_db:+.6f} dB drift"
+
+    def test_a_peak_on_a_block_boundary_is_still_found(self):
+        """The interior/margin bookkeeping must not skip or double-count samples."""
+        block = delivery_metrics._TRUE_PEAK_BLOCK
+        signal = np.zeros(block * 3, dtype=np.float32)
+        signal[block] = 0.95           # exactly on a boundary
+        signal[block * 2 - 1] = 0.85   # just before the next
+        assert delivery_metrics._true_peak(signal) >= 0.95

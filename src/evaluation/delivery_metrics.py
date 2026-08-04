@@ -109,15 +109,55 @@ def _oversample(column: np.ndarray, factor: int) -> np.ndarray:
     return np.fft.irfft(padded, n=target) * factor
 
 
+# Block size for true-peak oversampling, and the margin discarded at each block
+# edge. Both are powers of two so the FFT stays on its fast path.
+#
+# Oversampling the whole file in one FFT is what OOM-killed production on
+# 2026-08-04. A 138-second stereo render meant a 24.3-million-point complex
+# spectrum plus the irfft output and several full-length copies, per channel,
+# at a length with no small prime factors -- measured at 3.87 GB for one call.
+# Blocking makes peak memory a function of the block, not the file.
+#
+# The margin exists because sinc interpolation near a block edge sees a
+# truncated neighbourhood. Each block is oversampled with `_TRUE_PEAK_MARGIN`
+# samples of real context on both sides, and only the interior is scanned, so
+# no sample is ever evaluated without its surrounding context.
+_TRUE_PEAK_BLOCK = 1 << 18   # 262144 samples (~5.9 s at 44.1 kHz)
+_TRUE_PEAK_MARGIN = 1 << 10  # 1024 samples of discarded context per edge
+
+
+def _true_peak_column(column: np.ndarray, factor: int) -> float:
+    """Max |x| of the oversampled column, computed blockwise."""
+    n = column.shape[0]
+    if n < 2:
+        return float(np.max(np.abs(column))) if n else 0.0
+    if n <= _TRUE_PEAK_BLOCK:
+        up = _oversample(column, factor)
+        return float(np.max(np.abs(up))) if up.size else 0.0
+
+    peak = 0.0
+    for start in range(0, n, _TRUE_PEAK_BLOCK):
+        lo = max(0, start - _TRUE_PEAK_MARGIN)
+        hi = min(n, start + _TRUE_PEAK_BLOCK + _TRUE_PEAK_MARGIN)
+        up = _oversample(column[lo:hi], factor)
+        if not up.size:
+            continue
+        # Scan only this block's own samples, never the borrowed context.
+        interior_lo = (start - lo) * factor
+        interior_hi = interior_lo + min(_TRUE_PEAK_BLOCK, n - start) * factor
+        peak = max(peak, float(np.max(np.abs(up[interior_lo:interior_hi]))))
+    return peak
+
+
 def _true_peak(audio: np.ndarray) -> float:
     """Peak of the 4x oversampled signal, per channel, taking the maximum."""
     if audio.size == 0:
         return 0.0
     work = audio.reshape(-1, 1) if audio.ndim == 1 else audio
-    peaks = []
-    for ch in range(work.shape[1]):
-        up = _oversample(work[:, ch].astype(np.float64), TRUE_PEAK_OVERSAMPLE)
-        peaks.append(float(np.max(np.abs(up))) if up.size else 0.0)
+    peaks = [
+        _true_peak_column(work[:, ch].astype(np.float64), TRUE_PEAK_OVERSAMPLE)
+        for ch in range(work.shape[1])
+    ]
     return max(peaks) if peaks else 0.0
 
 

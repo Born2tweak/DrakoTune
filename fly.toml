@@ -39,17 +39,20 @@ primary_region = "iad"   # change to your nearest region (e.g. "lhr", "fra", "sj
 # ~180 MB of Python-tracked allocation per audio-minute (M36 benchmark); true
 # RSS runs higher with libs + STFT copies.
 #
-# 2 GB was NOT enough and the claim that it "comfortably handles a 5-minute
-# vocal" was wrong. On 2026-08-04 a real full-length rap vocal through a V3 mode
-# OOM-killed the machine at 1.85 GB RSS:
+# The claim that 2 GB "comfortably handles a 5-minute vocal" was wrong: a real
+# full-length rap vocal OOM-killed the machine twice on 2026-08-04, the second
+# time at 3.84 GB. The root cause was not sizing -- it was true-peak metering
+# oversampling the entire file in one FFT (see delivery_metrics._true_peak).
+# Blocking that call cut a 138-second render from 3.4 GB to 1.2 GB peak.
 #
-#   Out of memory: Killed process 644 (uvicorn) anon-rss:1892992kB
-#
-# Because the job store is in-memory, the reboot also destroyed the in-flight
-# job, so the browser waited on a request that could never return. Raised to
-# 4 GB, and the app now refuses over-long input up front rather than dying
-# partway through (MAX_AUDIO_SECONDS in src/webapp/app.py).
+# 4 GB is now headroom rather than a workaround: ~1.2 GB measured at 138 s
+# implies roughly 3 GB at the 6-minute MAX_AUDIO_SECONDS ceiling, which the
+# app refuses to exceed rather than dying partway through.
+# cpus = 2 is required, not a performance choice: Fly caps shared-cpu-1x at
+# 2048 MiB, and `fly deploy` refuses 4 GB on a single shared CPU with
+# "invalid config.guest.memory_mb, cannot exceed 2048 MiB". Two shared CPUs
+# raise the ceiling to 4 GB. This does increase cost.
 [[vm]]
   memory = "4gb"
   cpu_kind = "shared"
-  cpus = 1
+  cpus = 2
