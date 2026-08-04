@@ -14,14 +14,43 @@
  */
 
 const $ = (id) => document.getElementById(id);
+
+/* Ceiling on a single render request. Long enough for a full-length vocal on a
+ * small machine (a 3.3-minute take measured ~80 s locally), short enough that a
+ * dead server surfaces as an error instead of an endless spinner. */
+const UPLOAD_TIMEOUT_MS = 8 * 60 * 1000;
 const api = {
   modes: () => fetch("/api/modes").then((r) => r.json()),
-  upload: (form) => fetch("/api/audio/upload", { method: "POST", body: form })
-    .then(async (r) => {
-      const body = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(body.detail || body.error || `Upload failed (${r.status})`);
-      return body;
-    }),
+  /* A render is synchronous and can legitimately take a minute or more on a
+   * long file, so the timeout is generous. But it must exist: if the server
+   * dies mid-render (it was OOM-killed on 2026-08-04) the connection can hang
+   * open forever, and the page then shows "Processing…" indefinitely with no
+   * way to tell that nothing is coming back. */
+  upload: (form) => {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), UPLOAD_TIMEOUT_MS);
+    return fetch("/api/audio/upload", { method: "POST", body: form, signal: ctl.signal })
+      .then(async (r) => {
+        const body = await r.json().catch(() => ({}));
+        if (r.status === 413) {
+          throw new Error(`That file is too large (limit ${body.max_mb || "?"} MB).`);
+        }
+        if (r.status === 429) {
+          throw new Error("Too many requests just now. Wait a moment and try again.");
+        }
+        if (!r.ok) throw new Error(body.detail || body.error || `Upload failed (${r.status})`);
+        return body;
+      })
+      .catch((err) => {
+        if (err.name === "AbortError") {
+          throw new Error(
+            "The server stopped responding. This usually means the file was too " +
+            "long for it to finish. Try a shorter section.");
+        }
+        throw err;
+      })
+      .finally(() => clearTimeout(timer));
+  },
 };
 
 const state = {

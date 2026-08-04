@@ -304,3 +304,36 @@ def test_v2_flat_path_is_untouched_by_v3():
     processed, result = execute_plan(audio, int(sr), bundle.plan)
     assert np.all(np.isfinite(processed))
     assert "graph" not in result.chain_description()
+
+
+class TestOversizedInputIsRefusedNotFatal:
+    """Regression for the 2026-08-04 production OOM.
+
+    A full-length vocal killed the container mid-render. Because the job store is
+    in memory, the reboot destroyed the in-flight job and the browser waited on a
+    request that could never return. The fix refuses over-long input up front, so
+    the failure is an immediate message instead of a dead machine.
+    """
+
+    def test_over_long_audio_fails_with_an_actionable_message(self, tmp_path, monkeypatch):
+        from src.webapp import jobs as jobs_mod
+
+        monkeypatch.setattr(jobs_mod, "MAX_AUDIO_SECONDS", 2.0)
+        sr = 44100
+        long_wav = tmp_path / "long.wav"
+        sf.write(long_wav, np.zeros(int(sr * 5), dtype=np.float32), sr, subtype="PCM_16")
+
+        job = jobs_mod.process_upload("long.wav", long_wav.read_bytes())
+
+        assert job.status == jobs_mod.STATUS_FAILED
+        assert "minutes" in job.message
+        # It must say what to do, not merely that it refused.
+        assert "shorter" in job.message.lower() or "trim" in job.message.lower()
+
+    def test_audio_within_the_limit_still_processes(self, tmp_path, monkeypatch):
+        from src.webapp import jobs as jobs_mod
+
+        monkeypatch.setattr(jobs_mod, "MAX_AUDIO_SECONDS", 60.0)
+        with open(FIXTURE, "rb") as fh:
+            job = jobs_mod.process_upload("vocal.wav", fh.read(), mode="modern_rap")
+        assert job.status != jobs_mod.STATUS_FAILED, job.message

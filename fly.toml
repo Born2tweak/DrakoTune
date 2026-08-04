@@ -37,9 +37,19 @@ primary_region = "iad"   # change to your nearest region (e.g. "lhr", "fra", "sj
     path = "/health"
 
 # ~180 MB of Python-tracked allocation per audio-minute (M36 benchmark); true
-# RSS runs higher with libs + STFT copies. 2 GB comfortably handles a 5-minute
-# vocal. Drop to 1 GB only if you cap uploads to short clips.
+# RSS runs higher with libs + STFT copies.
+#
+# 2 GB was NOT enough and the claim that it "comfortably handles a 5-minute
+# vocal" was wrong. On 2026-08-04 a real full-length rap vocal through a V3 mode
+# OOM-killed the machine at 1.85 GB RSS:
+#
+#   Out of memory: Killed process 644 (uvicorn) anon-rss:1892992kB
+#
+# Because the job store is in-memory, the reboot also destroyed the in-flight
+# job, so the browser waited on a request that could never return. Raised to
+# 4 GB, and the app now refuses over-long input up front rather than dying
+# partway through (MAX_AUDIO_SECONDS in src/webapp/app.py).
 [[vm]]
-  memory = "2gb"
+  memory = "4gb"
   cpu_kind = "shared"
   cpus = 1

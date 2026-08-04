@@ -8,12 +8,15 @@ billing, or AI — that is deliberately out of scope for the skeleton.
 """
 
 import atexit
+import os
 import shutil
 import tempfile
 import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
+
+import soundfile as sf
 
 from src.diagnostics.advisory import diagnose_advisory
 from src.dsp_engine import render_plan
@@ -33,6 +36,11 @@ WORKROOT = Path(tempfile.gettempdir()) / "drakotune_web"
 STATUS_COMPLETED = "completed"
 STATUS_BLOCKED = "blocked"
 STATUS_FAILED = "failed"
+
+# Upper bound on input length. Chosen from the 2026-08-04 OOM: a 3.3-minute
+# vocal survived locally, a longer one killed a 2 GB container. With 4 GB and
+# this cap the pipeline has clear headroom. Override per-deployment.
+MAX_AUDIO_SECONDS = float(os.environ.get("DRAKOTUNE_MAX_AUDIO_SECONDS", "360"))
 
 
 RETENTION_SECONDS = 3600  # working audio is cleaned up after this age
@@ -140,6 +148,29 @@ def process_upload(filename: str, data: bytes, preset: str = "clean",
     suffix = Path(filename).suffix or ".wav"
     raw_path = workdir / f"raw{suffix}"
     raw_path.write_bytes(data)
+
+    # Duration guard. A byte-size cap is not enough: a compressed 6-minute MP3
+    # is small on the wire but expands to a very large float array, and the whole
+    # pipeline holds it in memory. On 2026-08-04 a real full-length vocal
+    # OOM-killed the container mid-render, which also destroyed the in-memory job
+    # and left the browser waiting forever on a request that could not return.
+    # Refusing up front turns that into an immediate, explainable error.
+    try:
+        info = sf.info(str(raw_path))
+        duration_s = float(info.frames) / float(info.samplerate or 1)
+    except Exception:  # noqa: BLE001 - unreadable here means preprocess will report it
+        duration_s = 0.0
+    if duration_s > MAX_AUDIO_SECONDS:
+        job = Job(
+            id=job_id, name=name, status=STATUS_FAILED,
+            message=(
+                f"That file is {duration_s / 60:.1f} minutes long. This service "
+                f"currently processes up to {MAX_AUDIO_SECONDS / 60:.0f} minutes per "
+                "upload. Trim it, or render a section at a time."
+            ),
+        )
+        _JOBS[job_id] = job
+        return job
 
     input_channels = probe_channels(raw_path)
     normalized = workdir / "before.wav"
